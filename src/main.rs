@@ -54,6 +54,9 @@ fn main() -> Result<()> {
     
     // https://docs.rs/polars/0.0.1/polars/frame/csv/struct.CsvReader.html
 
+    // =====================================================================
+    // Stuff
+    // =====================================================================
     let re_set = RegexSet::new(&[
 	r"NO_OF_FRAMES\t(.*?)",
 	r"NO_OF_CAMERAS\t(.*?)",
@@ -62,7 +65,7 @@ fn main() -> Result<()> {
     // .case_insensitive(true)
     eprintln!("{:?}", re_set);
     let mut regex_hits = vec![0, 0, 0]; // Count which ones we match
-
+    //let zero_vec = vec![0; len];
     
     let file = File::open(csv_path).expect("could not open file");
     let fileiter = std::io::BufReader::new(file).lines();
@@ -72,7 +75,9 @@ fn main() -> Result<()> {
         if let Ok(l) = line {
             //println!("{}", l);
 
-	    test_re(&l);
+	    if line_no < 12 { 
+		test_re(&l);
+	    }
 	    
 	    let bits: Vec<&str> = l.split("\t")
 		.collect();
@@ -152,6 +157,21 @@ MARKER_NAMES	x_HeadL	x_HeadTop	x_HeadR	x_HeadFront	x_LShoulderTop
 TRAJECTORY_TYPES	Measured	Measured
 23.2 34.34 ... DATA
 */
+
+#[derive(Debug)]
+struct MoCapFile {
+    name: String,
+    no_of_frames: u32,
+    no_of_cameras: u16,
+    no_of_markers: u16,
+    frequency: u16,
+    no_of_analog: u8,
+    description: String,
+    time_stamp: String,
+    data_included: String,
+    marker_names: Vec<String>,
+}
+
 fn test_re(line: &str) {
     let re_FRAMES = Regex::new(r"NO_OF_FRAMES\t(\d+)").unwrap();
     let re_CAMERAS = Regex::new(r"NO_OF_CAMERAS\t(.*?)").unwrap();
@@ -160,7 +180,8 @@ fn test_re(line: &str) {
     match re_FRAMES.captures(line) {
 	Some(caps) => {
             let cap = caps.get(1).unwrap().as_str();
-            println!("cap '{}'", cap);
+	    let cap_int = cap.parse::<u32>().unwrap(); 
+            println!("cap '{}'", cap_int);
 	}
 	None => {
             // The regex did not match. Deal with it here!
