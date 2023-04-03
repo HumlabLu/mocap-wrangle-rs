@@ -71,6 +71,9 @@ fn main() -> Result<()> {
     let re_CAMERAS = Regex::new(r"NO_OF_CAMERAS\t(\d+)").unwrap();
     let re_MARKERS = Regex::new(r"NO_OF_MARKERS\t(\d+)").unwrap();
     let re_MARKER_NAMES = Regex::new(r"MARKER_NAMES\t(.+)").unwrap();
+    //TIME_STAMP	2022-06-03, 10:47:36.627	94247.45402301
+    //TIME_STAMP	2022-11-22, 22:00:35
+    let re_TIME_STAMP = Regex::new(r"TIME_STAMP\t(.+?)(\t(.+)|\z)").unwrap();
 
     let file = File::open(csv_path).expect("could not open file");
     let fileiter = std::io::BufReader::new(file).lines();
@@ -106,7 +109,7 @@ fn main() -> Result<()> {
 			myfile.no_of_frames = cap_int;
 		    }
 		    None => {
-			// The regex did not match. Deal with it here!
+			// The regex did not match.
 		    }
 		}
 		match re_CAMERAS.captures(&l) {
@@ -117,7 +120,7 @@ fn main() -> Result<()> {
 			myfile.no_of_cameras = cap_int;
 		    }
 		    None => {
-			// The regex did not match. Deal with it here!
+			// The regex did not match.
 		    }
 		}
 		match re_MARKERS.captures(&l) {
@@ -128,7 +131,7 @@ fn main() -> Result<()> {
 			myfile.no_of_markers = cap_int;
 		    }
 		    None => {
-			// The regex did not match. Deal with it here!
+			// The regex did not match.
 		    }
 		}
 		match re_MARKER_NAMES.captures(&l) {
@@ -142,7 +145,16 @@ fn main() -> Result<()> {
 			myfile.marker_names = splits; // Move it here.
 		    }
 		    None => {
-			// The regex did not match. Deal with it here!
+			// No match.
+		    }
+		}
+		match re_TIME_STAMP.captures(&l) {
+		    Some(caps) => {
+			println!("caps {:?}", caps);
+			let cap = caps.get(1).unwrap().as_str();
+		    }
+		    None => {
+			// No match.
 		    }
 		}
 
@@ -222,6 +234,7 @@ NO_OF_ANALOG	0
 ANALOG_FREQUENCY	0
 DESCRIPTION	--
 TIME_STAMP	2022-06-03, 10:47:36.627	94247.45402301
+TIME_STAMP	2022-11-22, 22:00:35
 DATA_INCLUDED	3D
 MARKER_NAMES	x_HeadL	x_HeadTop	x_HeadR	x_HeadFront	x_LShoulderTop	
 TRAJECTORY_TYPES	Measured	Measured
@@ -244,8 +257,9 @@ struct MoCapFile {
 
 fn test_re(line: &str) {
     let re_FRAMES = Regex::new(r"NO_OF_FRAMES\t(\d+)").unwrap();
-    let re_CAMERAS = Regex::new(r"NO_OF_CAMERAS\t(.*?)").unwrap();
-    let re_MARKERS = Regex::new(r"NO_OF_MARKERS\t(.*?)").unwrap();
+    let re_CAMERAS = Regex::new(r"NO_OF_CAMERAS\t(.+)").unwrap();
+    let re_MARKERS = Regex::new(r"NO_OF_MARKERS\t(.+)").unwrap();
+    let re_TIME_STAMP = Regex::new(r"TIME_STAMP\t(.+)").unwrap();
 
     match re_FRAMES.captures(line) {
 	Some(caps) => {
