@@ -70,6 +70,7 @@ fn main() -> Result<()> {
     let re_FRAMES = Regex::new(r"NO_OF_FRAMES\t(\d+)").unwrap();
     let re_CAMERAS = Regex::new(r"NO_OF_CAMERAS\t(\d+)").unwrap();
     let re_MARKERS = Regex::new(r"NO_OF_MARKERS\t(\d+)").unwrap();
+    let re_MARKER_NAMES = Regex::new(r"MARKER_NAMES\t(.+)").unwrap();
 
     let file = File::open(csv_path).expect("could not open file");
     let fileiter = std::io::BufReader::new(file).lines();
@@ -125,6 +126,20 @@ fn main() -> Result<()> {
 			let cap_int = cap.parse::<u16>().unwrap(); 
 			println!("cap '{}'", cap_int);
 			myfile.no_of_markers = cap_int;
+		    }
+		    None => {
+			// The regex did not match. Deal with it here!
+		    }
+		}
+		match re_MARKER_NAMES.captures(&l) {
+		    Some(caps) => {
+			let cap = caps.get(1).unwrap().as_str();
+			//println!("cap '{}'", cap);
+			let seperator = Regex::new(r"(\t)").expect("Invalid regex");
+			// Split, convert to String, iterate and collect.
+			let splits: Vec<_> = seperator.split(cap).map(|s| s.to_string()).into_iter().collect();
+			//println!( "{:?}", splits );
+			myfile.marker_names = splits; // Move it here.
 		    }
 		    None => {
 			// The regex did not match. Deal with it here!
