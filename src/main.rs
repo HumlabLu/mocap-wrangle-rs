@@ -66,17 +66,71 @@ fn main() -> Result<()> {
     eprintln!("{:?}", re_set);
     let mut regex_hits = vec![0, 0, 0]; // Count which ones we match
     //let zero_vec = vec![0; len];
-    
+
+    let re_FRAMES = Regex::new(r"NO_OF_FRAMES\t(\d+)").unwrap();
+    let re_CAMERAS = Regex::new(r"NO_OF_CAMERAS\t(\d+)").unwrap();
+    let re_MARKERS = Regex::new(r"NO_OF_MARKERS\t(\d+)").unwrap();
+
     let file = File::open(csv_path).expect("could not open file");
     let fileiter = std::io::BufReader::new(file).lines();
     println!("Reading file");
     let mut line_no: usize = 0;
+
+    let mut myfile = MoCapFile {
+	name: csv_path.to_string(),
+	no_of_frames: 0,
+	no_of_cameras: 0,
+	no_of_markers: 0,
+	frequency: 200,
+	no_of_analog: 0,
+	description: String::new(),
+	time_stamp: String::new(),
+	data_included: String::new(),
+	marker_names: vec![],
+    };
+    
     for line in fileiter {
         if let Ok(l) = line {
             //println!("{}", l);
 
 	    if line_no < 12 { 
 		test_re(&l);
+
+		// Some matching for testing.
+		match re_FRAMES.captures(&l) {
+		    Some(caps) => {
+			let cap = caps.get(1).unwrap().as_str();
+			let cap_int = cap.parse::<u32>().unwrap(); 
+			println!("cap '{}'", cap_int);
+			myfile.no_of_frames = cap_int;
+		    }
+		    None => {
+			// The regex did not match. Deal with it here!
+		    }
+		}
+		match re_CAMERAS.captures(&l) {
+		    Some(caps) => {
+			let cap = caps.get(1).unwrap().as_str();
+			let cap_int = cap.parse::<u16>().unwrap(); 
+			println!("cap '{}'", cap_int);
+			myfile.no_of_cameras = cap_int;
+		    }
+		    None => {
+			// The regex did not match. Deal with it here!
+		    }
+		}
+		match re_MARKERS.captures(&l) {
+		    Some(caps) => {
+			let cap = caps.get(1).unwrap().as_str();
+			let cap_int = cap.parse::<u16>().unwrap(); 
+			println!("cap '{}'", cap_int);
+			myfile.no_of_markers = cap_int;
+		    }
+		    None => {
+			// The regex did not match. Deal with it here!
+		    }
+		}
+
 	    }
 	    
 	    let bits: Vec<&str> = l.split("\t")
@@ -102,6 +156,7 @@ fn main() -> Result<()> {
         }
     }
     println!("read file");
+    println!("{:?}", myfile);
     
     let file1 = File::open(csv_path).expect("could not open file");
     let foo = CsvReader::new(file1)
@@ -158,18 +213,18 @@ TRAJECTORY_TYPES	Measured	Measured
 23.2 34.34 ... DATA
 */
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct MoCapFile {
-    name: String,
-    no_of_frames: u32,
-    no_of_cameras: u16,
-    no_of_markers: u16,
-    frequency: u16,
-    no_of_analog: u8,
-    description: String,
-    time_stamp: String,
-    data_included: String,
-    marker_names: Vec<String>,
+    pub name: String,
+    pub no_of_frames: u32,
+    pub no_of_cameras: u16,
+    pub no_of_markers: u16,
+    pub frequency: u16,
+    pub no_of_analog: u8,
+    pub description: String,
+    pub time_stamp: String,
+    pub data_included: String,
+    pub marker_names: Vec<String>,
 }
 
 fn test_re(line: &str) {
