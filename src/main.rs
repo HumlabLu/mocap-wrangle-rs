@@ -59,17 +59,41 @@ fn main() -> Result<()> {
 	r"NO_OF_CAMERAS\t(.*?)",
 	r"NO_OF_MARKERS\t(.*?)",
     ]).expect("Error compiling RegexSet");
+    // .case_insensitive(true)
     eprintln!("{:?}", re_set);
+    let mut regex_hits = vec![0, 0, 0]; // Count which ones we match
+
     
     let file = File::open(csv_path).expect("could not open file");
     let fileiter = std::io::BufReader::new(file).lines();
     println!("Reading file");
+    let mut line_no: usize = 0;
     for line in fileiter {
         if let Ok(l) = line {
             //println!("{}", l);
+
+	    test_re(&l);
+	    
 	    let bits: Vec<&str> = l.split("\t")
 		.collect();
 	    //println!("{:?}", bits);
+
+	    let matches: Vec<_> = re_set.matches(&l) // &clean was &l
+		.into_iter()
+		.collect();
+	    if matches.contains(&2) {
+		eprintln!("{}", &l);
+		
+	    }
+	    if matches.len() > 0 {
+		println!("{:?}", matches);
+		// Count
+		matches.iter().for_each(|&index| {
+		    *regex_hits.get_mut(index).unwrap() += 1;
+		});
+		eprintln!("{} {:?}", line_no, regex_hits);
+	    }
+	    line_no += 1;
         }
     }
     println!("read file");
@@ -128,10 +152,36 @@ MARKER_NAMES	x_HeadL	x_HeadTop	x_HeadR	x_HeadFront	x_LShoulderTop
 TRAJECTORY_TYPES	Measured	Measured
 23.2 34.34 ... DATA
 */
-fn test_re() {
-    let re_FRAMES = Regex::new(r"NO_OF_FRAMES\t(.*?)").unwrap();
+fn test_re(line: &str) {
+    let re_FRAMES = Regex::new(r"NO_OF_FRAMES\t(\d+)").unwrap();
     let re_CAMERAS = Regex::new(r"NO_OF_CAMERAS\t(.*?)").unwrap();
     let re_MARKERS = Regex::new(r"NO_OF_MARKERS\t(.*?)").unwrap();
+
+    match re_FRAMES.captures(line) {
+	Some(caps) => {
+            let cap = caps.get(1).unwrap().as_str();
+            println!("cap '{}'", cap);
+	}
+	None => {
+            // The regex did not match. Deal with it here!
+	}
+    }
+
+    /*
+    match re_FRAMES.captures(line) {
+	Some(caps) => {
+	    let no_frames = caps.get(1).unwrap();
+	    let foo = no_frames.as_str().parse::<i32>().unwrap(); 
+	},
+	None => ()
+}
+    */
+    //let no_frames = caps.get(1).map_or("0", |m| m.as_str().trim() ); //parse::<i32>());
+    //println!( "{:?}", no_frames );
+
+    /*re_FRAMES.captures(line).and_then(|cap| {
+        cap.get(1).map(|var| var.as_str().trim().parse::<i32>())
+    });*/
 /*
     if let Some(captures) = re_FRAMES.captures(&l) {
 	let a_title = captures.get(1).unwrap().as_str();
