@@ -10,6 +10,10 @@ use rand::Rng;
 use regex::{Regex, RegexSet};
 use clap::Parser;
 
+#[macro_use] extern crate log;
+extern crate simplelog;
+use simplelog::*;
+
 #[derive(Parser, Debug)]
 #[command(author="Peter Berck <peter.berck@humlab.lu.se>",
 	  version="0.1.0",
@@ -33,6 +37,16 @@ struct Args {
 }
 
 fn main() -> Result<()> {
+    CombinedLogger::init(
+        vec![
+            TermLogger::new(LevelFilter::Warn, Config::default(), TerminalMode::Mixed, ColorChoice::Auto),
+            WriteLogger::new(LevelFilter::Info, Config::default(), File::create("my_rust_binary.log").unwrap()),
+        ]
+    ).unwrap();
+    error!("Bright red error");
+    info!("This only appears in the log file");
+    debug!("This level is currently not enabled for any logger");
+    
     let args = Args::parse();
     eprintln!("{:?}", args); // or: dbg!(&args);
     
