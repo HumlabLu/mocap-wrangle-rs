@@ -9,7 +9,9 @@ use std::env;
 use rand::Rng;
 use regex::{Regex, RegexSet};
 
-fn main() -> Result<()> { 
+
+fn main() -> Result<()> {
+
     let data: Vec<u8> = Client::new()
         .get("https://j.mp/iriscsv")
         .send()?
