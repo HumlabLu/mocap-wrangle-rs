@@ -4,6 +4,7 @@ use reqwest::blocking::Client;
 use std::io::Cursor;
 //use std::io::BufReader
 use std::io::{BufRead};
+use std::fs::OpenOptions;
 use std::fs::File;
 use std::env;
 use rand::Rng;
@@ -39,8 +40,14 @@ struct Args {
 fn main() -> Result<()> {
     CombinedLogger::init(
         vec![
-            TermLogger::new(LevelFilter::Warn, Config::default(), TerminalMode::Mixed, ColorChoice::Auto),
-            WriteLogger::new(LevelFilter::Info, Config::default(), File::create("my_rust_binary.log").unwrap()),
+            TermLogger::new(LevelFilter::Info, Config::default(), TerminalMode::Mixed, ColorChoice::Auto),
+            WriteLogger::new(LevelFilter::Info, Config::default(),
+			     OpenOptions::new()
+			     .create(true) // to allow creating the file, if it doesn't exist
+			     .append(true) // to not truncate the file, but instead add to it
+			     .open("mocap.log")
+			     .unwrap()
+	    )
         ]
     ).unwrap();
     error!("Bright red error");
