@@ -8,7 +8,29 @@ use std::fs::File;
 use std::env;
 use rand::Rng;
 use regex::{Regex, RegexSet};
+use clap::Parser;
 
+#[derive(Parser, Debug)]
+#[command(author="Peter Berck <peter.berck@humlab.lu.se>",
+	  version="0.1.0",
+	  about="Scans TSv MoCap data.",
+	  name="mocap",
+	  long_about = None)]
+
+/*
+Two command line arguments:
+  file: scan this XML file.
+  number: don't scan more than this number.
+*/
+struct Args {
+    /// Filename
+    #[arg(short, long, default_value_t = String::from("street_adapt_1tsv"))]
+    file: String, // Path thingy?
+    
+    /// Number of pages to scan
+    #[arg(short, long, default_value_t = 0, help = "Max pages to scan (0 for all)")]
+    number: usize,
+}
 
 fn main() -> Result<()> {
 
@@ -113,7 +135,7 @@ fn main() -> Result<()> {
 		    None => {
 			// The regex did not match.
 		    }
-		}
+		}		
 		match re_cameras.captures(&l) {
 		    Some(caps) => {
 			let cap = caps.get(1).unwrap().as_str();
