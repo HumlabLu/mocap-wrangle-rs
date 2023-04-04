@@ -3,7 +3,7 @@ use polars::prelude::*;
 use reqwest::blocking::Client;
 use std::io::Cursor;
 //use std::io::BufReader
-use std::io::{self, BufRead};
+use std::io::{BufRead};
 use std::fs::File;
 use std::env;
 use rand::Rng;
@@ -67,13 +67,13 @@ fn main() -> Result<()> {
     let mut regex_hits = vec![0, 0, 0]; // Count which ones we match
     //let zero_vec = vec![0; len];
 
-    let re_FRAMES = Regex::new(r"NO_OF_FRAMES\t(\d+)").unwrap();
-    let re_CAMERAS = Regex::new(r"NO_OF_CAMERAS\t(\d+)").unwrap();
-    let re_MARKERS = Regex::new(r"NO_OF_MARKERS\t(\d+)").unwrap();
-    let re_MARKER_NAMES = Regex::new(r"MARKER_NAMES\t(.+)").unwrap();
+    let re_frames = Regex::new(r"NO_OF_FRAMES\t(\d+)").unwrap();
+    let re_cameras = Regex::new(r"NO_OF_CAMERAS\t(\d+)").unwrap();
+    let re_markers = Regex::new(r"NO_OF_MARKERS\t(\d+)").unwrap();
+    let re_marker_names = Regex::new(r"MARKER_NAMES\t(.+)").unwrap();
     //TIME_STAMP	2022-06-03, 10:47:36.627	94247.45402301
     //TIME_STAMP	2022-11-22, 22:00:35
-    let re_TIME_STAMP = Regex::new(r"TIME_STAMP\t(.+?)(\t(.+)|\z)").unwrap();
+    let re_time_stamp = Regex::new(r"TIME_STAMP\t(.+?)(\t(.+)|\z)").unwrap();
 
     let file = File::open(csv_path).expect("could not open file");
     let fileiter = std::io::BufReader::new(file).lines();
@@ -101,7 +101,7 @@ fn main() -> Result<()> {
 		test_re(&l);
 
 		// Some matching for testing.
-		match re_FRAMES.captures(&l) {
+		match re_frames.captures(&l) {
 		    Some(caps) => {
 			let cap = caps.get(1).unwrap().as_str();
 			let cap_int = cap.parse::<u32>().unwrap(); 
@@ -112,7 +112,7 @@ fn main() -> Result<()> {
 			// The regex did not match.
 		    }
 		}
-		match re_CAMERAS.captures(&l) {
+		match re_cameras.captures(&l) {
 		    Some(caps) => {
 			let cap = caps.get(1).unwrap().as_str();
 			let cap_int = cap.parse::<u16>().unwrap(); 
@@ -123,7 +123,7 @@ fn main() -> Result<()> {
 			// The regex did not match.
 		    }
 		}
-		match re_MARKERS.captures(&l) {
+		match re_markers.captures(&l) {
 		    Some(caps) => {
 			let cap = caps.get(1).unwrap().as_str();
 			let cap_int = cap.parse::<u16>().unwrap(); 
@@ -134,7 +134,7 @@ fn main() -> Result<()> {
 			// The regex did not match.
 		    }
 		}
-		match re_MARKER_NAMES.captures(&l) {
+		match re_marker_names.captures(&l) {
 		    Some(caps) => {
 			let cap = caps.get(1).unwrap().as_str();
 			//println!("cap '{}'", cap);
@@ -148,7 +148,7 @@ fn main() -> Result<()> {
 			// No match.
 		    }
 		}
-		match re_TIME_STAMP.captures(&l) {
+		match re_time_stamp.captures(&l) {
 		    Some(caps) => {
 			println!("caps {:?}", caps);
 			let cap = caps.get(1).unwrap().as_str();
@@ -256,12 +256,12 @@ struct MoCapFile {
 }
 
 fn test_re(line: &str) {
-    let re_FRAMES = Regex::new(r"NO_OF_FRAMES\t(\d+)").unwrap();
-    let re_CAMERAS = Regex::new(r"NO_OF_CAMERAS\t(.+)").unwrap();
-    let re_MARKERS = Regex::new(r"NO_OF_MARKERS\t(.+)").unwrap();
-    let re_TIME_STAMP = Regex::new(r"TIME_STAMP\t(.+)").unwrap();
+    let re_frames = Regex::new(r"NO_OF_FRAMES\t(\d+)").unwrap();
+    let re_cameras = Regex::new(r"NO_OF_CAMERAS\t(.+)").unwrap();
+    let re_markers = Regex::new(r"NO_OF_MARKERS\t(.+)").unwrap();
+    let re_time_stamp = Regex::new(r"TIME_STAMP\t(.+)").unwrap();
 
-    match re_FRAMES.captures(line) {
+    match re_frames.captures(line) {
 	Some(caps) => {
             let cap = caps.get(1).unwrap().as_str();
 	    let cap_int = cap.parse::<u32>().unwrap(); 
