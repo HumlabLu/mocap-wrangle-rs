@@ -40,8 +40,13 @@ struct Args {
 fn main() -> Result<()> {
     CombinedLogger::init(
         vec![
-            TermLogger::new(LevelFilter::Info, Config::default(), TerminalMode::Mixed, ColorChoice::Auto),
-            WriteLogger::new(LevelFilter::Info, Config::default(),
+            TermLogger::new(LevelFilter::Info,
+			    Config::default(),
+			    TerminalMode::Mixed,
+			    ColorChoice::Auto
+	    ),
+            WriteLogger::new(LevelFilter::Info,
+			     Config::default(),
 			     OpenOptions::new()
 			     .create(true) // to allow creating the file, if it doesn't exist
 			     .append(true) // to not truncate the file, but instead add to it
@@ -50,12 +55,9 @@ fn main() -> Result<()> {
 	    )
         ]
     ).unwrap();
-    error!("Bright red error");
-    info!("This only appears in the log file");
-    debug!("This level is currently not enabled for any logger");
     
     let args = Args::parse();
-    eprintln!("{:?}", args); // or: dbg!(&args);
+    info!("{:?}", args);
     
     let data: Vec<u8> = Client::new()
         .get("https://j.mp/iriscsv")
@@ -77,10 +79,9 @@ fn main() -> Result<()> {
 
     
     // =================================================
-
-    let csv_path = "street_adapt_1.tsv"; //"./eaf_NewAnno.csv";
     
     /*
+    let csv_path = "street_adapt_1.tsv"; //"./eaf_NewAnno.csv";
     Let df = CsvReader::from_path(csv_path)
 	.unwrap()
 	.finish()
@@ -107,13 +108,13 @@ fn main() -> Result<()> {
     let re_time_stamp = Regex::new(r"TIME_STAMP\t(.+?)(\t(.+)|\z)").unwrap();
 
     let filename = args.file;
-    let file = File::open(csv_path).expect("could not open file");
+    let file = File::open(filename.clone()).expect("could not open file");
     let fileiter = std::io::BufReader::new(file).lines();
     println!("Reading file");
     let mut line_no: usize = 0;
 
     let mut myfile = MoCapFile {
-	name: csv_path.to_string(),
+	name: filename,
 	no_of_frames: 0,
 	no_of_cameras: 0,
 	no_of_markers: 0,
@@ -201,33 +202,7 @@ fn main() -> Result<()> {
     }
     println!("read file");
     println!("{:?}", myfile);
-    
-    let file1 = File::open(csv_path).expect("could not open file");
-    let foo = CsvReader::new(file1)
-        .infer_schema(None)
-        .has_header(true)
-	.with_delimiter(9) // ascii 9 is TAB
-        .finish()?;
-	//.expect("reading error"); // was .unwrap()
-    println!( "{:?}", foo.schema() );
-
-    //foo.as_single_chunk_par();
-    
-    let mut iters = foo.columns(["x_LHandOut_dX", "x_LHandOut_dY", "x_LHandOut_dZ"])? //.expect("no column")
-	.iter()
-	.map( |s| s.iter() )
-	.collect::<Vec<_>>();
-    
-    for row in 0..3 { //foo.height() {
-	println!( "ROW {}", row );
-	for iter in &mut iters {
-            let value = iter
-		.next()
-		.expect("should have as many iterations as rows");
-            // process value
-	    println!( "{:.8}", value );
-	}
-    }
+        
 
     let bar = make_rnd(28, 42);
     println!( "{:?}", bar );
