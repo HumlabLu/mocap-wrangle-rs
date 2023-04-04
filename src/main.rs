@@ -33,7 +33,9 @@ struct Args {
 }
 
 fn main() -> Result<()> {
-
+    let args = Args::parse();
+    eprintln!("{:?}", args); // or: dbg!(&args);
+    
     let data: Vec<u8> = Client::new()
         .get("https://j.mp/iriscsv")
         .send()?
@@ -52,18 +54,11 @@ fn main() -> Result<()> {
 
     println!("{:?}", df);
 
-    for arg in env::args() {
-	println!( "{arg}" )
-	    //numbers.push(u64::from_str(&arg)
-	//	     .expect("error parsing argument"));
-    }
-
     
     // =================================================
 
-    //let csv_path = "/Users/pberck/Development/MoCap/Neural/eaf_NewAnno.csv";
     let csv_path = "street_adapt_1.tsv"; //"./eaf_NewAnno.csv";
-
+    
     /*
     Let df = CsvReader::from_path(csv_path)
 	.unwrap()
@@ -81,15 +76,6 @@ fn main() -> Result<()> {
     // =====================================================================
     // Stuff
     // =====================================================================
-    let re_set = RegexSet::new(&[
-	r"NO_OF_FRAMES\t(.*?)",
-	r"NO_OF_CAMERAS\t(.*?)",
-	r"NO_OF_MARKERS\t(.*?)",
-    ]).expect("Error compiling RegexSet");
-    // .case_insensitive(true)
-    eprintln!("{:?}", re_set);
-    let mut regex_hits = vec![0, 0, 0]; // Count which ones we match
-    //let zero_vec = vec![0; len];
 
     let re_frames = Regex::new(r"NO_OF_FRAMES\t(\d+)").unwrap();
     let re_cameras = Regex::new(r"NO_OF_CAMERAS\t(\d+)").unwrap();
@@ -99,6 +85,7 @@ fn main() -> Result<()> {
     //TIME_STAMP	2022-11-22, 22:00:35
     let re_time_stamp = Regex::new(r"TIME_STAMP\t(.+?)(\t(.+)|\z)").unwrap();
 
+    let filename = args.file;
     let file = File::open(csv_path).expect("could not open file");
     let fileiter = std::io::BufReader::new(file).lines();
     println!("Reading file");
@@ -116,7 +103,7 @@ fn main() -> Result<()> {
 	data_included: String::new(),
 	marker_names: vec![],
     };
-    
+
     for line in fileiter {
         if let Ok(l) = line {
             //println!("{}", l);
@@ -188,21 +175,6 @@ fn main() -> Result<()> {
 		.collect();
 	    //println!("{:?}", bits);
 
-	    let matches: Vec<_> = re_set.matches(&l) // &clean was &l
-		.into_iter()
-		.collect();
-	    if matches.contains(&2) {
-		eprintln!("{}", &l);
-		
-	    }
-	    if matches.len() > 0 {
-		println!("{:?}", matches);
-		// Count
-		matches.iter().for_each(|&index| {
-		    *regex_hits.get_mut(index).unwrap() += 1;
-		});
-		eprintln!("{} {:?}", line_no, regex_hits);
-	    }
 	    line_no += 1;
         }
     }
