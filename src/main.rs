@@ -110,7 +110,11 @@ fn main() -> Result<()> {
     let filename = args.file;
     let file = File::open(filename.clone()).expect("could not open file");
     let fileiter = std::io::BufReader::new(file).lines();
-    println!("Reading file");
+
+    println!("// =====================================================================");
+    println!("// Reading file");
+    println!("// =====================================================================");
+    
     let mut line_no: usize = 0;
 
     let mut myfile = MoCapFile {
@@ -191,25 +195,32 @@ fn main() -> Result<()> {
 		    }
 		}
 
-	    }
-	    
-	    //let bits: Vec<&str> = l.split("\t").collect();
-	    let bits = l.split("\t").
-		filter_map(
-		    |s| s.parse::<f32>().ok()
-		).collect::<Vec<_>>();
-	    if line_no < 20 {
-		println!("{}, {:?}", bits.len(), bits);
-		// bits.len() should be 3 * no_of_markers, if more, take the last 3*num as data?
-		// the first one or two coyuld be frame/timestamp info
-	    }
-
+	    } // if line_no < 12
+	    else {
+		//let bits: Vec<&str> = l.split("\t").collect();
+		let bits = l.split("\t").
+		    filter_map(
+			|s| s.parse::<f32>().ok()
+		    ).collect::<Vec<_>>();
+		if line_no < 0 {
+		    println!("{}, {:?}", bits.len(), bits);
+		    // bits.len() should be 3 * no_of_markers, if more, take the last 3*num as data?
+		    // the first one or two coyuld be frame/timestamp info
+		}
+		let num_bits = bits.len(); // Should be 3 * marker_names.len()
+		let expected_num_bits = (myfile.no_of_markers * 3) as usize;
+		if num_bits > expected_num_bits {
+		    info!("Got {} extra fields in line {}", num_bits - expected_num_bits, line_no);
+		} else if num_bits < expected_num_bits {
+		    info!("Got {} missing fields in line {}", expected_num_bits - num_bits, line_no);
+		}
+	    } // if line_no >= 12
 	    line_no += 1;
         }
     }
     println!("read file");
     println!("{:?}", myfile);
-        
+    println!("{:?}", myfile.num_markers());
 
     let bar = make_rnd(28, 42);
     println!( "{:?}", bar );
@@ -252,6 +263,12 @@ struct MoCapFile {
     pub time_stamp: String,
     pub data_included: String,
     pub marker_names: Vec<String>,
+}
+
+impl MoCapFile {
+    fn num_markers(&self) -> usize {
+        self.marker_names.len()
+    }
 }
 
 fn test_re(line: &str) {
