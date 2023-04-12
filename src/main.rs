@@ -29,7 +29,7 @@ Two command line arguments:
 */
 struct Args {
     /// Filename
-    #[arg(short, long, default_value_t = String::from("street_adapt_1tsv"))]
+    #[arg(short, long, default_value_t = String::from("street_adapt_1.tsv"))]
     file: String, // Path thingy?
     
     /// Number of pages to scan
@@ -193,9 +193,16 @@ fn main() -> Result<()> {
 
 	    }
 	    
-	    let bits: Vec<&str> = l.split("\t")
-		.collect();
-	    //println!("{:?}", bits);
+	    //let bits: Vec<&str> = l.split("\t").collect();
+	    let bits = l.split("\t").
+		filter_map(
+		    |s| s.parse::<f32>().ok()
+		).collect::<Vec<_>>();
+	    if line_no < 20 {
+		println!("{}, {:?}", bits.len(), bits);
+		// bits.len() should be 3 * no_of_markers, if more, take the last 3*num as data?
+		// the first one or two coyuld be frame/timestamp info
+	    }
 
 	    line_no += 1;
         }
