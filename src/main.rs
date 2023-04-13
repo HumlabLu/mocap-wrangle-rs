@@ -130,6 +130,9 @@ fn main() -> Result<()> {
 	marker_names: vec![],
     };
 
+    let mut prev_bits: Option<Vec<f32>> = None;
+    let mut prev_slice: Option<&mut [f32]> = None;
+    
     for line in fileiter {
         if let Ok(l) = line {
             //println!("{}", l);
@@ -213,12 +216,25 @@ fn main() -> Result<()> {
 		    info!("Got {} extra fields in line {}", num_bits - expected_num_bits, line_no);
 		} else if num_bits < expected_num_bits {
 		    info!("Got {} missing fields in line {}", expected_num_bits - num_bits, line_no);
+		} else {
+		    for triplet in (0..num_bits).step_by(3) {
+			let slice = &bits[triplet..triplet+3];
+			if prev_bits.is_some() {
+			    let x = prev_bits.as_mut().unwrap();
+			    let prev_slice = &x[triplet..triplet+3];
+			    println!("{:?} {:?}", slice, prev_slice);
+			} else {
+			    let prev_slice = &vec![0.0, 0.0, 0.0];
+			    println!("{:?} {:?}", slice, prev_slice);
+			}
+		    }
+		    prev_bits = Some(bits);
 		}
 	    } // if line_no >= 12
 	    line_no += 1;
         }
     }
-    println!("read file");
+    println!("read file {}", line_no);
     println!("{:?}", myfile);
     println!("{:?}", myfile.num_markers());
 
@@ -232,6 +248,12 @@ fn main() -> Result<()> {
     println!( "{:?}", s );
 	
     Ok(())
+}
+
+fn d3D(coords0: &[f64], coords1: &[f64]) {
+    assert!( coords0.len() == 3 );
+    assert!( coords1.len() == 3 );
+    
 }
 
 /*
