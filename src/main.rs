@@ -131,7 +131,7 @@ fn main() -> Result<()> {
     };
 
     let mut prev_bits: Option<Vec<f32>> = None;
-    let mut prev_slice: Option<&[f32]> = None;
+    let mut prev_slice: &[f32] = &[0.0, 0.0, 0.0];
     
     for line in fileiter {
         if let Ok(l) = line {
@@ -220,13 +220,12 @@ fn main() -> Result<()> {
 		    for triplet in (0..num_bits).step_by(3) {
 			let slice = &bits[triplet..triplet+3];
 			if prev_bits.is_some() {
-			    let x = prev_bits.as_mut().unwrap();
-			    prev_slice = Some(&x[triplet..triplet+3]);
-			    println!("{:?} {:?}", slice, prev_slice);
+			    let x = prev_bits.clone().unwrap();
+			    prev_slice = &x[triplet..triplet+3];
+			    let dist = d3D(slice, prev_slice);
+			    println!("{:?} {:?} {}", slice, prev_slice, dist);
 			} else {
 			    // dist is 0
-			    let prev_slice = &vec![0.0, 0.0, 0.0];
-			    println!("{:?} {:?}", slice, prev_slice);
 			}
 		    }
 		    prev_bits = Some(bits);
@@ -251,10 +250,23 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn d3D(coords0: &[f64], coords1: &[f64]) {
+fn d3D(coords0: &[f32], coords1: &[f32]) -> f32 {
     assert!( coords0.len() == 3 );
     assert!( coords1.len() == 3 );
-    
+    //dist = sum( [ (x-y)*(x-y) for x,y in zip(v0, v1) ] )
+    //return math.sqrt( dist )
+    /*
+    let x_diff = coords0[0] - coords1[0];
+    let y_diff = coords0[1] - coords1[1];
+    let z_diff = coords0[2] - coords1[2];
+    let distance_squared = x_diff * x_diff + y_diff * y_diff + z_diff * z_diff;
+    distance_squared.sqrt()
+    */
+    let squared_sum = coords0.iter()
+        .zip(coords1.iter())
+        .map(|(&a, &b)| (a - b) * (a - b))
+        .fold(0.0, |acc, x| acc + x);
+    squared_sum.sqrt()
 }
 
 /*
