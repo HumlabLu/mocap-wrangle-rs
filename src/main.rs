@@ -131,7 +131,7 @@ fn main() -> Result<()> {
     };
 
     let mut prev_bits: Option<Vec<f32>> = None;
-    let mut prev_slice: Option<&mut [f32]> = None;
+    let mut prev_slice: Option<&[f32]> = None;
     
     for line in fileiter {
         if let Ok(l) = line {
@@ -221,9 +221,10 @@ fn main() -> Result<()> {
 			let slice = &bits[triplet..triplet+3];
 			if prev_bits.is_some() {
 			    let x = prev_bits.as_mut().unwrap();
-			    let prev_slice = &x[triplet..triplet+3];
+			    prev_slice = Some(&x[triplet..triplet+3]);
 			    println!("{:?} {:?}", slice, prev_slice);
 			} else {
+			    // dist is 0
 			    let prev_slice = &vec![0.0, 0.0, 0.0];
 			    println!("{:?} {:?}", slice, prev_slice);
 			}
