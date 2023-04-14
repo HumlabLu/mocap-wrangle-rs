@@ -222,10 +222,12 @@ fn main() -> Result<()> {
 			if prev_bits.is_some() {
 			    let x = prev_bits.clone().unwrap();
 			    prev_slice = &x[triplet..triplet+3];
-			    let dist = d3D(slice, prev_slice);
+			    let dist = dist_3d(slice, prev_slice);
 			    println!("{:?} {:?} {}", slice, prev_slice, dist);
 			} else {
 			    // dist is 0
+			    let dist = 0.0;
+			    println!("Too early");
 			}
 		    }
 		    prev_bits = Some(bits);
@@ -250,7 +252,7 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn d3D(coords0: &[f32], coords1: &[f32]) -> f32 {
+fn dist_3d(coords0: &[f32], coords1: &[f32]) -> f32 {
     assert!( coords0.len() == 3 );
     assert!( coords1.len() == 3 );
     //dist = sum( [ (x-y)*(x-y) for x,y in zip(v0, v1) ] )
@@ -370,7 +372,6 @@ fn parse(line: &str) -> Option<(i32, i32, i32, i32)> {
 ////
 
 fn make_rnd(n: u64, m: u64) -> (u64, u64) {
-    
     let mut rng = rand::thread_rng();
     let n0: u64 = rng.gen();
     let n1 = rng.gen_range(n.. m);
@@ -384,4 +385,16 @@ fn test_make_rnd() {
 	let (foo, bar) = make_rnd(28, 42);
 	assert!( bar >= 28 && bar <= 42 );
     }
+}
+
+#[test]
+fn test_dist0() {
+    let dist = dist_3d(&[0.0,0.0,0.0], &[0.0,0.0,0.0]);
+    assert!(dist==0.0);
+}
+
+#[test]
+fn test_dist1() {
+    let dist = dist_3d(&[1.0,0.0,0.0], &[0.0,0.0,0.0]);
+    assert!(dist==1.0);
 }
