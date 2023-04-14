@@ -116,7 +116,8 @@ fn main() -> Result<()> {
     println!("// =====================================================================");
     
     let mut line_no: usize = 0;
-
+    let mut data_no: usize = 0;
+    
     let mut myfile = MoCapFile {
 	name: filename,
 	no_of_frames: 0,
@@ -223,40 +224,31 @@ fn main() -> Result<()> {
 			    let x = prev_bits.clone().unwrap();
 			    prev_slice = &x[triplet..triplet+3];
 			    let dist = dist_3d(slice, prev_slice);
-			    println!("{:?} {:?} {}", slice, prev_slice, dist);
+			    println!("{} {:?} {:?} {}", data_no, slice, prev_slice, dist);
 			} else {
 			    // dist is 0
+			    prev_slice = &slice;
 			    let dist = 0.0;
-			    println!("Too early");
+			    println!("{} {:?} {:?} {}", data_no, slice, prev_slice, dist);
 			}
 		    }
 		    prev_bits = Some(bits);
+		    data_no += 1;
 		}
 	    } // if line_no >= 12
 	    line_no += 1;
         }
     }
-    println!("read file {}", line_no);
+    println!("read file {} {}", line_no, data_no);
     println!("{:?}", myfile);
     println!("{:?}", myfile.num_markers());
-
-    let bar = make_rnd(28, 42);
-    println!( "{:?}", bar );
-
-    let q = "Petrus";
-    println!( "{:?}", q );
-    let s = vec!["udon".to_string(), "ramen".to_string(),
-		 "soba".to_string()];
-    println!( "{:?}", s );
 	
     Ok(())
 }
 
 fn dist_3d(coords0: &[f32], coords1: &[f32]) -> f32 {
-    assert!( coords0.len() == 3 );
-    assert!( coords1.len() == 3 );
-    //dist = sum( [ (x-y)*(x-y) for x,y in zip(v0, v1) ] )
-    //return math.sqrt( dist )
+    assert!(coords0.len() == 3);
+    assert!(coords1.len() == 3);
     /*
     let x_diff = coords0[0] - coords1[0];
     let y_diff = coords0[1] - coords1[1];
@@ -383,18 +375,18 @@ fn make_rnd(n: u64, m: u64) -> (u64, u64) {
 fn test_make_rnd() {
     for i in 0..10 {
 	let (foo, bar) = make_rnd(28, 42);
-	assert!( bar >= 28 && bar <= 42 );
+	assert!(bar >= 28 && bar <= 42);
     }
 }
 
 #[test]
 fn test_dist0() {
     let dist = dist_3d(&[0.0,0.0,0.0], &[0.0,0.0,0.0]);
-    assert!(dist==0.0);
+    assert!(dist==0.0f32);
 }
 
 #[test]
 fn test_dist1() {
     let dist = dist_3d(&[1.0,0.0,0.0], &[0.0,0.0,0.0]);
-    assert!(dist==1.0);
+    assert!(dist==1.0f32);
 }
