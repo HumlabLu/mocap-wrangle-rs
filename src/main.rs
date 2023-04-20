@@ -381,3 +381,9 @@ fn test_dist1() {
     let dist = dist_3d(&[1.0,0.0,0.0], &[0.0,0.0,0.0]);
     assert!(dist==1.0f32);
 }
+
+#[test]
+#[should_panic]
+fn test_dist2() {
+    let dist = dist_3d(&[1.0,0.0,0.0,4.0], &[0.0,0.0,0.0]);
+}
