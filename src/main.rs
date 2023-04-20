@@ -4,6 +4,7 @@ use reqwest::blocking::Client;
 use std::io::Cursor;
 //use std::io::BufReader
 use std::io::{BufRead};
+use std::io::{BufWriter, Write};
 use std::fs::OpenOptions;
 use std::fs::File;
 use std::env;
@@ -111,6 +112,12 @@ fn main() -> Result<()> {
     let file = File::open(filename.clone()).expect("could not open file");
     let fileiter = std::io::BufReader::new(file).lines();
 
+    let path = "results.txt";
+    let mut file_out = File::create(path)?;
+    let line = "hello";
+    let my_string = format!("Hello {}", "world");
+    write!(file_out, "{}\n", line);
+	
     println!("// =====================================================================");
     println!("// Reading file");
     println!("// =====================================================================");
