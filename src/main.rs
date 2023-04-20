@@ -91,7 +91,7 @@ fn main() -> Result<()> {
     let mut file_out = File::create(path)?;
     let mut buffer_out = BufWriter::new(file_out);
 	
-    info!("Reading file {}", &filename);
+    info!("Reading file {}", filename);
     
     let mut line_no: usize = 0;
     let mut data_no: usize = 0;
@@ -189,7 +189,8 @@ fn main() -> Result<()> {
 		if num_bits > expected_num_bits {
 		    info!("Got {} extra fields in line {}, skip!", num_bits - expected_num_bits, line_no);
 		} else if num_bits < expected_num_bits {
-		    info!("Got {} missing fields in line {}, skip!", expected_num_bits - num_bits, line_no);
+		    info!("Got {} ({}) missing fields in line {}, skip!",
+			  expected_num_bits - num_bits, expected_num_bits, line_no);
 		} else {
 		    let mut output_bits = Vec::new(); // Collect and save values at the end.
 		    for triplet in (0..num_bits).step_by(3) { // Process per triple.
