@@ -119,14 +119,14 @@ fn main() -> Result<()> {
             //println!("{}", l);
 
 	    if line_no < 12 { 
-		test_re(&l);
+		//test_re(&l);
 
 		// Some matching for testing.
 		match re_frames.captures(&l) {
 		    Some(caps) => {
 			let cap = caps.get(1).unwrap().as_str();
 			let cap_int = cap.parse::<u32>().unwrap(); 
-			println!("cap '{}'", cap_int);
+			//println!("cap '{}'", cap_int);
 			myfile.no_of_frames = cap_int;
 		    }
 		    None => {
@@ -137,7 +137,7 @@ fn main() -> Result<()> {
 		    Some(caps) => {
 			let cap = caps.get(1).unwrap().as_str();
 			let cap_int = cap.parse::<u16>().unwrap(); 
-			println!("cap '{}'", cap_int);
+			//println!("cap '{}'", cap_int);
 			myfile.no_of_cameras = cap_int;
 		    }
 		    None => {
@@ -148,7 +148,7 @@ fn main() -> Result<()> {
 		    Some(caps) => {
 			let cap = caps.get(1).unwrap().as_str();
 			let cap_int = cap.parse::<u16>().unwrap(); 
-			println!("cap '{}'", cap_int);
+			//println!("cap '{}'", cap_int);
 			myfile.no_of_markers = cap_int;
 		    }
 		    None => {
@@ -171,7 +171,7 @@ fn main() -> Result<()> {
 		}
 		match re_time_stamp.captures(&l) {
 		    Some(caps) => {
-			println!("caps {:?}", caps);
+			//println!("caps {:?}", caps);
 			let cap = caps.get(1).unwrap().as_str();
 		    }
 		    None => {
@@ -189,9 +189,9 @@ fn main() -> Result<()> {
 		let num_bits = bits.len(); // Should be 3 * marker_names.len()
 		let expected_num_bits = (myfile.no_of_markers * 3) as usize;
 		if num_bits > expected_num_bits {
-		    info!("Got {} extra fields in line {}", num_bits - expected_num_bits, line_no);
+		    info!("Got {} extra fields in line {}, skip!", num_bits - expected_num_bits, line_no);
 		} else if num_bits < expected_num_bits {
-		    info!("Got {} missing fields in line {}", expected_num_bits - num_bits, line_no);
+		    info!("Got {} missing fields in line {}, skip!", expected_num_bits - num_bits, line_no);
 		} else {
 		    let mut output_bits = Vec::new(); // Collect and save values at the end.
 		    for triplet in (0..num_bits).step_by(3) { // Process per triple.
@@ -200,7 +200,7 @@ fn main() -> Result<()> {
 			    let x = prev_bits.clone().unwrap();
 			    prev_slice = &x[triplet..triplet+3];
 			    let dist = dist_3d(slice, prev_slice);
-			    println!("{} {:?} {:?} {}", data_no, slice, prev_slice, dist);
+			    //println!("{} {:?} {:?} {}", data_no, slice, prev_slice, dist);
 			    //write!(file_out, "{}\t{}\t{}\t{}", slice[0], slice[1], slice[2], dist);
 			    output_bits.extend_from_slice(&slice);
 			    output_bits.push(dist);
@@ -208,7 +208,7 @@ fn main() -> Result<()> {
 			    // No previous bits, the dist is 0 (our starting value).
 			    prev_slice = &slice;
 			    let dist = 0.0;
-			    println!("{} {:?} {:?} {}", data_no, slice, prev_slice, dist);
+			    //println!("{} {:?} {:?} {}", data_no, slice, prev_slice, dist);
 			    //write!(file_out, "{}\t{}\t{}\t{}", slice[0], slice[1], slice[2], dist);
 			    output_bits.extend_from_slice(&slice);
 			    output_bits.push(dist);
@@ -230,8 +230,8 @@ fn main() -> Result<()> {
 	    line_no += 1;
         }
     }
-    println!("read file {} {}", line_no, data_no);
-    println!("{:?}", myfile);
+    info!("read file, lines:{} data:{}", line_no, data_no);
+    println!("{:?}", myfile.name);
     println!("{:?}", myfile.num_markers());
 	
     Ok(())
