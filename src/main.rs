@@ -232,7 +232,7 @@ fn main() -> Result<()> {
         }
     }
     info!("read file, lines:{} data:{}", line_no, data_no);
-    println!("{} -> {}", myfile.name, path);
+    info!("{} -> {}", myfile.name, path);
 	
     Ok(())
 }
