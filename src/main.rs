@@ -88,7 +88,7 @@ fn main() -> Result<()> {
     let fileiter = std::io::BufReader::new(file).lines();
 
     let len = filename.len();
-    let path = format!("{}{}", &filename[0..len-4], "_d3D.tsv");
+    let path = format!("{}{}", &filename[0..len-4], "_d3D.tsv"); // This panics on short filenames, fix!
     let mut file_out = File::create(&path)?;
     let mut buffer_out = BufWriter::new(file_out);
 	
@@ -222,7 +222,7 @@ fn main() -> Result<()> {
 			if i > 0 {
 			    buffer_out.write(b"\t")?;
 			}
-			buffer_out.write_fmt(format_args!("{:.2}", value))?;
+			buffer_out.write_fmt(format_args!("{:.3}", value))?; // Note the ".3"!
 		    }
 		    buffer_out.write(b"\n")?;
 		    output_bits.clear();
