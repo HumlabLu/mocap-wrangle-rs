@@ -87,11 +87,13 @@ fn main() -> Result<()> {
     let file = File::open(filename.clone()).expect("could not open file");
     let fileiter = std::io::BufReader::new(file).lines();
 
-    let path = "results.txt";
-    let mut file_out = File::create(path)?;
+    let len = filename.len();
+    let path = format!("{}{}", &filename[0..len-4], "_d3D.tsv");
+    let mut file_out = File::create(&path)?;
     let mut buffer_out = BufWriter::new(file_out);
 	
     info!("Reading file {}", filename);
+    info!("Writing file {}", path);
     
     let mut line_no: usize = 0;
     let mut data_no: usize = 0;
@@ -230,8 +232,7 @@ fn main() -> Result<()> {
         }
     }
     info!("read file, lines:{} data:{}", line_no, data_no);
-    println!("{:?}", myfile.name);
-    println!("{:?}", myfile.num_markers());
+    println!("{} -> {}", myfile.name, path);
 	
     Ok(())
 }
