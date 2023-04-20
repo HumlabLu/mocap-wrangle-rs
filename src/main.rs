@@ -17,12 +17,6 @@ extern crate simplelog;
 use simplelog::*;
 
 #[derive(Parser, Debug)]
-#[command(author="Peter Berck <peter.berck@humlab.lu.se>",
-	  version="0.1.0",
-	  about="Scans TSv MoCap data.",
-	  name="mocap",
-	  long_about = None)]
-
 /*
 Two command line arguments:
   file: scan this XML file.
