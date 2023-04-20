@@ -387,3 +387,9 @@ fn test_dist1() {
 fn test_dist2() {
     let dist = dist_3d(&[1.0,0.0,0.0,4.0], &[0.0,0.0,0.0]);
 }
+
+#[test]
+fn test_dist3() {
+    let result = std::panic::catch_unwind(|| dist_3d(&[1.0,0.0,0.0], &[0.0,0.0,0.0,4.0]));
+    assert!(result.is_err()); 
+}
