@@ -188,11 +188,6 @@ fn main() -> Result<()> {
 		    filter_map(
 			|s| s.parse::<f32>().ok() // We assume f32 for now.
 		    ).collect::<Vec<_>>();
-		if line_no < 10 {
-		    println!("{}, {:?}", bits.len(), bits);
-		    // bits.len() should be 3 * no_of_markers, if more, take the last 3*num as data?
-		    // the first one or two coyuld be frame/timestamp info
-		}
 		let num_bits = bits.len(); // Should be 3 * marker_names.len()
 		let expected_num_bits = (myfile.no_of_markers * 3) as usize;
 		if num_bits > expected_num_bits {
@@ -200,22 +195,31 @@ fn main() -> Result<()> {
 		} else if num_bits < expected_num_bits {
 		    info!("Got {} missing fields in line {}", expected_num_bits - num_bits, line_no);
 		} else {
-		    for triplet in (0..num_bits).step_by(3) {
+		    let mut output_bits = Vec::new(); // Collect and save values at the end.
+		    for triplet in (0..num_bits).step_by(3) { // Process per triple.
 			let slice = &bits[triplet..triplet+3];
-			if prev_bits.is_some() {
+			if prev_bits.is_some() { // Do we have a saved "previous line/triplet"?
 			    let x = prev_bits.clone().unwrap();
 			    prev_slice = &x[triplet..triplet+3];
 			    let dist = dist_3d(slice, prev_slice);
 			    println!("{} {:?} {:?} {}", data_no, slice, prev_slice, dist);
+			    //write!(file_out, "{}\t{}\t{}\t{}", slice[0], slice[1], slice[2], dist);
+			    output_bits.extend_from_slice(&slice);
+			    output_bits.push(dist);
 			} else {
-			    // dist is 0
+			    // No previous bits, the dist is 0 (our starting value).
 			    prev_slice = &slice;
 			    let dist = 0.0;
 			    println!("{} {:?} {:?} {}", data_no, slice, prev_slice, dist);
+			    //write!(file_out, "{}\t{}\t{}\t{}", slice[0], slice[1], slice[2], dist);
+			    output_bits.extend_from_slice(&slice);
+			    output_bits.push(dist);
 			}
 		    }
 		    prev_bits = Some(bits);
 		    data_no += 1;
+		    write!(file_out, "{:?}\n", output_bits);
+		    output_bits.clear();
 		}
 	    } // if line_no >= 12
 	    line_no += 1;
