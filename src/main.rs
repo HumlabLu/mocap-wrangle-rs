@@ -72,7 +72,7 @@ fn main() -> Result<()> {
     // https://docs.rs/polars/0.0.1/polars/frame/csv/struct.CsvReader.html
 
     // =====================================================================
-    // Stuff
+    // Read file line by line and caclulate d3D
     // =====================================================================
 
     let re_frames = Regex::new(r"NO_OF_FRAMES\t(\d+)").unwrap();
@@ -186,9 +186,9 @@ fn main() -> Result<()> {
 		//let bits: Vec<&str> = l.split("\t").collect();
 		let bits = l.split("\t").
 		    filter_map(
-			|s| s.parse::<f32>().ok()
+			|s| s.parse::<f32>().ok() // We assume f32 for now.
 		    ).collect::<Vec<_>>();
-		if line_no < 0 {
+		if line_no < 10 {
 		    println!("{}, {:?}", bits.len(), bits);
 		    // bits.len() should be 3 * no_of_markers, if more, take the last 3*num as data?
 		    // the first one or two coyuld be frame/timestamp info
