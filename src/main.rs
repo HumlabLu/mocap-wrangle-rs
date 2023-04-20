@@ -91,9 +91,7 @@ fn main() -> Result<()> {
     let mut file_out = File::create(path)?;
     let mut buffer_out = BufWriter::new(file_out);
 	
-    println!("// =====================================================================");
-    println!("// Reading file");
-    println!("// =====================================================================");
+    info!("Reading file {}", &filename);
     
     let mut line_no: usize = 0;
     let mut data_no: usize = 0;
