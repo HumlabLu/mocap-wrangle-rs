@@ -89,9 +89,7 @@ fn main() -> Result<()> {
 
     let path = "results.txt";
     let mut file_out = File::create(path)?;
-    let line = "hello";
-    let my_string = format!("Hello {}", "world");
-    write!(file_out, "{}\n", line);
+    let mut buffer_out = BufWriter::new(file_out);
 	
     println!("// =====================================================================");
     println!("// Reading file");
@@ -218,7 +216,14 @@ fn main() -> Result<()> {
 		    }
 		    prev_bits = Some(bits);
 		    data_no += 1;
-		    write!(file_out, "{:?}\n", output_bits);
+		    //write!(file_out, "{:?}\n", output_bits);
+		    for (i, value) in output_bits.iter().enumerate() {
+			if i > 0 {
+			    buffer_out.write(b"\t")?;
+			}
+			buffer_out.write_fmt(format_args!("{:.2}", value))?;
+		    }
+		    buffer_out.write(b"\n")?;
 		    output_bits.clear();
 		}
 	    } // if line_no >= 12
