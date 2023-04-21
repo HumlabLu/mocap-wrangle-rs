@@ -110,7 +110,7 @@ fn main() -> Result<()> {
 	no_of_frames: 0,
 	no_of_cameras: 0,
 	no_of_markers: 0,
-	frequency: 200,
+	frequency: 0,
 	no_of_analog: 0,
 	description: String::new(),
 	time_stamp: String::new(),
@@ -319,7 +319,7 @@ impl MoCapFile {
 
 impl MoCapFile {
     fn is_valid(&self) -> bool {
-        if self.marker_names.len() > 0 {
+        if self.frequency == 0 {
 	    true
 	} else {
 	    false
