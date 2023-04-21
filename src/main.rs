@@ -59,8 +59,8 @@ fn main() -> Result<()> {
             WriteLogger::new(LevelFilter::Info,
 			     Config::default(),
 			     OpenOptions::new()
-			     .create(true) // to allow creating the file, if it doesn't exist
-			     .append(true) // to not truncate the file, but instead add to it
+			     .create(true) // To allow creating the file, if it doesn't exist,
+			     .append(true) // do not truncate the file, but instead add to it.
 			     .open("mocap.log")
 			     .unwrap()
 	    )
@@ -94,7 +94,7 @@ fn main() -> Result<()> {
     if !args.force && Path::new(&outfilename).exists() == true {
 	error!("Error: {} exists!", outfilename);
 	std::process::exit(1);
-	// Or use Ulid to generate a filename?
+	// Or use Ulid to generate a filename? (https://github.com/huxi/rusty_ulid)
     }
     let mut file_out = File::create(&outfilename)?;
     let mut buffer_out = BufWriter::new(file_out);
@@ -370,3 +370,4 @@ fn filename_no_tsv() {
     let result = create_outputfilename("abcde");
     assert!(result=="abcde_d3D.tsv");
 }
+
