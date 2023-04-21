@@ -117,7 +117,9 @@ fn main() -> Result<()> {
             //println!("{}", l);
 
 	    if line_no < 12 { // Arbitrary, fix me.
-
+		if args.verbose {
+		    info!("{}", l);
+		}
 		// Some matching for testing.
 		match re_frames.captures(&l) {
 		    Some(caps) => {
@@ -256,7 +258,7 @@ fn create_outputfilename(filename: &str) -> String {
     if len > 4 {  // Better to test for ".tsv" suffix.
 	format!("{}{}", &filename[0..len-4], "_d3D.tsv")
     } else {
-	"ouput_d3d.tsv".to_string()
+	"output_d3D.tsv".to_string()
     }
 }
 
@@ -323,4 +325,28 @@ fn test_wrong_params_lhs() {
 fn test_dist_wrong_params_rhs() {
     let result = std::panic::catch_unwind(|| dist_3d(&[1.0,0.0,0.0], &[0.0,0.0,0.0,4.0]));
     assert!(result.is_err()); 
+}
+
+#[test]
+fn filename_normal() {
+    let result = create_outputfilename("filename.tsv");
+    assert!(result=="filename_d3D.tsv");
+}
+
+#[test]
+fn filename_short() {
+    let result = create_outputfilename("foo");
+    assert!(result=="output_d3D.tsv");
+}
+
+#[test]
+fn filename_four_chars() {
+    let result = create_outputfilename("abcd");
+    assert!(result=="output_d3D.tsv");
+}
+
+#[test]
+fn filename_five_chars() {
+    let result = create_outputfilename("abcde");
+    assert!(result=="a_d3D.tsv");
 }
