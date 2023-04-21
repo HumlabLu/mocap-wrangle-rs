@@ -19,3 +19,4 @@ regex = "1.7.3"
 clap = { version = "4.2.1", features = ["derive"] }
 simplelog = "0.12.1"
 log = "0.4.17"
+

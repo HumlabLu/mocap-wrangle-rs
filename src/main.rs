@@ -187,8 +187,12 @@ fn main() -> Result<()> {
 		    }
 		}
 
-	    } // if line_no < 12
+	    } // if line_no < 12 (but we need a better check)
 	    else {
+		if !myfile.is_valid() {
+		    error!("The file does not seem to contain a header!");
+		    break;
+		}
 		//let bits: Vec<&str> = l.split("\t").collect();
 		let bits = l.split("\t").
 		    filter_map(
@@ -264,8 +268,8 @@ fn dist_3d(coords0: &[f32], coords1: &[f32]) -> f32 {
 
 fn create_outputfilename(filename: &str) -> String {
     let len = filename.len();
-    if len > 4 {  // Also test for ".tsv" suffix.
-	let suffix = &filename[len-4..len];
+    if len > 4 { 
+	let suffix = &filename[len-4..len]; // Also test for ".tsv" suffix.
 	if suffix == ".tsv" {
 	    format!("{}{}", &filename[0..len-4], "_d3D.tsv")
 	} else {
@@ -310,6 +314,16 @@ struct MoCapFile {
 impl MoCapFile {
     fn num_markers(&self) -> usize {
         self.marker_names.len()
+    }
+}
+
+impl MoCapFile {
+    fn is_valid(&self) -> bool {
+        if self.marker_names.len() > 0 {
+	    true
+	} else {
+	    false
+	}
     }
 }
 
