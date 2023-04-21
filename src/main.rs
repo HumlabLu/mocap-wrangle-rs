@@ -86,15 +86,12 @@ fn main() -> Result<()> {
 	args.fileout.unwrap() // unwrap() to get the value, which we know exists.
     } else {
 	let len = filename.len();
-	format!("{}{}", &filename[0..len-4], "_d3D.tsv") // This panics on short filenames, fix!
-    }.to_string();
-    /*
-    let fileout = args.fileout;
-    if fileout.is_none() {
-	let len = filename.len();
-	outfile = format!("{}{}", &filename[0..len-4], "_d3D.tsv"); // This panics on short filenames, fix!
-}
-    */
+	if len > 4 {  // Better to test for ".tsv" suffix.
+	    format!("{}{}", &filename[0..len-4], "_d3D.tsv")
+	} else {
+	    "ouput_d3d.tsv".to_string()
+	}
+    };
     let mut file_out = File::create(&outfilename)?;
     let mut buffer_out = BufWriter::new(file_out);
 	
