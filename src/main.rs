@@ -85,12 +85,7 @@ fn main() -> Result<()> {
     let outfilename = if args.fileout.is_some() {
 	args.fileout.unwrap() // unwrap() to get the value, which we know exists.
     } else {
-	let len = filename.len();
-	if len > 4 {  // Better to test for ".tsv" suffix.
-	    format!("{}{}", &filename[0..len-4], "_d3D.tsv")
-	} else {
-	    "ouput_d3d.tsv".to_string()
-	}
+	create_outputfilename(&filename)
     };
     let mut file_out = File::create(&outfilename)?;
     let mut buffer_out = BufWriter::new(file_out);
@@ -254,6 +249,15 @@ fn dist_3d(coords0: &[f32], coords1: &[f32]) -> f32 {
         .map(|(&a, &b)| (a - b) * (a - b))
         .fold(0.0, |acc, x| acc + x);
     squared_sum.sqrt()
+}
+
+fn create_outputfilename(filename: &str) -> String {
+    let len = filename.len();
+    if len > 4 {  // Better to test for ".tsv" suffix.
+	format!("{}{}", &filename[0..len-4], "_d3D.tsv")
+    } else {
+	"ouput_d3d.tsv".to_string()
+    }
 }
 
 /*
