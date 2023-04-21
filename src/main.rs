@@ -296,68 +296,6 @@ impl MoCapFile {
     }
 }
 
-fn test_re(line: &str) {
-    let re_frames = Regex::new(r"NO_OF_FRAMES\t(\d+)").unwrap();
-    let re_cameras = Regex::new(r"NO_OF_CAMERAS\t(.+)").unwrap();
-    let re_markers = Regex::new(r"NO_OF_MARKERS\t(.+)").unwrap();
-    let re_time_stamp = Regex::new(r"TIME_STAMP\t(.+)").unwrap();
-
-    match re_frames.captures(line) {
-	Some(caps) => {
-            let cap = caps.get(1).unwrap().as_str();
-	    let cap_int = cap.parse::<u32>().unwrap(); 
-            println!("cap '{}'", cap_int);
-	}
-	None => {
-            // The regex did not match. Deal with it here!
-	}
-    }
-
-    /*
-    match re_FRAMES.captures(line) {
-	Some(caps) => {
-	    let no_frames = caps.get(1).unwrap();
-	    let foo = no_frames.as_str().parse::<i32>().unwrap(); 
-	},
-	None => ()
-}
-    */
-    //let no_frames = caps.get(1).map_or("0", |m| m.as_str().trim() ); //parse::<i32>());
-    //println!( "{:?}", no_frames );
-
-    /*re_FRAMES.captures(line).and_then(|cap| {
-        cap.get(1).map(|var| var.as_str().trim().parse::<i32>())
-    });*/
-/*
-    if let Some(captures) = re_FRAMES.captures(&l) {
-	let a_title = captures.get(1).unwrap().as_str();
-	//eprintln!("{}", a_title);
-    }
-*/
-}
-
-////
-fn parse(line: &str) -> Option<(i32, i32, i32, i32)> {
-    let re_str = concat!(
-        r"^\s+(?P<qrw1>\d+)\|(?P<qrw2>\d+)",//qrw 0|0
-        r"\s+(?P<arw1>\d+)\|(?P<arw2>\d+)",//arw 34|118
-    );
-    let re = Regex::new(re_str).unwrap();
-    match re.captures(line) {
-        Some(caps) => {
-            let internal_parse = |key| {
-                caps.name(key).unwrap().as_str().parse::<i32>().unwrap()
-            };
-            let qrw1 = internal_parse("qrw1");
-            let qrw2 = internal_parse("qrw2");
-            let arw1 = internal_parse("arw1");
-            let arw2 = internal_parse("arw2");
-            Some((qrw1, qrw2, arw1, arw2))
-        }
-        None => None,
-    }
-}
-
 // =====================================================================
 // Main.
 // =====================================================================
