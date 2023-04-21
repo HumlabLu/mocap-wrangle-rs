@@ -12,6 +12,7 @@ use std::env;
 use rand::Rng;
 use regex::{Regex, RegexSet};
 use clap::Parser;
+use std::path::Path;
 
 #[macro_use] extern crate log;
 extern crate simplelog;
@@ -87,6 +88,10 @@ fn main() -> Result<()> {
     } else {
 	create_outputfilename(&filename)
     };
+    if Path::new(&outfilename).exists() == true {
+	error!("Error: {} exists!", outfilename);
+	std::process::exit(1);
+    }
     let mut file_out = File::create(&outfilename)?;
     let mut buffer_out = BufWriter::new(file_out);
 	
