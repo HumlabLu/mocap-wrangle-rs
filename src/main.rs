@@ -255,8 +255,13 @@ fn dist_3d(coords0: &[f32], coords1: &[f32]) -> f32 {
 
 fn create_outputfilename(filename: &str) -> String {
     let len = filename.len();
-    if len > 4 {  // Better to test for ".tsv" suffix.
-	format!("{}{}", &filename[0..len-4], "_d3D.tsv")
+    if len > 4 {  // Also test for ".tsv" suffix.
+	let suffix = &filename[len-4..len];
+	if suffix == ".tsv" {
+	    format!("{}{}", &filename[0..len-4], "_d3D.tsv")
+	} else {
+	    format!("{}{}", &filename, "_d3D.tsv")
+	}
     } else {
 	"output_d3D.tsv".to_string()
     }
@@ -335,7 +340,7 @@ fn filename_normal() {
 
 #[test]
 fn filename_short() {
-    let result = create_outputfilename("foo");
+    let result = create_outputfilename("");
     assert!(result=="output_d3D.tsv");
 }
 
@@ -347,6 +352,12 @@ fn filename_four_chars() {
 
 #[test]
 fn filename_five_chars() {
-    let result = create_outputfilename("abcde");
+    let result = create_outputfilename("a.tsv");
     assert!(result=="a_d3D.tsv");
+}
+
+#[test]
+fn filename_no_tsv() {
+    let result = create_outputfilename("abcde");
+    assert!(result=="abcde_d3D.tsv");
 }
