@@ -39,6 +39,10 @@ struct Args {
     // Extra output
     #[clap(long, short, action, help = "Produce superfluous output.")]
     verbose: bool,
+
+    // Force overwrite of output
+    #[clap(long, action, help = "Overwrite output if it exists.")]
+    force: bool,
 }
 
 // =====================================================================
@@ -88,9 +92,10 @@ fn main() -> Result<()> {
     } else {
 	create_outputfilename(&filename)
     };
-    if Path::new(&outfilename).exists() == true {
+    if !args.force && Path::new(&outfilename).exists() == true {
 	error!("Error: {} exists!", outfilename);
 	std::process::exit(1);
+	// Or use Ulid to generate a filename?
     }
     let mut file_out = File::create(&outfilename)?;
     let mut buffer_out = BufWriter::new(file_out);
