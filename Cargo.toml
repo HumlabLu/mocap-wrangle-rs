@@ -3,9 +3,12 @@ name = "mocap"
 version = "0.1.0"
 edition = "2021"
 author = "Peter Berck <peter.berck@humlab.lu.se>"
-about = "Scans TSV MoCap data."
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+about = "Calculates 3D distances from X, Y and Z coordinates."
+description = "Calculates 3D distances from X, Y and Z coordinates."
+repository = "https://github.com/"
+readme = "README.md"
+homepage = "http://humlab.lu.se"
+keywords = ["MoCap"]
 
 [dependencies]
 polars = { version = "0.26.1", features = ["lazy"] }
