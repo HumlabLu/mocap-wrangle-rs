@@ -18,12 +18,11 @@ use std::path::Path;
 extern crate simplelog;
 use simplelog::*;
 
+// =====================================================================
+// Command line arguments.
+// =====================================================================
+
 #[derive(Parser, Debug)]
-/*
-Two command line arguments:
-  file: scan this file.
-  number: don't scan more than this number.
-*/
 struct Args {
     /// Filename
     #[arg(short, long, default_value_t = String::from("street_adapt_1.tsv"))]
