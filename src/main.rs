@@ -81,7 +81,8 @@ fn main() -> Result<()> {
     //TIME_STAMP	2022-06-03, 10:47:36.627	94247.45402301
     //TIME_STAMP	2022-11-22, 22:00:35
     let re_time_stamp = Regex::new(r"TIME_STAMP\t(.+?)(\t(.+)|\z)").unwrap();
-
+    let re_frequency = Regex::new(r"^FREQUENCY\t(\d+)").unwrap();
+    
     let filename = args.file;
     let file = File::open(filename.clone()).expect("could not open file");
     let fileiter = std::io::BufReader::new(file).lines();
@@ -184,6 +185,17 @@ fn main() -> Result<()> {
 		    }
 		    None => {
 			// No match.
+		    }
+		}
+		match re_frequency.captures(&l) {
+		    Some(caps) => {
+			let cap = caps.get(1).unwrap().as_str();
+			let cap_int = cap.parse::<u16>().unwrap(); 
+			//println!("cap '{}'", cap_int);
+			myfile.frequency = cap_int;
+		    }
+		    None => {
+			// The regex did not match.
 		    }
 		}
 
@@ -319,7 +331,7 @@ impl MoCapFile {
 
 impl MoCapFile {
     fn is_valid(&self) -> bool {
-        if self.frequency == 0 {
+        if self.frequency > 0 {
 	    true
 	} else {
 	    false
@@ -385,3 +397,19 @@ fn filename_no_tsv() {
     assert!(result=="abcde_d3D.tsv");
 }
 
+#[test]
+fn struct_is_valid() {
+    let mut myfile = MoCapFile {
+	name: String::new(),
+	no_of_frames: 0,
+	no_of_cameras: 0,
+	no_of_markers: 0,
+	frequency: 0,
+	no_of_analog: 0,
+	description: String::new(),
+	time_stamp: String::new(),
+	data_included: String::new(),
+	marker_names: vec![],
+    };
+    assert!(myfile.is_valid()==false);
+}
