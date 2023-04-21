@@ -85,7 +85,7 @@ fn main() -> Result<()> {
     
     let filename = args.file;
     let file_size = std::fs::metadata(&filename)?.len();
-    if file_size < 10 { // Arbitrary size... but to prevent creation of 0-byte files.
+    if file_size < 28 { // Arbitrary size... but to prevent creation of 0-byte files.
 	error!("Error: Inputfile is too small!");
 	std::process::exit(2);
     }
