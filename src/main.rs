@@ -1,3 +1,4 @@
+#![allow(unused)] // Remove me for release build
 use color_eyre::{Result};
 use polars::prelude::*;
 use reqwest::blocking::Client;
@@ -19,7 +20,7 @@ use simplelog::*;
 #[derive(Parser, Debug)]
 /*
 Two command line arguments:
-  file: scan this XML file.
+  file: scan this file.
   number: don't scan more than this number.
 */
 struct Args {
@@ -27,10 +28,14 @@ struct Args {
     #[arg(short, long, default_value_t = String::from("street_adapt_1.tsv"))]
     file: String, // Path thingy?
     
-    /// Number of pages to scan
+    /// Number of lines to scan
     #[arg(short, long, default_value_t = 0, help = "Max pages to scan (0 for all)")]
     number: usize,
 }
+
+// =====================================================================
+// Main.
+// =====================================================================
 
 fn main() -> Result<()> {
     CombinedLogger::init(
@@ -352,44 +357,31 @@ fn parse(line: &str) -> Option<(i32, i32, i32, i32)> {
         None => None,
     }
 }
-////
 
-fn make_rnd(n: u64, m: u64) -> (u64, u64) {
-    let mut rng = rand::thread_rng();
-    let n0: u64 = rng.gen();
-    let n1 = rng.gen_range(n.. m);
-    println!("Random u64: {}", n0);
-    (n0, n1)
-}
+// =====================================================================
+// Main.
+// =====================================================================
 
 #[test]
-fn test_make_rnd() {
-    for i in 0..10 {
-	let (foo, bar) = make_rnd(28, 42);
-	assert!(bar >= 28 && bar <= 42);
-    }
-}
-
-#[test]
-fn test_dist0() {
+fn test_zero_dist() {
     let dist = dist_3d(&[0.0,0.0,0.0], &[0.0,0.0,0.0]);
     assert!(dist==0.0f32);
 }
 
 #[test]
-fn test_dist1() {
+fn test_normal_dist() {
     let dist = dist_3d(&[1.0,0.0,0.0], &[0.0,0.0,0.0]);
     assert!(dist==1.0f32);
 }
 
 #[test]
 #[should_panic]
-fn test_dist2() {
+fn test_wrong_params_lhs() {
     let dist = dist_3d(&[1.0,0.0,0.0,4.0], &[0.0,0.0,0.0]);
 }
 
 #[test]
-fn test_dist3() {
+fn test_dist_wrong_params_rhs() {
     let result = std::panic::catch_unwind(|| dist_3d(&[1.0,0.0,0.0], &[0.0,0.0,0.0,4.0]));
     assert!(result.is_err()); 
 }
