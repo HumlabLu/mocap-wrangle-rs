@@ -84,6 +84,11 @@ fn main() -> Result<()> {
     let re_frequency = Regex::new(r"^FREQUENCY\t(\d+)").unwrap();
     
     let filename = args.file;
+    let file_size = std::fs::metadata(&filename)?.len();
+    if file_size < 10 { // Arbitrary size... but to prevent creation of 0-byte files.
+	error!("Error: Inputfile is too small!");
+	std::process::exit(2);
+    }
     let file = File::open(filename.clone()).expect("could not open file");
     let fileiter = std::io::BufReader::new(file).lines();
 
@@ -126,7 +131,9 @@ fn main() -> Result<()> {
         if let Ok(l) = line {
             //println!("{}", l);
 
-	    if line_no < 12 { // Arbitrary, fix me.
+	    let ch = &l.chars().take(1).last().unwrap(); // Surely, this could be simplified?!
+	    if ch.is_ascii_uppercase() {
+		//if line_no < 12 { // Arbitrary, fix me, maybe count fields? (loop while !is_valid()? numbits < 3?)
 		if args.verbose {
 		    info!("{}", l);
 		}
