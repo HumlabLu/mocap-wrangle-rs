@@ -27,10 +27,17 @@ struct Args {
     /// Filename
     #[arg(short, long, default_value_t = String::from("street_adapt_1.tsv"))]
     file: String, // Path thingy?
-    
+
+    #[arg(short = 'o', long, help="Output filename (auto-generated if unspecified).")]
+    fileout: Option<String>,
+
     /// Number of lines to scan
-    #[arg(short, long, default_value_t = 0, help = "Max pages to scan (0 for all)")]
+    #[arg(short, long, default_value_t = 0, help = "Max pages to scan (0 for all).")]
     number: usize,
+
+    // Extra output
+    #[clap(long, short, action, help = "Produce superfluous output.")]
+    verbose: bool,
 }
 
 // =====================================================================
@@ -59,23 +66,6 @@ fn main() -> Result<()> {
     let args = Args::parse();
     info!("{:?}", args);
         
-    // =================================================
-    
-    /*
-    let csv_path = "street_adapt_1.tsv"; //"./eaf_NewAnno.csv";
-    Let df = CsvReader::from_path(csv_path)
-	.unwrap()
-	.finish()
-	.unwrap();
-    println!("{:?}", df);
-
-    let df = LazyCsvReader::new(&csv_path).finish().unwrap();
-     */
-
-    //panic!("crash and burn");
-    
-    // https://docs.rs/polars/0.0.1/polars/frame/csv/struct.CsvReader.html
-
     // =====================================================================
     // Read file line by line and caclulate d3D
     // =====================================================================
@@ -92,13 +82,24 @@ fn main() -> Result<()> {
     let file = File::open(filename.clone()).expect("could not open file");
     let fileiter = std::io::BufReader::new(file).lines();
 
-    let len = filename.len();
-    let path = format!("{}{}", &filename[0..len-4], "_d3D.tsv"); // This panics on short filenames, fix!
-    let mut file_out = File::create(&path)?;
+    let outfilename = if args.fileout.is_some() {
+	args.fileout.unwrap() // unwrap() to get the value, which we know exists.
+    } else {
+	let len = filename.len();
+	format!("{}{}", &filename[0..len-4], "_d3D.tsv") // This panics on short filenames, fix!
+    }.to_string();
+    /*
+    let fileout = args.fileout;
+    if fileout.is_none() {
+	let len = filename.len();
+	outfile = format!("{}{}", &filename[0..len-4], "_d3D.tsv"); // This panics on short filenames, fix!
+}
+    */
+    let mut file_out = File::create(&outfilename)?;
     let mut buffer_out = BufWriter::new(file_out);
 	
     info!("Reading file {}", filename);
-    info!("Writing file {}", path);
+    info!("Writing file {}", outfilename);
     
     let mut line_no: usize = 0;
     let mut data_no: usize = 0;
@@ -123,8 +124,7 @@ fn main() -> Result<()> {
         if let Ok(l) = line {
             //println!("{}", l);
 
-	    if line_no < 12 { 
-		//test_re(&l);
+	    if line_no < 12 { // Arbitrary, fix me.
 
 		// Some matching for testing.
 		match re_frames.captures(&l) {
@@ -237,7 +237,7 @@ fn main() -> Result<()> {
         }
     }
     info!("read file, lines:{} data:{}", line_no, data_no);
-    info!("{} -> {}", myfile.name, path);
+    info!("{} -> {:?}", myfile.name, outfilename);
 	
     Ok(())
 }
@@ -297,7 +297,7 @@ impl MoCapFile {
 }
 
 // =====================================================================
-// Main.
+// Tests.
 // =====================================================================
 
 #[test]
