@@ -13,6 +13,7 @@ use rand::Rng;
 use regex::{Regex, RegexSet};
 use clap::Parser;
 use std::path::Path;
+use std::time::{Duration, Instant};
 
 #[macro_use] extern crate log;
 extern crate simplelog;
@@ -126,6 +127,8 @@ fn main() -> Result<()> {
 
     let mut prev_bits: Option<Vec<f32>> = None;
     let mut prev_slice: &[f32] = &[0.0, 0.0, 0.0];
+
+    let time_start = Instant::now();
     
     for line in fileiter {
         if let Ok(l) = line {
@@ -262,8 +265,10 @@ fn main() -> Result<()> {
 	    line_no += 1;
         }
     }
+    let time_duration = time_start.elapsed().as_millis();
+    let lps = data_no as u128 * 1000 / time_duration; // as usize;
     info!("read file, lines:{} data:{}", line_no, data_no);
-    info!("{} -> {:?}", myfile.name, outfilename);
+    info!("{} -> {:?}, {} l/s", myfile.name, outfilename, lps);
 	
     Ok(())
 }
