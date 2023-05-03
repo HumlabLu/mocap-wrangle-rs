@@ -40,6 +40,10 @@ struct Args {
     #[clap(long, short, action, help = "Produce superfluous output.")]
     verbose: bool,
 
+    // Header output
+    #[clap(long, action, help = "Output header row.")]
+    header: bool,
+
     // Force overwrite of output
     #[clap(long, action, help = "Overwrite output if it exists.")]
     force: bool,
@@ -127,7 +131,7 @@ fn main() -> Result<()> {
 
     let mut prev_bits: Option<Vec<f32>> = None;
     let mut prev_slice: &[f32] = &[0.0, 0.0, 0.0];
-    let mut wrote_header = false;
+    let mut wrote_header = !args.header; // If we specify --header, wrote_header is false.
     let mut output_bits = Vec::<f32>::new(); // Senbsor values as f32.
     
     let time_start = Instant::now();
