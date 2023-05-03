@@ -127,7 +127,9 @@ fn main() -> Result<()> {
 
     let mut prev_bits: Option<Vec<f32>> = None;
     let mut prev_slice: &[f32] = &[0.0, 0.0, 0.0];
-
+    let mut wrote_header = false;
+    let mut output_bits = Vec::<f32>::new(); // Senbsor values as f32.
+    
     let time_start = Instant::now();
     
     for line in fileiter {
@@ -135,8 +137,7 @@ fn main() -> Result<()> {
             //println!("{}", l);
 
 	    let ch = &l.chars().take(1).last().unwrap(); // Surely, this could be simplified?!
-	    if ch.is_ascii_uppercase() {
-		//if line_no < 12 { // Arbitrary, fix me, maybe count fields? (loop while !is_valid()? numbits < 3?)
+	    if ch.is_ascii_uppercase() { // Assume we are still pasring the header.
 		if args.verbose {
 		    info!("{}", l);
 		}
@@ -174,6 +175,7 @@ fn main() -> Result<()> {
 			// The regex did not match.
 		    }
 		}
+		// These are to be used again if we request the header in the output.
 		match re_marker_names.captures(&l) {
 		    Some(caps) => {
 			let cap = caps.get(1).unwrap().as_str();
@@ -209,12 +211,33 @@ fn main() -> Result<()> {
 		    }
 		}
 
-	    } // if line_no < 12 (but we need a better check)
-	    else {
+	    } 
+	    else { // Assume we are in the data part.
 		if !myfile.is_valid() {
 		    error!("The file does not seem to contain a header!");
 		    break;
 		}
+		// If we requested a header, print it first (at this point we have not
+		// written to the output file yet.
+		//
+		if !wrote_header {
+		    let mut output_strs = Vec::new();
+		    for marker_name in &myfile.marker_names {
+			for marker_type in vec!["_X", "_Y", "_X", "_d3D"] {
+			    //print!("{}{}", marker_name, marker_type );
+			    output_strs.push(format!("{}{}", marker_name, marker_type));
+			}
+		    }
+		    for (i, value) in output_strs.iter().enumerate() {
+			if i > 0 {
+			    buffer_out.write(b"\t")?;
+			}
+			buffer_out.write_fmt(format_args!("{}", value))?;
+		    }
+		    buffer_out.write(b"\n")?;
+		    wrote_header = true;
+		}
+		    
 		//let bits: Vec<&str> = l.split("\t").collect();
 		let bits = l.split("\t").
 		    filter_map(
@@ -228,7 +251,7 @@ fn main() -> Result<()> {
 		    info!("Got {} ({}) missing fields in line {}, skip!",
 			  expected_num_bits - num_bits, expected_num_bits, line_no);
 		} else {
-		    let mut output_bits = Vec::new(); // Collect and save values at the end.
+		    //let mut output_bits = Vec::new(); // Collect and save values at the end.
 		    for triplet in (0..num_bits).step_by(3) { // Process per triple.
 			let slice = &bits[triplet..triplet+3];
 			if prev_bits.is_some() { // Do we have a saved "previous line/triplet"?
