@@ -131,8 +131,8 @@ fn main() -> Result<()> {
 
     let mut prev_bits: Option<Vec<f32>> = None;
     let mut prev_slice: &[f32] = &[0.0, 0.0, 0.0];
-    let mut wrote_header = !args.header; // If we specify --header, wrote_header is false.
-    let mut output_bits = Vec::<f32>::new(); // Senbsor values as f32.
+    let mut wrote_header = !args.header; // If we specify --header, wrote_header becomes false.
+    let mut output_bits = Vec::<f32>::new(); // Sensor values as f32.
     
     let time_start = Instant::now();
     
@@ -295,7 +295,7 @@ fn main() -> Result<()> {
     let time_duration = time_start.elapsed().as_millis();
     let lps = data_no as u128 * 1000 / time_duration; // as usize;
     info!("read file, lines:{} data:{}", line_no, data_no);
-    info!("{} -> {:?}, {} l/s", myfile.name, outfilename, lps);
+    info!("{} -> {}, {} l/s", myfile.name, outfilename, lps);
 	
     Ok(())
 }
