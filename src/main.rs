@@ -389,7 +389,14 @@ impl std::fmt::Display for MoCapFile {
         write!(f, "NAME {}\n", self.name);
 	write!(f, "NO_OF_FRAMES\t{}\n", self.no_of_frames);
 	write!(f, "NO_OF_CAMERAS\t{}\n", self.no_of_cameras);
-	write!(f, "NO_OF_MARKERS\t{}", self.no_of_markers)
+	write!(f, "NO_OF_MARKERS\t{}", self.no_of_markers);
+	write!(f, "FREQUENCY\t{}", self.frequency);
+	write!(f, "NO_OF_ANALOG\t{}", self.no_of_analog);
+	write!(f, "DESCRIPTION\t{}", self.description);
+	write!(f, "TIME_STAMP\t{}", self.time_stamp);
+	write!(f, "DATA_INCLUDED\t{}", self.data_included);
+	write!(f, "MARKER_NAMES\t{}", self.marker_names)
+	
     }
 }
 // =====================================================================
