@@ -48,6 +48,8 @@ struct Args {
 // Main.
 // =====================================================================
 
+type SensorFloat = f32;
+
 fn main() -> Result<()> {
     CombinedLogger::init(
         vec![
@@ -123,10 +125,10 @@ fn main() -> Result<()> {
     
     let mut line_no: usize = 0; // Counts line in the file.
     let mut frames_no: usize = 0; // Counts the lines with sensor data.
-    let mut prev_bits: Option<Vec<f32>> = None; // Previous line used in calculations.
-    let mut prev_slice: &[f32] = &[0.0, 0.0, 0.0]; // Previous X, Y and Z coordinates.
+    let mut prev_bits: Option<Vec<SensorFloat>> = None; // Previous line used in calculations.
+    let mut prev_slice: &[SensorFloat] = &[0.0, 0.0, 0.0]; // Previous X, Y and Z coordinates.
     let mut wrote_header = !args.header; // If we specify --header, wrote_header becomes false.
-    let mut output_bits = Vec::<f32>::new(); // Sensor values as f32.
+    let mut output_bits = Vec::<SensorFloat>::new(); // Sensor values as SensorFloat.
     
     let time_start = Instant::now();
     
@@ -240,7 +242,7 @@ fn main() -> Result<()> {
 		//let bits: Vec<&str> = l.split("\t").collect();
 		let bits = l.split("\t").
 		    filter_map(
-			|s| s.parse::<f32>().ok() // We assume all f32 values for now.
+			|s| s.parse::<SensorFloat>().ok() // We assume all SensorFloat values for now.
 		    ).collect::<Vec<_>>();
 		let num_bits = bits.len(); // Should be 3 * marker_names.len()
 		let expected_num_bits = (myfile.no_of_markers * 3) as usize;
@@ -311,7 +313,7 @@ fn main() -> Result<()> {
 }
 
 // Calculate the distance in 3D.
-fn dist_3d(coords0: &[f32], coords1: &[f32]) -> f32 {
+fn dist_3d(coords0: &[SensorFloat], coords1: &[SensorFloat]) -> SensorFloat {
     assert!(coords0.len() == 3);
     assert!(coords1.len() == 3);
     /*
@@ -415,13 +417,13 @@ impl std::fmt::Display for MoCapFile {
 #[test]
 fn test_zero_dist() {
     let dist = dist_3d(&[0.0,0.0,0.0], &[0.0,0.0,0.0]);
-    assert!(dist==0.0f32);
+    assert!(dist==0.0);
 }
 
 #[test]
 fn test_normal_dist() {
     let dist = dist_3d(&[1.0,0.0,0.0], &[0.0,0.0,0.0]);
-    assert!(dist==1.0f32);
+    assert!(dist==1.0);
 }
 
 #[test]
