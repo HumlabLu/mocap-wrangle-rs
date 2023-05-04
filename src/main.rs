@@ -294,11 +294,13 @@ fn main() -> Result<()> {
     let lps = frames_no as u128 * 1000 / time_duration; // as usize;
     info!("read file, lines:{} data:{} (in {} ms)", line_no, frames_no, time_duration);
     info!("{} -> {}, {} l/s", myfile.name, outfilename, lps);
+    
     if myfile.no_of_frames as usize != frames_no {
 	error!("Error, did not read the specified number ({}) of frames.", myfile.no_of_frames);
     }
 
     // The meta data.
+    //myfile.no_of_frames = frames_no as u32; // Maybe not.
     println!("{}", myfile);
     
     Ok(())
@@ -390,7 +392,7 @@ impl MoCapFile {
 
 impl std::fmt::Display for MoCapFile {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "NAME {}\n", self.name);
+        // write!(f, "NAME {}\n", self.name); // Not part of original meta data.
 	write!(f, "NO_OF_FRAMES\t{}\n", self.no_of_frames); // Should print the real count?
 	write!(f, "NO_OF_CAMERAS\t{}\n", self.no_of_cameras);
 	write!(f, "NO_OF_MARKERS\t{}\n", self.no_of_markers);
