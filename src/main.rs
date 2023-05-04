@@ -79,6 +79,7 @@ fn main() -> Result<()> {
     //TIME_STAMP	2022-06-03, 10:47:36.627	94247.45402301
     //TIME_STAMP	2022-11-22, 22:00:35
     let re_time_stamp = Regex::new(r"TIME_STAMP\t(.+?)(\t(.+)|\z)").unwrap();
+    let re_description = Regex::new(r"DESCRIPTION\t(.+)").unwrap();
     let re_frequency = Regex::new(r"^FREQUENCY\t(\d+)").unwrap();
     
     let filename = args.file;
@@ -191,6 +192,16 @@ fn main() -> Result<()> {
 			//println!("caps {:?}", caps);
 			let cap = caps.get(1).unwrap().as_str();
 			myfile.time_stamp = cap.to_string();
+		    }
+		    None => {
+			// No match.
+		    }
+		}
+		match re_description.captures(&l) {
+		    Some(caps) => {
+			//println!("caps {:?}", caps);
+			let cap = caps.get(1).unwrap().as_str();
+			myfile.description = cap.to_string();
 		    }
 		    None => {
 			// No match.
