@@ -294,7 +294,9 @@ fn main() -> Result<()> {
     let lps = data_no as u128 * 1000 / time_duration; // as usize;
     info!("read file, lines:{} data:{} (in {} ms)", line_no, data_no, time_duration);
     info!("{} -> {}, {} l/s", myfile.name, outfilename, lps);
-	
+
+    println!("{}", myfile);
+    
     Ok(())
 }
 
@@ -382,6 +384,14 @@ impl MoCapFile {
     }
 }
 
+impl std::fmt::Display for MoCapFile {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "NAME {}\n", self.name);
+	write!(f, "NO_OF_FRAMES\t{}\n", self.no_of_frames);
+	write!(f, "NO_OF_CAMERAS\t{}\n", self.no_of_cameras);
+	write!(f, "NO_OF_MARKERS\t{}", self.no_of_markers)
+    }
+}
 // =====================================================================
 // Tests.
 // =====================================================================
