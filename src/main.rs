@@ -277,7 +277,6 @@ fn main() -> Result<()> {
 		    }
 		    prev_bits = Some(bits);
 		    data_no += 1;
-		    //write!(file_out, "{:?}\n", output_bits);
 		    for (i, value) in output_bits.iter().enumerate() {
 			if i > 0 {
 			    buffer_out.write(b"\t")?;
@@ -287,7 +286,7 @@ fn main() -> Result<()> {
 		    buffer_out.write(b"\n")?;
 		    output_bits.clear();
 		}
-	    } // if line_no >= 12
+	    } // If sensor data.
 	    line_no += 1;
         }
     }
@@ -299,6 +298,7 @@ fn main() -> Result<()> {
     Ok(())
 }
 
+// Calculate the distance in 3D.
 fn dist_3d(coords0: &[f32], coords1: &[f32]) -> f32 {
     assert!(coords0.len() == 3);
     assert!(coords1.len() == 3);
@@ -316,6 +316,8 @@ fn dist_3d(coords0: &[f32], coords1: &[f32]) -> f32 {
     squared_sum.sqrt()
 }
 
+// Create a new output filename, try to append "_d3D" to
+// the filename.
 fn create_outputfilename(filename: &str) -> String {
     let len = filename.len();
     if len > 4 { 
@@ -367,6 +369,9 @@ impl MoCapFile {
     }
 }
 
+// Quick and dirty method to determine if the file
+// contained a valid header. Maybe frequency should be
+// an Option?
 impl MoCapFile {
     fn is_valid(&self) -> bool {
         if self.frequency > 0 {
