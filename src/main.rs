@@ -103,7 +103,7 @@ fn main() -> Result<()> {
 	create_outputfilename(&filename)
     };
     if !args.force && Path::new(&outfilename).exists() == true {
-	error!("Error: {} exists!", outfilename);
+	error!("Error: {} exists! Use --force to overwrite.", outfilename);
 	std::process::exit(1);
 	// Or use Ulid to generate a filename? (https://github.com/huxi/rusty_ulid)
     }
@@ -112,9 +112,6 @@ fn main() -> Result<()> {
 	
     info!("Reading file {}", filename);
     info!("Writing file {}", outfilename);
-    
-    let mut line_no: usize = 0;
-    let mut data_no: usize = 0;
     
     let mut myfile = MoCapFile {
 	name: filename,
@@ -128,9 +125,11 @@ fn main() -> Result<()> {
 	data_included: String::new(),
 	marker_names: vec![],
     };
-
-    let mut prev_bits: Option<Vec<f32>> = None;
-    let mut prev_slice: &[f32] = &[0.0, 0.0, 0.0];
+    
+    let mut line_no: usize = 0; // Counts line in the file.
+    let mut data_no: usize = 0; // Counts the lines with sensor data.
+    let mut prev_bits: Option<Vec<f32>> = None; // Previous line used in calculations.
+    let mut prev_slice: &[f32] = &[0.0, 0.0, 0.0]; // Previous X, Y and Z coordinates.
     let mut wrote_header = !args.header; // If we specify --header, wrote_header becomes false.
     let mut output_bits = Vec::<f32>::new(); // Sensor values as f32.
     
@@ -141,7 +140,7 @@ fn main() -> Result<()> {
             //println!("{}", l);
 
 	    let ch = &l.chars().take(1).last().unwrap(); // Surely, this could be simplified?!
-	    if ch.is_ascii_uppercase() { // Assume we are still pasring the header.
+	    if ch.is_ascii_uppercase() { // Assume we are still parsing the header.
 		if args.verbose {
 		    info!("{}", l);
 		}
@@ -234,7 +233,7 @@ fn main() -> Result<()> {
 		    }
 		    for (i, value) in output_strs.iter().enumerate() {
 			if i > 0 {
-			    buffer_out.write(b"\t")?;
+			    buffer_out.write(b"\t")?; // If not at start, write a tab.
 			}
 			buffer_out.write_fmt(format_args!("{}", value))?;
 		    }
@@ -245,7 +244,7 @@ fn main() -> Result<()> {
 		//let bits: Vec<&str> = l.split("\t").collect();
 		let bits = l.split("\t").
 		    filter_map(
-			|s| s.parse::<f32>().ok() // We assume f32 for now.
+			|s| s.parse::<f32>().ok() // We assume all f32 values for now.
 		    ).collect::<Vec<_>>();
 		let num_bits = bits.len(); // Should be 3 * marker_names.len()
 		let expected_num_bits = (myfile.no_of_markers * 3) as usize;
@@ -294,7 +293,7 @@ fn main() -> Result<()> {
     }
     let time_duration = time_start.elapsed().as_millis();
     let lps = data_no as u128 * 1000 / time_duration; // as usize;
-    info!("read file, lines:{} data:{}", line_no, data_no);
+    info!("read file, lines:{} data:{} (in {} ms)", line_no, data_no, time_duration);
     info!("{} -> {}, {} l/s", myfile.name, outfilename, lps);
 	
     Ok(())
