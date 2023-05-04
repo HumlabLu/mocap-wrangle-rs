@@ -127,7 +127,7 @@ fn main() -> Result<()> {
     };
     
     let mut line_no: usize = 0; // Counts line in the file.
-    let mut data_no: usize = 0; // Counts the lines with sensor data.
+    let mut frames_no: usize = 0; // Counts the lines with sensor data.
     let mut prev_bits: Option<Vec<f32>> = None; // Previous line used in calculations.
     let mut prev_slice: &[f32] = &[0.0, 0.0, 0.0]; // Previous X, Y and Z coordinates.
     let mut wrote_header = !args.header; // If we specify --header, wrote_header becomes false.
@@ -261,7 +261,7 @@ fn main() -> Result<()> {
 			    let x = prev_bits.clone().unwrap();
 			    prev_slice = &x[triplet..triplet+3];
 			    let dist = dist_3d(slice, prev_slice);
-			    //println!("{} {:?} {:?} {}", data_no, slice, prev_slice, dist);
+			    //println!("{} {:?} {:?} {}", frames_no, slice, prev_slice, dist);
 			    //write!(file_out, "{}\t{}\t{}\t{}", slice[0], slice[1], slice[2], dist);
 			    output_bits.extend_from_slice(&slice);
 			    output_bits.push(dist);
@@ -269,14 +269,14 @@ fn main() -> Result<()> {
 			    // No previous bits, the dist is 0 (our starting value).
 			    prev_slice = &slice;
 			    let dist = 0.0;
-			    //println!("{} {:?} {:?} {}", data_no, slice, prev_slice, dist);
+			    //println!("{} {:?} {:?} {}", frames_no, slice, prev_slice, dist);
 			    //write!(file_out, "{}\t{}\t{}\t{}", slice[0], slice[1], slice[2], dist);
 			    output_bits.extend_from_slice(&slice);
 			    output_bits.push(dist);
 			}
 		    }
 		    prev_bits = Some(bits);
-		    data_no += 1;
+		    frames_no += 1;
 		    for (i, value) in output_bits.iter().enumerate() {
 			if i > 0 {
 			    buffer_out.write(b"\t")?;
@@ -291,10 +291,14 @@ fn main() -> Result<()> {
         }
     }
     let time_duration = time_start.elapsed().as_millis();
-    let lps = data_no as u128 * 1000 / time_duration; // as usize;
-    info!("read file, lines:{} data:{} (in {} ms)", line_no, data_no, time_duration);
+    let lps = frames_no as u128 * 1000 / time_duration; // as usize;
+    info!("read file, lines:{} data:{} (in {} ms)", line_no, frames_no, time_duration);
     info!("{} -> {}, {} l/s", myfile.name, outfilename, lps);
+    if myfile.no_of_frames as usize != frames_no {
+	error!("Error, did not read the specified number ({}) of frames.", myfile.no_of_frames);
+    }
 
+    // The meta data.
     println!("{}", myfile);
     
     Ok(())
@@ -387,7 +391,7 @@ impl MoCapFile {
 impl std::fmt::Display for MoCapFile {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "NAME {}\n", self.name);
-	write!(f, "NO_OF_FRAMES\t{}\n", self.no_of_frames);
+	write!(f, "NO_OF_FRAMES\t{}\n", self.no_of_frames); // Should print the real count?
 	write!(f, "NO_OF_CAMERAS\t{}\n", self.no_of_cameras);
 	write!(f, "NO_OF_MARKERS\t{}\n", self.no_of_markers);
 	write!(f, "FREQUENCY\t{}\n", self.frequency);
