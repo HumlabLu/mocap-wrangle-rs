@@ -44,6 +44,9 @@ struct Args {
 // Main.
 // =====================================================================
 
+// The float type for the coordinates/veloocities, etc.
+// Note that there are different sizes of integers as well.
+// (Maybe use usize for all the integers?)
 type SensorFloat = f32;
 
 fn main() -> Result<()> {
@@ -106,7 +109,8 @@ fn main() -> Result<()> {
 	
     info!("Reading file {}", filename);
     info!("Writing file {}", outfilename);
-    
+
+    // Metadata structure.
     let mut myfile = MoCapFile {
 	name: filename,
 	no_of_frames: 0,
@@ -311,8 +315,7 @@ fn main() -> Result<()> {
 	error!("Error, did not read the specified number ({}) of frames.", myfile.no_of_frames);
     }
 
-    
-    // The meta data.
+    // The metadata.
     //myfile.no_of_frames = frames_no as u32; // Maybe not.
     println!("{}", myfile);
     
@@ -395,7 +398,7 @@ impl MoCapFile {
 // an Option?
 impl MoCapFile {
     fn is_valid(&self) -> bool {
-        if self.frequency > 0 {
+        if self.frequency > 0 && self.num_markers() > 0 {
 	    true
 	} else {
 	    false
