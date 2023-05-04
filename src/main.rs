@@ -140,7 +140,9 @@ fn main() -> Result<()> {
     for line in fileiter {
         if let Ok(l) = line {
             //println!("{}", l);
-
+	    if l.len() < 1 {
+		continue;
+	    }
 	    let ch = &l.chars().take(1).last().unwrap(); // Surely, this could be simplified?!
 	    if ch.is_ascii_uppercase() { // Assume we are still parsing the header.
 		if args.verbose {
@@ -312,7 +314,7 @@ fn main() -> Result<()> {
     }
     let time_duration = time_start.elapsed().as_millis() + 1; // Add one to avoid division by zero.
     let lps = frames_no as u128 * 1000 / time_duration; 
-    info!("read file, lines:{} data:{} (in {} ms)", line_no, frames_no, time_duration);
+    info!("Ready, lines:{} data:{} (in {} ms)", line_no, frames_no, time_duration);
     
     let bytes_written = buffer_out.into_inner()?.seek(SeekFrom::Current(0))?;
     if bytes_written == 0 {
@@ -522,3 +524,4 @@ fn struct_is_invalid() {
     };
     assert!(myfile.is_valid()==false);
 }
+
