@@ -31,6 +31,10 @@ struct Args {
     #[clap(long, short, action, help = "Produce superfluous output.")]
     verbose: bool,
 
+    // Extra output
+    #[clap(long, short, action, default_value_t = 0, help = "Skip first n columns in sensor data.")]
+    skip: usize,
+
     // Header output
     #[clap(long, action, help = "Output header row.")]
     header: bool,
@@ -251,14 +255,21 @@ fn main() -> Result<()> {
 		}
 		    
 		//let bits: Vec<&str> = l.split("\t").collect();
-		let bits = l.split("\t").
+		let mut bits = l.split("\t").
 		    filter_map(
 			|s| s.parse::<SensorFloat>().ok() // We assume all SensorFloat values for now.
 		    ).collect::<Vec<_>>();
+		if args.skip > 0 {
+		    //let u: Vec<_> = bits.drain(0..args.skip).collect(); // Keep them, output them?
+		    bits.drain(0..args.skip);
+		}
 		let num_bits = bits.len(); // Should be 3 * marker_names.len()
 		let expected_num_bits = (myfile.no_of_markers * 3) as usize;
 		if num_bits > expected_num_bits {
-		    info!("Got {} extra fields in line {}, skip!", num_bits - expected_num_bits, line_no);
+		    // Two extra fields could mean a frame number and frame time!
+		    let num_extra = num_bits - expected_num_bits;
+		    info!("Got {} extra fields in line {}, skipping (or use -s{})!",
+			  num_extra, line_no, num_extra);
 		} else if num_bits < expected_num_bits {
 		    info!("Got {} ({}) missing fields in line {}, skip!",
 			  expected_num_bits - num_bits, expected_num_bits, line_no);
