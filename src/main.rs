@@ -27,10 +27,6 @@ struct Args {
     #[arg(short = 'o', long, help="Output filename (auto-generated if unspecified).")]
     fileout: Option<String>,
 
-    /// Number of lines to scan
-    #[arg(short, long, default_value_t = 0, help = "Max pages to scan (0 for all).")]
-    number: usize,
-
     // Extra output
     #[clap(long, short, action, help = "Produce superfluous output.")]
     verbose: bool,
