@@ -485,6 +485,23 @@ fn struct_is_valid() {
 	no_of_frames: 0,
 	no_of_cameras: 0,
 	no_of_markers: 0,
+	frequency: 200,
+	no_of_analog: 0,
+	description: String::new(),
+	time_stamp: String::new(),
+	data_included: String::new(),
+	marker_names: vec!["X".to_string()],
+    };
+    assert!(myfile.is_valid()==true);
+}
+
+#[test]
+fn struct_is_invalid() {
+    let mut myfile = MoCapFile {
+	name: String::new(),
+	no_of_frames: 0,
+	no_of_cameras: 0,
+	no_of_markers: 0,
 	frequency: 0,
 	no_of_analog: 0,
 	description: String::new(),
