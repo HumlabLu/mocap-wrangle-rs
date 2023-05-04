@@ -86,8 +86,6 @@ fn main() -> Result<()> {
     let re_cameras = Regex::new(r"NO_OF_CAMERAS\t(\d+)").unwrap();
     let re_markers = Regex::new(r"NO_OF_MARKERS\t(\d+)").unwrap();
     let re_marker_names = Regex::new(r"MARKER_NAMES\t(.+)").unwrap();
-    //TIME_STAMP	2022-06-03, 10:47:36.627	94247.45402301
-    //TIME_STAMP	2022-11-22, 22:00:35
     let re_time_stamp = Regex::new(r"TIME_STAMP\t(.+?)(\t(.+)|\z)").unwrap();
     let re_description = Regex::new(r"DESCRIPTION\t(.+)").unwrap();
     let re_frequency = Regex::new(r"^FREQUENCY\t(\d+)").unwrap();
@@ -339,6 +337,12 @@ fn main() -> Result<()> {
 }
 
 /// Calculate the distance in 3D.
+///
+/// # Example
+///
+/// ```rust
+/// let dist = dist_3d(&[1.0, 0.0, 0.0], &[0.0, 0.0, 0.0]);
+/// ```
 fn dist_3d(coords0: &[SensorFloat], coords1: &[SensorFloat]) -> SensorFloat {
     assert!(coords0.len() == 3);
     assert!(coords1.len() == 3);
