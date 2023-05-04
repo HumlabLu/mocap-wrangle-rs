@@ -20,7 +20,7 @@ use simplelog::*;
 
 #[derive(Parser, Debug)]
 struct Args {
-    /// Filename
+    // Filename
     #[arg(short, long, default_value_t = String::from("street_adapt_1.tsv"))]
     file: String, // Path thingy?
 
@@ -48,11 +48,14 @@ struct Args {
 // Main.
 // =====================================================================
 
-// The float type for the coordinates/veloocities, etc.
-// Note that there are different sizes of integers as well.
-// (Maybe use usize for all the integers?)
+/// The float type for the coordinates/velocities, etc.
+/// Note that there are different sizes of integers as well.
+/// # (Maybe use usize for all the integers?)
 type SensorFloat = f32;
 
+/// Reads the MoCap file with sensor data.
+///
+/// Expects a header, followed by numeric data. Values should be tab-separated.
 fn main() -> Result<()> {
     CombinedLogger::init(
         vec![
@@ -335,7 +338,7 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-// Calculate the distance in 3D.
+/// Calculate the distance in 3D.
 fn dist_3d(coords0: &[SensorFloat], coords1: &[SensorFloat]) -> SensorFloat {
     assert!(coords0.len() == 3);
     assert!(coords1.len() == 3);
@@ -353,8 +356,8 @@ fn dist_3d(coords0: &[SensorFloat], coords1: &[SensorFloat]) -> SensorFloat {
     squared_sum.sqrt()
 }
 
-// Create a new output filename, try to append "_d3D" to
-// the filename.
+/// Create a new output filename, tries to append "_d3D" to
+/// the filename.
 fn create_outputfilename(filename: &str) -> String {
     let len = filename.len();
     if len > 4 { 
@@ -369,23 +372,24 @@ fn create_outputfilename(filename: &str) -> String {
     }
 }
 
-/*
-(VENV) (base) pberck@Peters-MacBook-Pro mocap % head -n12 street_adapt_1.tsv
-NO_OF_FRAMES	16722
-NO_OF_CAMERAS	20
-NO_OF_MARKERS	64
-FREQUENCY	200
-NO_OF_ANALOG	0
-ANALOG_FREQUENCY	0
-DESCRIPTION	--
-TIME_STAMP	2022-06-03, 10:47:36.627	94247.45402301
-TIME_STAMP	2022-11-22, 22:00:35
-DATA_INCLUDED	3D
-MARKER_NAMES	x_HeadL	x_HeadTop	x_HeadR	x_HeadFront	x_LShoulderTop	
-TRAJECTORY_TYPES	Measured	Measured
-23.2 34.34 ... DATA
-*/
 
+/// Struct to contain the metadata. In the MoCap file, the metadata
+/// looks as follows.
+/// ```text
+/// NO_OF_FRAMES	16722
+/// NO_OF_CAMERAS	20
+/// NO_OF_MARKERS	64
+/// FREQUENCY	200
+/// NO_OF_ANALOG	0
+/// ANALOG_FREQUENCY	0
+/// DESCRIPTION	--
+/// TIME_STAMP	2022-06-03, 10:47:36.627	94247.45402301
+/// TIME_STAMP	2022-11-22, 22:00:35
+/// DATA_INCLUDED	3D
+/// MARKER_NAMES	x_HeadL	x_HeadTop	x_HeadR	x_HeadFront	x_LShoulderTop	
+/// TRAJECTORY_TYPES	Measured	Measured
+/// 23.2 34.34 ... (sensor data)
+/// ```
 #[derive(Debug, Clone)]
 struct MoCapFile {
     pub name: String,
