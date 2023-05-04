@@ -1,13 +1,8 @@
 #![allow(unused)] // Remove me for release build
 use color_eyre::{Result};
-use polars::prelude::*;
 use reqwest::blocking::Client;
-use std::io::Cursor;
-//use std::io::BufReader
-use std::io::{BufRead};
-use std::io::{BufWriter, Write};
-use std::fs::OpenOptions;
-use std::fs::File;
+use std::io::{Cursor, BufRead, BufWriter, Write, Seek, SeekFrom};
+use std::fs::{OpenOptions, File, remove_file};
 use std::env;
 use rand::Rng;
 use regex::{Regex, RegexSet};
@@ -197,6 +192,7 @@ fn main() -> Result<()> {
 		    Some(caps) => {
 			//println!("caps {:?}", caps);
 			let cap = caps.get(1).unwrap().as_str();
+			myfile.time_stamp = cap.to_string();
 		    }
 		    None => {
 			// No match.
@@ -218,7 +214,7 @@ fn main() -> Result<()> {
 	    else { // Assume we are in the data part.
 		if !myfile.is_valid() {
 		    error!("The file does not seem to contain a header!");
-		    break;
+		    break; // This creates a zero byte file.
 		}
 		// If we requested a header, print it first (at this point we have not
 		// written to the output file yet.
@@ -290,15 +286,23 @@ fn main() -> Result<()> {
 	    line_no += 1;
         }
     }
-    let time_duration = time_start.elapsed().as_millis();
-    let lps = frames_no as u128 * 1000 / time_duration; // as usize;
+    let time_duration = time_start.elapsed().as_millis() + 1; // Add one to avoid division by zero.
+    let lps = frames_no as u128 * 1000 / time_duration; 
     info!("read file, lines:{} data:{} (in {} ms)", line_no, frames_no, time_duration);
-    info!("{} -> {}, {} l/s", myfile.name, outfilename, lps);
+    
+    let bytes_written = buffer_out.into_inner()?.seek(SeekFrom::Current(0))?;
+    if bytes_written == 0 {
+	error!("Created file is 0 bytes, removing it!");
+	remove_file(&outfilename)?;
+    } else {
+	info!("{} -> {}, {} l/s", myfile.name, outfilename, lps);
+    }
     
     if myfile.no_of_frames as usize != frames_no {
 	error!("Error, did not read the specified number ({}) of frames.", myfile.no_of_frames);
     }
 
+    
     // The meta data.
     //myfile.no_of_frames = frames_no as u32; // Maybe not.
     println!("{}", myfile);
