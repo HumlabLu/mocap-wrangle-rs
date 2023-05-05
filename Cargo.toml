@@ -10,6 +10,14 @@ readme = "README.md"
 homepage = "http://humlab.lu.se"
 keywords = ["MoCap"]
 
+[[bin]]
+name = "mocap"
+path = "src/main.rs"
+
+[lib]
+name = "mocap"
+path = "src/lib.rs"
+
 [dependencies]
 polars = { version = "0.26.1", features = ["lazy"] }
 reqwest =  { version = "0.11.14", features = ["blocking"] }
@@ -20,10 +28,3 @@ clap = { version = "4.2.1", features = ["derive"] }
 simplelog = "0.12.1"
 log = "0.4.17"
 
-[lib]
-name = "mocap"
-path = "src/lib.rs"
-
-[[bin]]
-name = "mocap"
-path = "src/main.rs"
