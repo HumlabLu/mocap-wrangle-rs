@@ -26,4 +26,4 @@ path = "src/lib.rs"
 
 [[bin]]
 name = "mocap"
-path = "src/bin.rs"
+path = "src/main.rs"
