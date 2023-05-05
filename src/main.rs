@@ -114,18 +114,7 @@ fn main() -> Result<()> {
     info!("Writing file {}", outfilename);
 
     // Metadata structure.
-    let mut myfile = MoCapFile {
-	name: filename,
-	no_of_frames: 0,
-	no_of_cameras: 0,
-	no_of_markers: 0,
-	frequency: 0,
-	no_of_analog: 0,
-	description: String::new(),
-	time_stamp: String::new(),
-	data_included: String::new(),
-	marker_names: vec![],
-    };
+    let mut myfile = MoCapFile { name: filename, ..Default::default() };
     
     let mut line_no: usize = 0; // Counts line in the file.
     let mut frames_no: usize = 0; // Counts the lines with sensor data.
@@ -334,7 +323,6 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-// Should be moved back, does not belong in lib.rs
 /// Create a new output filename, tries to append "_d3D" to
 /// the filename.
 ///

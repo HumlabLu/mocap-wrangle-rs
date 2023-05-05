@@ -13,13 +13,7 @@ pub type SensorFloat = f32;
 pub fn dist_3d(coords0: &[SensorFloat], coords1: &[SensorFloat]) -> SensorFloat {
     assert!(coords0.len() == 3);
     assert!(coords1.len() == 3);
-    /*
-    let x_diff = coords0[0] - coords1[0];
-    let y_diff = coords0[1] - coords1[1];
-    let z_diff = coords0[2] - coords1[2];
-    let distance_squared = x_diff * x_diff + y_diff * y_diff + z_diff * z_diff;
-    distance_squared.sqrt()
-    */
+
     let squared_sum = coords0.iter()
         .zip(coords1.iter())
         .map(|(&a, &b)| (a - b) * (a - b))
@@ -58,6 +52,23 @@ pub struct MoCapFile {
     pub marker_names: Vec<String>,
 }
 
+impl Default for MoCapFile {
+    fn default() -> MoCapFile {
+        MoCapFile {
+	    name: String::new(),
+	    no_of_frames: 0,
+	    no_of_cameras: 0,
+	    no_of_markers: 0,
+	    frequency: 0,
+	    no_of_analog: 0,
+	    description: String::new(),
+	    time_stamp: String::new(),
+	    data_included: String::new(),
+	    marker_names: vec![],
+        }
+    }
+}
+
 impl MoCapFile {
     fn num_markers(&self) -> usize {
         self.marker_names.len()
@@ -75,6 +86,13 @@ impl MoCapFile {
 	    false
 	}
     }
+
+    // Move all "header lines" into a data structure, then apply the regexen
+    // one by one? We could create one big string to work on?
+    // Or give it the bufreader and consume until we have what we need?
+    pub fn extract_no_of_frames(&self) -> bool {
+	true
+    }
 }
 
 impl std::fmt::Display for MoCapFile {
@@ -91,3 +109,6 @@ impl std::fmt::Display for MoCapFile {
 	write!(f, "MARKER_NAMES\t{:?}", self.marker_names) // Needs fixing!
     }
 }
+
+// map, index by first word?
+// let re_frames = Regex::new(r"NO_OF_FRAMES\t(\d+)").unwrap();
