@@ -20,3 +20,10 @@ clap = { version = "4.2.1", features = ["derive"] }
 simplelog = "0.12.1"
 log = "0.4.17"
 
+[lib]
+name = "mocap"
+path = "src/lib.rs"
+
+[[bin]]
+name = "mocap"
+path = "src/main.rs"
