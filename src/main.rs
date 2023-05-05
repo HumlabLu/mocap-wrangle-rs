@@ -10,7 +10,7 @@ use clap::Parser;
 use std::path::Path;
 use std::time::{Duration, Instant};
 
-use mocap::{dist_3d, create_outputfilename, MoCapFile};
+use mocap::{dist_3d, MoCapFile};
 use mocap::SensorFloat;
 
 #[macro_use] extern crate log;
@@ -332,6 +332,26 @@ fn main() -> Result<()> {
     println!("{}", myfile);
     
     Ok(())
+}
+
+// Should be moved back, does not belong in lib.rs
+/// Create a new output filename, tries to append "_d3D" to
+/// the filename.
+///
+/// Short input filenames will return `output_d3D.tsv`.
+///
+fn create_outputfilename(filename: &str) -> String {
+    let len = filename.len();
+    if len > 4 { 
+	let suffix = &filename[len-4..len]; // Also test for ".tsv" suffix.
+	if suffix == ".tsv" {
+	    format!("{}{}", &filename[0..len-4], "_d3D.tsv")
+	} else {
+	    format!("{}{}", &filename, "_d3D.tsv")
+	}
+    } else {
+	"output_d3D.tsv".to_string()
+    }
 }
 
 // =====================================================================
