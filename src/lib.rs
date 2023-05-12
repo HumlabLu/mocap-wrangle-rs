@@ -1,3 +1,5 @@
+use regex::Regex;
+    
 /// The float type for the coordinates/velocities, etc.
 /// Note that there are different sizes of integers as well.
 /// # (Maybe use usize for all the integers?)
@@ -70,15 +72,14 @@ impl Default for MoCapFile {
 }
 
 impl MoCapFile {
+    // The number of markers in the vector.
     fn num_markers(&self) -> usize {
         self.marker_names.len()
     }
-}
 
-// Quick and dirty method to determine if the file
-// contained a valid header. Maybe frequency should be
-// an Option?
-impl MoCapFile {
+    // Quick and dirty method to determine if the file
+    // contained a valid header. Maybe frequency should be
+    // an Option?
     pub fn is_valid(&self) -> bool {
         if self.frequency > 0 && self.num_markers() > 0 {
 	    true
@@ -90,8 +91,19 @@ impl MoCapFile {
     // Move all "header lines" into a data structure, then apply the regexen
     // one by one? We could create one big string to work on?
     // Or give it the bufreader and consume until we have what we need?
-    pub fn extract_no_of_frames(&self) -> bool {
-	true
+    pub fn extract_no_of_frames(&mut self, l:&str) {
+	let re_frames = Regex::new(r"NO_OF_FRAMES\t(\d+)").unwrap();
+	match re_frames.captures(l) {
+	    Some(caps) => {
+		let cap = caps.get(1).unwrap().as_str();
+		let cap_int = cap.parse::<u32>().unwrap();
+		//println!("cap '{}'", cap_int);
+		self.no_of_frames = cap_int;
+	    }
+	    None => {
+		// The regex did not match.
+	    }
+	}
     }
 }
 
