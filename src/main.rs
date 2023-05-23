@@ -90,14 +90,6 @@ fn main() -> Result<()> {
     // 30 minutes = 390 MB in memory (plus overhead).
     // About 1 GB per hour of video.
     // =====================================================================
-
-    let re_frames = Regex::new(r"NO_OF_FRAMES\t(\d+)").unwrap();
-    let re_cameras = Regex::new(r"NO_OF_CAMERAS\t(\d+)").unwrap();
-    let re_markers = Regex::new(r"NO_OF_MARKERS\t(\d+)").unwrap();
-    let re_marker_names = Regex::new(r"MARKER_NAMES\t(.+)").unwrap();
-    let re_time_stamp = Regex::new(r"TIME_STAMP\t(.+?)(\t(.+)|\z)").unwrap();
-    let re_description = Regex::new(r"DESCRIPTION\t(.+)").unwrap();
-    let re_frequency = Regex::new(r"^FREQUENCY\t(\d+)").unwrap();
     
     let filename = args.file;
     let file_size = std::fs::metadata(&filename)?.len();
