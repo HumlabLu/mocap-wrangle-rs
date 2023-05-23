@@ -148,6 +148,9 @@ fn main() -> Result<()> {
 		    info!("{}", l);
 		}
 		// Some matching for testing.
+		if let Some(x) = mocap::extract_no_of_frames(&l) {
+		    myfile.no_of_frames = x;
+		}
 		match re_frames.captures(&l) {
 		    Some(caps) => {
 			let cap = caps.get(1).unwrap().as_str();
