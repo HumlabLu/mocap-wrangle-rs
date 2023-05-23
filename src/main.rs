@@ -273,10 +273,10 @@ fn main() -> Result<()> {
 // separate read_data function.
 
 fn parse_header(filename: &String) -> Option<MoCapFile> {
-    let file = File::open(&filename).expect("could not open file");
-    let fileiter = std::io::BufReader::new(file).lines();
+    let mut file = File::open(&filename).expect("could not open file");
+    let fileiter = std::io::BufReader::new(&file).lines();
     let mut myfile = MoCapFile { name: filename.clone(), ..Default::default() };
-    let mut line_no: usize = 0; // Counts line in the file.
+    let mut line_no: usize = 0; // Counts lines in the file.
     
     let time_start = Instant::now();
     
@@ -314,7 +314,9 @@ fn parse_header(filename: &String) -> Option<MoCapFile> {
 	    } 
 	}
     }	
-
+    let bytes_read = file.stream_position().unwrap();
+    println!("{}", bytes_read);
+    
     Some(myfile)
 }
 
