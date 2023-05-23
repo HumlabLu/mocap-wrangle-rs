@@ -204,3 +204,42 @@ pub fn extract_marker_names(l: &str) -> Option<Vec<String>> {
 	}
     }
 }
+
+pub fn extract_timestamp(l: &str) -> Option<String> {
+    match RE_TIME_STAMP.captures(&l) {
+	Some(caps) => {
+	    //println!("caps {:?}", caps);
+	    let cap = caps.get(1).unwrap().as_str();
+	    Some(cap.to_string())
+	}
+	None => {
+	    // No match.
+	    None
+	}
+    }
+}
+
+pub fn extract_description(l: &str) -> Option<String> {
+    match RE_DESCRIPTION.captures(&l) {
+	Some(caps) => {
+	    //println!("caps {:?}", caps);
+	    let cap = caps.get(1).unwrap().as_str();
+	    Some(cap.to_string())
+	}
+	None => {
+	    // No match.
+	    None
+	}
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    #[test]
+    fn extracy_frequency() {
+	let result = extract_frequency("FREQUENCY\t28");
+	assert!(result==Some(28));
+    }
+}

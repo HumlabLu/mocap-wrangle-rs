@@ -3,6 +3,7 @@ mod tests {
     use mocap::{dist_3d, MoCapFile};
     use mocap::SensorFloat;
     
+    
     #[test]
     fn test_zero_dist() {
 	let dist = dist_3d(&[0.0,0.0,0.0], &[0.0,0.0,0.0]);
@@ -60,4 +61,27 @@ mod tests {
 	};
 	assert!(myfile.is_valid()==false);
     }
+
+    // Regular expressions
+    
+    #[test]
+    fn extract_frequency() {
+	let result = mocap::extract_frequency("FREQUENCY\t28").unwrap();
+	assert!(result==28);
+    }
+
+    #[test]
+    fn extract_no_of_caemras() {
+	let result = mocap::extract_no_of_cameras("NO_OF_CAMERAS\t28").unwrap();
+	assert!(result==28);
+    }
+
+    /*
+    mocap::extract_no_of_cameras(&l)
+	mocap::extract_no_of_markers(&l) {
+	    mocap::extract_frequency(&l) {
+		mocap::extract_marker_names(&l) {
+		    mocap::extract_timestamp(&l) {
+    mocap::extract_description(&l) {
+    */
 }

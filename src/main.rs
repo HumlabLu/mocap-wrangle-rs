@@ -160,42 +160,15 @@ fn main() -> Result<()> {
 		if let Some(x) = mocap::extract_frequency(&l) {
 		    myfile.frequency = x;
 		}
-		// These are to be used again if we request the header in the output.
-		match re_marker_names.captures(&l) {
-		    Some(caps) => {
-			let cap = caps.get(1).unwrap().as_str();
-			//println!("cap '{}'", cap);
-			let seperator = Regex::new(r"(\t)").expect("Invalid regex");
-			// Split, convert to String, iterate and collect.
-			let splits: Vec<_> = seperator.split(cap).map(|s| s.to_string()).into_iter().collect();
-			//println!( "{:?}", splits );
-			myfile.marker_names = splits; // Move it here.
-		    }
-		    None => {
-			// No match.
-		    }
-		}
-		match re_time_stamp.captures(&l) {
-		    Some(caps) => {
-			//println!("caps {:?}", caps);
-			let cap = caps.get(1).unwrap().as_str();
-			myfile.time_stamp = cap.to_string();
-		    }
-		    None => {
-			// No match.
-		    }
-		}
-		match re_description.captures(&l) {
-		    Some(caps) => {
-			//println!("caps {:?}", caps);
-			let cap = caps.get(1).unwrap().as_str();
-			myfile.description = cap.to_string();
-		    }
-		    None => {
-			// No match.
-		    }
-		}
-
+		if let Some(x) = mocap::extract_marker_names(&l) {
+		    myfile.marker_names = x;
+		}		
+		if let Some(x) = mocap::extract_timestamp(&l) {
+		    myfile.time_stamp = x;
+		}		
+		if let Some(x) = mocap::extract_description(&l) {
+		    myfile.description = x;
+		}		
 	    } 
 	    else { // Assume we are in the data part.
 		if !myfile.is_valid() {
