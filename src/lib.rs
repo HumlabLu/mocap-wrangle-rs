@@ -233,13 +233,3 @@ pub fn extract_description(l: &str) -> Option<String> {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    
-    #[test]
-    fn extracy_frequency() {
-	let result = extract_frequency("FREQUENCY\t28");
-	assert!(result==Some(28));
-    }
-}

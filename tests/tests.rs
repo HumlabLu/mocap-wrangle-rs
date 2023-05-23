@@ -19,7 +19,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_wrong_params_lhs() {
-	let dist = dist_3d(&[1.0,0.0,0.0,4.0], &[0.0,0.0,0.0]);
+	let _dist = dist_3d(&[1.0,0.0,0.0,4.0], &[0.0,0.0,0.0]);
     }
 
     #[test]
