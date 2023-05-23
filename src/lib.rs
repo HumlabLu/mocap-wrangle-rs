@@ -185,3 +185,22 @@ pub fn extract_frequency(l: &str) -> Option<SensorInt> {
 	}
     }
 }
+
+// These are to be used again if we request the header in the output.
+pub fn extract_marker_names(l: &str) -> Option<Vec<String>> {
+    match RE_MARKER_NAMES.captures(l) {
+	Some(caps) => {
+	    let cap = caps.get(1).unwrap().as_str();
+	    //println!("cap '{}'", cap);
+	    let seperator = Regex::new(r"(\t)").expect("Invalid regex");
+	    // Split, convert to String, iterate and collect.
+	    let splits: Vec<_> = seperator.split(cap).map(|s| s.to_string()).into_iter().collect();
+	    //println!( "{:?}", splits );
+	    Some(splits)
+	}
+	None => {
+	    // No match.
+	    None
+	}
+    }
+}
