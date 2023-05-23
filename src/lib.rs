@@ -194,7 +194,7 @@ pub fn extract_marker_names(l: &str) -> Option<Vec<String>> {
 	    //println!("cap '{}'", cap);
 	    let seperator = Regex::new(r"(\t)").expect("Invalid regex");
 	    // Split, convert to String, iterate and collect.
-	    let splits: Vec<_> = seperator.split(cap).map(|s| s.to_string()).into_iter().collect();
+	    let splits: Vec<String> = seperator.split(cap).map(|s| s.to_string()).into_iter().collect();
 	    //println!( "{:?}", splits );
 	    Some(splits)
 	}
