@@ -97,7 +97,9 @@ fn main() -> Result<()> {
 	error!("Error: Inputfile is too small!");
 	std::process::exit(2);
     }
-    let file = File::open(filename.clone()).expect("could not open file");
+    parse_header(&filename);
+
+    let file = File::open(&filename).expect("could not open file");
     let fileiter = std::io::BufReader::new(file).lines();
 
     let outfilename = if args.fileout.is_some() {
@@ -267,8 +269,56 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn read_and_write(args: Args) {
+// What we want is a parse_header() function returning a MoCap structure, and then a
+// separate read_data function.
 
+fn parse_header(filename: &String) -> Option<MoCapFile> {
+    let file = File::open(&filename).expect("could not open file");
+    let fileiter = std::io::BufReader::new(file).lines();
+    let mut myfile = MoCapFile { name: filename.clone(), ..Default::default() };
+    let mut line_no: usize = 0; // Counts line in the file.
+    
+    let time_start = Instant::now();
+    
+    for line in fileiter {
+        if let Ok(l) = line {
+            //println!("{}", l);
+	    if l.len() < 1 {
+		continue;
+	    }
+	    let ch = &l.chars().take(1).last().unwrap(); // Surely, this could be simplified?!
+	    if ch.is_ascii_uppercase() { // Assume we are still parsing the header.
+		// Some matching for testing.
+		if let Some(x) = mocap::extract_no_of_frames(&l) {
+		    myfile.no_of_frames = x;
+		}
+		if let Some(x) = mocap::extract_no_of_cameras(&l) {
+		    myfile.no_of_cameras = x;
+		}
+		if let Some(x) = mocap::extract_no_of_markers(&l) {
+		    myfile.no_of_markers = x;
+		}		
+		if let Some(x) = mocap::extract_frequency(&l) {
+		    myfile.frequency = x;
+		}
+		if let Some(x) = mocap::extract_marker_names(&l) {
+		    myfile.marker_names = x;
+		}		
+		if let Some(x) = mocap::extract_time_stamp(&l) {
+		    myfile.time_stamp = x;
+		}		
+		if let Some(x) = mocap::extract_description(&l) {
+		    myfile.description = x;
+		}
+		line_no += 1;
+	    } 
+	}
+    }	
+
+    Some(myfile)
+}
+
+fn read_and_write(args: Args) {
     let filename = args.file;
     let file_size = std::fs::metadata(&filename).unwrap().len();
     if file_size < 28 { // Arbitrary size... but to prevent creation of 0-byte files.
