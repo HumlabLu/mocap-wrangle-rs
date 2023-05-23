@@ -1,5 +1,6 @@
 use regex::Regex;
-    
+use lazy_static::lazy_static;
+
 /// The float type for the coordinates/velocities, etc.
 /// Note that there are different sizes of integers as well.
 /// # (Maybe use usize for all the integers?)
@@ -87,24 +88,6 @@ impl MoCapFile {
 	    false
 	}
     }
-
-    // Move all "header lines" into a data structure, then apply the regexen
-    // one by one? We could create one big string to work on?
-    // Or give it the bufreader and consume until we have what we need?
-    pub fn extract_no_of_frames(&mut self, l: &str) {
-	let re_frames = Regex::new(r"NO_OF_FRAMES\t(\d+)").unwrap();
-	match re_frames.captures(l) {
-	    Some(caps) => {
-		let cap = caps.get(1).unwrap().as_str();
-		let cap_int = cap.parse::<u32>().unwrap();
-		//println!("cap '{}'", cap_int);
-		self.no_of_frames = cap_int;
-	    }
-	    None => {
-		// The regex did not match.
-	    }
-	}
-    }
 }
 
 impl std::fmt::Display for MoCapFile {
@@ -124,3 +107,34 @@ impl std::fmt::Display for MoCapFile {
 
 // map, index by first word?
 // let re_frames = Regex::new(r"NO_OF_FRAMES\t(\d+)").unwrap();
+
+// Move all "header lines" into a data structure, then apply the regexen
+// one by one? We could create one big string to work on?
+// Or give it the bufreader and consume until we have what we need?
+
+// Extract the number of frames from a header string.
+const FRAMES_REGEX: &str = r"NO_OF_FRAMES\t(\d+)";
+lazy_static! {
+    static ref RE_FRAMES: Regex = Regex::new(FRAMES_REGEX).unwrap();
+    static ref RE_CAMERAS: Regex = Regex::new(r"NO_OF_CAMERAS\t(\d+)").unwrap();
+    static ref RE_MARKERS: Regex = Regex::new(r"NO_OF_MARKERS\t(\d+)").unwrap();
+    static ref RE_MARKER_NAMES: Regex = Regex::new(r"MARKER_NAMES\t(.+)").unwrap();
+    static ref RE_TIME_STAMP: Regex = Regex::new(r"TIME_STAMP\t(.+?)(\t(.+)|\z)").unwrap();
+    static ref RE_DESCRIPTION: Regex = Regex::new(r"DESCRIPTION\t(.+)").unwrap();
+    static ref RE_FREQUENCY: Regex = Regex::new(r"^FREQUENCY\t(\d+)").unwrap();
+}
+
+pub fn extract_no_of_frames(l: &str) -> Option<u32> {
+    match RE_FRAMES.captures(l) {
+	Some(caps) => {
+	    let cap = caps.get(1).unwrap().as_str();
+	    let cap_int = cap.parse::<u32>().unwrap();
+	    //println!("cap '{}'", cap_int);
+	    Some(cap_int)
+	}
+	None => {
+	    // The regex did not match.
+	    None
+	}
+    }
+}
