@@ -163,7 +163,7 @@ fn main() -> Result<()> {
 		if let Some(x) = mocap::extract_marker_names(&l) {
 		    myfile.marker_names = x;
 		}		
-		if let Some(x) = mocap::extract_timestamp(&l) {
+		if let Some(x) = mocap::extract_time_stamp(&l) {
 		    myfile.time_stamp = x;
 		}		
 		if let Some(x) = mocap::extract_description(&l) {

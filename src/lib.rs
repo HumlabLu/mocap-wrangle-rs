@@ -205,7 +205,7 @@ pub fn extract_marker_names(l: &str) -> Option<Vec<String>> {
     }
 }
 
-pub fn extract_timestamp(l: &str) -> Option<String> {
+pub fn extract_time_stamp(l: &str) -> Option<String> {
     match RE_TIME_STAMP.captures(&l) {
 	Some(caps) => {
 	    //println!("caps {:?}", caps);

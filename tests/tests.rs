@@ -71,11 +71,32 @@ mod tests {
     }
 
     #[test]
-    fn extract_no_of_caemras() {
+    fn extract_no_of_cameras() {
 	let result = mocap::extract_no_of_cameras("NO_OF_CAMERAS\t28").unwrap();
 	assert!(result==28);
     }
 
+    #[test]
+    fn extract_no_of_markers() {
+	let result = mocap::extract_no_of_markers("NO_OF_MARKERS\t28").unwrap();
+	assert!(result==28);
+    }
+
+    #[test]
+    fn extract_time_stamp() {
+	let result = mocap::extract_time_stamp("TIME_STAMP\t2022-06-03, 10:47:36.627\t94247.45402301").unwrap();
+	assert!(result=="2022-06-03, 10:47:36.627");
+
+	let result = mocap::extract_time_stamp("TIME_STAMP\t2022-11-22, 22:00:35").unwrap();
+	assert!(result=="2022-11-22, 22:00:35");
+    }
+
+    #[test]
+    fn extract_marker_names() {
+	let result = mocap::extract_marker_names("MARKER_NAMES\tx_HeadL\tx_HeadTop\tx_HeadR").unwrap();
+	assert!(result==vec!["x_HeadL","x_HeadTop","x_HeadR"]);
+    }
+    
     /*
     mocap::extract_no_of_cameras(&l)
 	mocap::extract_no_of_markers(&l) {
