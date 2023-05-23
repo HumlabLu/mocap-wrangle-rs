@@ -91,7 +91,7 @@ impl MoCapFile {
     // Move all "header lines" into a data structure, then apply the regexen
     // one by one? We could create one big string to work on?
     // Or give it the bufreader and consume until we have what we need?
-    pub fn extract_no_of_frames(&mut self, l:&str) {
+    pub fn extract_no_of_frames(&mut self, l: &str) {
 	let re_frames = Regex::new(r"NO_OF_FRAMES\t(\d+)").unwrap();
 	match re_frames.captures(l) {
 	    Some(caps) => {

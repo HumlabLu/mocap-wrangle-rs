@@ -54,6 +54,8 @@ struct Args {
 /// Reads the MoCap file with sensor data.
 ///
 /// Expects a header, followed by numeric data. Values should be tab-separated.
+/// The file is not read into memory, it reads one line, processes it and then
+/// writes it to the new file.
 fn main() -> Result<()> {
     CombinedLogger::init(
         vec![
@@ -77,7 +79,16 @@ fn main() -> Result<()> {
     info!("{:?}", args);
         
     // =====================================================================
-    // Read file line by line and caclulate d3D
+    // Read file line by line and calculate d3D
+    //
+    // Space requirements...
+    // Let's say we have 128 sensors per line, so 384 values.
+    // Each value is a f32 (SensorFloat in lib.rs), 4 bytes.
+    // 384 * 4 = 1136 bytes per line.
+    // 1 minute = 60 seconds x 200 frames, this takes
+    // 1136 * 200 * 60 = 13,632,000 = 13 MB per minute
+    // 30 minutes = 390 MB in memory (plus overhead).
+    // About 1 GB per hour of video.
     // =====================================================================
 
     let re_frames = Regex::new(r"NO_OF_FRAMES\t(\d+)").unwrap();
@@ -109,7 +120,7 @@ fn main() -> Result<()> {
     }
     let mut file_out = File::create(&outfilename)?;
     let mut buffer_out = BufWriter::new(file_out);
-	
+    
     info!("Reading file {}", filename);
     info!("Writing file {}", outfilename);
 
