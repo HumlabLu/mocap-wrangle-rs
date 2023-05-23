@@ -96,13 +96,11 @@ mod tests {
 	let result = mocap::extract_marker_names("MARKER_NAMES\tx_HeadL\tx_HeadTop\tx_HeadR").unwrap();
 	assert!(result==vec!["x_HeadL","x_HeadTop","x_HeadR"]);
     }
+
+    #[test]
+    fn extract_description() {
+	let result = mocap::extract_description("DESCRIPTION\tThe answer is 42!").unwrap();
+	assert!(result=="The answer is 42!");
+    }
     
-    /*
-    mocap::extract_no_of_cameras(&l)
-	mocap::extract_no_of_markers(&l) {
-	    mocap::extract_frequency(&l) {
-		mocap::extract_marker_names(&l) {
-		    mocap::extract_timestamp(&l) {
-    mocap::extract_description(&l) {
-    */
 }
