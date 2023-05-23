@@ -11,7 +11,7 @@ use std::path::Path;
 use std::time::{Duration, Instant};
 
 use mocap::{dist_3d, MoCapFile};
-use mocap::SensorFloat;
+use mocap::{SensorFloat, SensorInt};
 
 #[macro_use] extern crate log;
 extern crate simplelog;
@@ -165,7 +165,7 @@ fn main() -> Result<()> {
 		match re_cameras.captures(&l) {
 		    Some(caps) => {
 			let cap = caps.get(1).unwrap().as_str();
-			let cap_int = cap.parse::<u16>().unwrap(); 
+			let cap_int = cap.parse::<SensorInt>().unwrap(); 
 			//println!("cap '{}'", cap_int);
 			myfile.no_of_cameras = cap_int;
 		    }
@@ -176,7 +176,7 @@ fn main() -> Result<()> {
 		match re_markers.captures(&l) {
 		    Some(caps) => {
 			let cap = caps.get(1).unwrap().as_str();
-			let cap_int = cap.parse::<u16>().unwrap(); 
+			let cap_int = cap.parse::<SensorInt>().unwrap(); 
 			//println!("cap '{}'", cap_int);
 			myfile.no_of_markers = cap_int;
 		    }
@@ -222,7 +222,7 @@ fn main() -> Result<()> {
 		match re_frequency.captures(&l) {
 		    Some(caps) => {
 			let cap = caps.get(1).unwrap().as_str();
-			let cap_int = cap.parse::<u16>().unwrap(); 
+			let cap_int = cap.parse::<SensorInt>().unwrap(); 
 			//println!("cap '{}'", cap_int);
 			myfile.frequency = cap_int;
 		    }

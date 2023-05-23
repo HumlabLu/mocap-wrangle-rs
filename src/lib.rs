@@ -5,6 +5,7 @@ use lazy_static::lazy_static;
 /// Note that there are different sizes of integers as well.
 /// # (Maybe use usize for all the integers?)
 pub type SensorFloat = f32;
+pub type SensorInt = u32;
 
 /// Calculate the distance in 3D.
 ///
@@ -44,11 +45,11 @@ pub fn dist_3d(coords0: &[SensorFloat], coords1: &[SensorFloat]) -> SensorFloat 
 #[derive(Debug, Clone)]
 pub struct MoCapFile {
     pub name: String,
-    pub no_of_frames: u32,
-    pub no_of_cameras: u16,
-    pub no_of_markers: u16,
-    pub frequency: u16,
-    pub no_of_analog: u8,
+    pub no_of_frames: SensorInt,
+    pub no_of_cameras: SensorInt,
+    pub no_of_markers: SensorInt,
+    pub frequency: SensorInt,
+    pub no_of_analog: SensorInt,
     pub description: String,
     pub time_stamp: String,
     pub data_included: String,
@@ -124,11 +125,11 @@ lazy_static! {
     static ref RE_FREQUENCY: Regex = Regex::new(r"^FREQUENCY\t(\d+)").unwrap();
 }
 
-pub fn extract_no_of_frames(l: &str) -> Option<u32> {
+pub fn extract_no_of_frames(l: &str) -> Option<SensorInt> {
     match RE_FRAMES.captures(l) {
 	Some(caps) => {
 	    let cap = caps.get(1).unwrap().as_str();
-	    let cap_int = cap.parse::<u32>().unwrap();
+	    let cap_int = cap.parse::<SensorInt>().unwrap();
 	    //println!("cap '{}'", cap_int);
 	    Some(cap_int)
 	}
