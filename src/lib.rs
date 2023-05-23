@@ -119,14 +119,60 @@ lazy_static! {
     static ref RE_FRAMES: Regex = Regex::new(FRAMES_REGEX).unwrap();
     static ref RE_CAMERAS: Regex = Regex::new(r"NO_OF_CAMERAS\t(\d+)").unwrap();
     static ref RE_MARKERS: Regex = Regex::new(r"NO_OF_MARKERS\t(\d+)").unwrap();
+    static ref RE_FREQUENCY: Regex = Regex::new(r"^FREQUENCY\t(\d+)").unwrap();
+    
     static ref RE_MARKER_NAMES: Regex = Regex::new(r"MARKER_NAMES\t(.+)").unwrap();
     static ref RE_TIME_STAMP: Regex = Regex::new(r"TIME_STAMP\t(.+?)(\t(.+)|\z)").unwrap();
     static ref RE_DESCRIPTION: Regex = Regex::new(r"DESCRIPTION\t(.+)").unwrap();
-    static ref RE_FREQUENCY: Regex = Regex::new(r"^FREQUENCY\t(\d+)").unwrap();
 }
 
 pub fn extract_no_of_frames(l: &str) -> Option<SensorInt> {
     match RE_FRAMES.captures(l) {
+	Some(caps) => {
+	    let cap = caps.get(1).unwrap().as_str();
+	    let cap_int = cap.parse::<SensorInt>().unwrap();
+	    //println!("cap '{}'", cap_int);
+	    Some(cap_int)
+	}
+	None => {
+	    // The regex did not match.
+	    None
+	}
+    }
+}
+
+pub fn extract_no_of_cameras(l: &str) -> Option<SensorInt> {
+    match RE_CAMERAS.captures(l) {
+	Some(caps) => {
+	    let cap = caps.get(1).unwrap().as_str();
+	    let cap_int = cap.parse::<SensorInt>().unwrap();
+	    //println!("cap '{}'", cap_int);
+	    Some(cap_int)
+	}
+	None => {
+	    // The regex did not match.
+	    None
+	}
+    }
+}
+
+pub fn extract_no_of_markers(l: &str) -> Option<SensorInt> {
+    match RE_MARKERS.captures(l) {
+	Some(caps) => {
+	    let cap = caps.get(1).unwrap().as_str();
+	    let cap_int = cap.parse::<SensorInt>().unwrap();
+	    //println!("cap '{}'", cap_int);
+	    Some(cap_int)
+	}
+	None => {
+	    // The regex did not match.
+	    None
+	}
+    }
+}
+
+pub fn extract_frequency(l: &str) -> Option<SensorInt> {
+    match RE_FREQUENCY.captures(l) {
 	Some(caps) => {
 	    let cap = caps.get(1).unwrap().as_str();
 	    let cap_int = cap.parse::<SensorInt>().unwrap();

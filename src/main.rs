@@ -151,38 +151,14 @@ fn main() -> Result<()> {
 		if let Some(x) = mocap::extract_no_of_frames(&l) {
 		    myfile.no_of_frames = x;
 		}
-		match re_frames.captures(&l) {
-		    Some(caps) => {
-			let cap = caps.get(1).unwrap().as_str();
-			let cap_int = cap.parse::<u32>().unwrap(); 
-			//println!("cap '{}'", cap_int);
-			myfile.no_of_frames = cap_int;
-		    }
-		    None => {
-			// The regex did not match.
-		    }
-		}		
-		match re_cameras.captures(&l) {
-		    Some(caps) => {
-			let cap = caps.get(1).unwrap().as_str();
-			let cap_int = cap.parse::<SensorInt>().unwrap(); 
-			//println!("cap '{}'", cap_int);
-			myfile.no_of_cameras = cap_int;
-		    }
-		    None => {
-			// The regex did not match.
-		    }
+		if let Some(x) = mocap::extract_no_of_cameras(&l) {
+		    myfile.no_of_cameras = x;
 		}
-		match re_markers.captures(&l) {
-		    Some(caps) => {
-			let cap = caps.get(1).unwrap().as_str();
-			let cap_int = cap.parse::<SensorInt>().unwrap(); 
-			//println!("cap '{}'", cap_int);
-			myfile.no_of_markers = cap_int;
-		    }
-		    None => {
-			// The regex did not match.
-		    }
+		if let Some(x) = mocap::extract_no_of_markers(&l) {
+		    myfile.no_of_markers = x;
+		}		
+		if let Some(x) = mocap::extract_frequency(&l) {
+		    myfile.frequency = x;
 		}
 		// These are to be used again if we request the header in the output.
 		match re_marker_names.captures(&l) {
@@ -217,17 +193,6 @@ fn main() -> Result<()> {
 		    }
 		    None => {
 			// No match.
-		    }
-		}
-		match re_frequency.captures(&l) {
-		    Some(caps) => {
-			let cap = caps.get(1).unwrap().as_str();
-			let cap_int = cap.parse::<SensorInt>().unwrap(); 
-			//println!("cap '{}'", cap_int);
-			myfile.frequency = cap_int;
-		    }
-		    None => {
-			// The regex did not match.
 		    }
 		}
 
