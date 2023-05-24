@@ -125,6 +125,14 @@ fn main() -> Result<()> {
     info!("Ready, frames: {} (in {} ms)", mocap_file.num_frames, time_duration);
     info!("{} -> {}, {} l/s", mocap_file.filename, mocap_file.out_filename, lps);
 
+    let time_start = Instant::now();
+    read_data(&mut mocap_file, &args);
+    let time_duration = time_start.elapsed().as_millis() + 1; // Add one to avoid division by zero.
+    let lps = mocap_file.num_frames as u128 * 1000 / time_duration;
+
+    info!("Ready, frames: {} (in {} ms)", mocap_file.num_frames, time_duration);
+    info!("{} -> {}, {} l/s", mocap_file.filename, mocap_file.out_filename, lps);
+
     if args.verbose {
 	println!("{}", mocap_file);
     }
@@ -317,6 +325,69 @@ fn parse_data(mocap_file: &mut MoCapFile, args: &Args) -> Result<()> {
         }
     }
     mocap_file.num_frames = frame_no;
+    Ok(())
+}
+
+fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> Result<()> {
+    let filename = mocap_file.filename.clone();
+    let file = File::open(&filename).expect("could not open file");
+    let mut fileiter = std::io::BufReader::new(file).lines();
+
+    // Skip the header.
+    info!("Skipping {} header lines.", mocap_file.num_header_lines);
+    for _ in fileiter.by_ref().take(mocap_file.num_header_lines) {
+	// print, save, show?
+    }
+    
+    info!("Reading file {}", filename);
+
+    let mut line_no: usize = 0; // Counts line in the file.
+    let mut frame_no: usize = 0; // Counts the lines with sensor data.
+    let mut frames = Vec::<Vec<SensorFloat>>::new(); // or ::with_capacity(1000); 
+    
+    let time_start = Instant::now();
+    
+    for line in fileiter {
+        if let Ok(l) = line {
+	    if l.len() < 1 {
+		continue;
+	    }
+	    let ch = &l.chars().take(1).last().unwrap(); // Surely, this could be simplified?!
+	    if ch.is_ascii_uppercase() {
+		// this shouldn't happen
+	    } 
+	    else { // Assume we are in the data part.
+		//let bits: Vec<&str> = l.split("\t").collect();
+		let mut bits = l.split("\t").
+		    filter_map(
+			|s| s.parse::<SensorFloat>().ok() // We assume all SensorFloat values for now.
+		    ).collect::<Vec<SensorFloat>>();
+		// We we requested to skip, we remove the first args.skip.
+		if args.skip > 0 {
+		    //let u: Vec<_> = bits.drain(0..args.skip).collect(); // Keep them, output them?
+		    bits.drain(0..args.skip);
+		}
+		let num_bits = bits.len(); // Should be 3 * marker_names.len()
+		let expected_num_bits = (mocap_file.no_of_markers * 3) as usize;
+		if num_bits > expected_num_bits {
+		    // Two extra fields could mean a frame number and frame time!
+		    let num_extra = num_bits - expected_num_bits;
+		    info!("Got {} extra fields in line {}, skipping (or use -s{})!",
+			  num_extra, line_no, num_extra);
+		} else if num_bits < expected_num_bits {
+		    info!("Got {} ({}) missing fields in line {}, skip!",
+			  expected_num_bits - num_bits, expected_num_bits, line_no);
+		} else {
+		    frames.push(bits);
+		    frame_no += 1;
+		}
+	    } // If sensor data.
+	    line_no += 1;
+        }
+    }
+    mocap_file.num_frames = frame_no;
+    println!("{:?}/{:?}", frames.len(), frames.capacity());
+    
     Ok(())
 }
 
