@@ -6,6 +6,7 @@ use lazy_static::lazy_static;
 /// # (Maybe use usize for all the integers?)
 pub type SensorFloat = f32;
 pub type SensorInt = u32;
+pub type Triplet = Vec<SensorFloat>;
 
 /// Calculate the distance in 3D.
 ///
@@ -18,6 +19,14 @@ pub fn dist_3d(coords0: &[SensorFloat], coords1: &[SensorFloat]) -> SensorFloat 
     assert!(coords0.len() == 3);
     assert!(coords1.len() == 3);
 
+    let squared_sum = coords0.iter()
+        .zip(coords1.iter())
+        .map(|(&a, &b)| (a - b) * (a - b))
+        .fold(0.0, |acc, x| acc + x);
+    squared_sum.sqrt()
+}
+
+pub fn dist_3d_t(coords0: &Triplet, coords1: &Triplet) -> SensorFloat {
     let squared_sum = coords0.iter()
         .zip(coords1.iter())
         .map(|(&a, &b)| (a - b) * (a - b))

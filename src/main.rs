@@ -11,7 +11,7 @@ use std::path::Path;
 use std::time::{Duration, Instant};
 
 use mocap::{dist_3d, MoCapFile};
-use mocap::{SensorFloat, SensorInt};
+use mocap::{SensorFloat, SensorInt, Triplet};
 
 #[macro_use] extern crate log;
 extern crate simplelog;
@@ -126,7 +126,7 @@ fn main() -> Result<()> {
     info!("{} -> {}, {} l/s", mocap_file.filename, mocap_file.out_filename, lps);
 
     let time_start = Instant::now();
-    read_frames(&mut mocap_file, &args);
+    let foo:Vec<Vec<Triplet>> = read_frames(&mut mocap_file, &args);
     let time_duration = time_start.elapsed().as_millis() + 1; // Add one to avoid division by zero.
     let lps = mocap_file.num_frames as u128 * 1000 / time_duration;
 
@@ -328,7 +328,7 @@ fn parse_data(mocap_file: &mut MoCapFile, args: &Args) -> Result<()> {
     Ok(())
 }
 
-fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> Result<()> {
+fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> Vec<Vec<Triplet>> {
     let filename = mocap_file.filename.clone();
     let file = File::open(&filename).expect("could not open file");
     let mut fileiter = std::io::BufReader::new(file).lines();
@@ -343,7 +343,7 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> Result<()> {
 
     let mut line_no: usize = 0; // Counts line in the file.
     let mut frame_no: usize = 0; // Counts the lines with sensor data.
-    let mut frames = Vec::<Vec<SensorFloat>>::new(); // or ::with_capacity(1000); 
+    let mut frames = Vec::<Vec<Triplet>>::new(); // or ::with_capacity(1000); 
     
     let time_start = Instant::now();
     
@@ -378,7 +378,13 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> Result<()> {
 		    info!("Got {} ({}) missing fields in line {}, skip!",
 			  expected_num_bits - num_bits, expected_num_bits, line_no);
 		} else {
-		    frames.push(bits);
+		    let mut triplets = Vec::<Triplet>::new(); 
+		    for triplet in (0..num_bits).step_by(3) { // Process per triple.
+			let slice = &bits[triplet..triplet+3];
+			let triplet: Triplet = bits[triplet..triplet+3].to_vec(); //vec![1.0, 2.0, 3.0];
+			triplets.push(triplet);
+		    }
+		    frames.push(triplets);
 		    frame_no += 1;
 		}
 	    } // If sensor data.
@@ -386,9 +392,9 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> Result<()> {
         }
     }
     mocap_file.num_frames = frame_no;
-    println!("{:?}/{:?}", frames.len(), frames.capacity());
+    println!("Frames {:?}, capacity {:?}", frames.len(), frames.capacity());
     
-    Ok(())
+    frames
 }
 
 /// Create a new output filename, tries to append "_d3D" to
