@@ -31,7 +31,11 @@ mod tests {
     #[test]
     fn struct_is_valid() {
 	let mut myfile = MoCapFile {
-	    name: String::new(),
+	    filename: String::new(),
+	    out_filename: String::new(),
+	    num_header_lines: 0,
+	    num_matches: 0,
+	    checked_header: false,
 	    no_of_frames: 0,
 	    no_of_cameras: 0,
 	    no_of_markers: 0,
@@ -48,7 +52,11 @@ mod tests {
     #[test]
     fn struct_is_invalid() {
 	let mut myfile = MoCapFile {
-	    name: String::new(),
+	    filename: String::new(),
+	    out_filename: String::new(),
+	    num_header_lines: 0,
+	    num_matches: 0,
+	    checked_header: false,
 	    no_of_frames: 0,
 	    no_of_cameras: 0,
 	    no_of_markers: 0,
