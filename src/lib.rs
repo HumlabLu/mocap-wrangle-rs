@@ -44,7 +44,8 @@ pub fn dist_3d(coords0: &[SensorFloat], coords1: &[SensorFloat]) -> SensorFloat 
 /// ```
 #[derive(Debug, Clone)]
 pub struct MoCapFile {
-    pub name: String,
+    pub filename: String,
+    pub out_filename: String,
     pub num_header_lines: usize,
     pub num_matches: usize,
     pub checked_header: bool,
@@ -62,7 +63,8 @@ pub struct MoCapFile {
 impl Default for MoCapFile {
     fn default() -> MoCapFile {
         MoCapFile {
-	    name: String::new(),
+	    filename: String::new(),
+	    out_filename: String::new(),
 	    num_header_lines: 0,
 	    num_matches: 0,
 	    checked_header: false,

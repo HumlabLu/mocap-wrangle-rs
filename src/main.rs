@@ -97,32 +97,49 @@ fn main() -> Result<()> {
 	error!("Error: Inputfile is too small!");
 	std::process::exit(2);
     }
-    
-    info!("Reading header file {}", filename);
-    let mocap_file = parse_header(&filename).unwrap();
-    info!("Header contains {} lines, {} matched.", mocap_file.num_header_lines, mocap_file.num_matches);
-    
-    let file = File::open(&filename).expect("could not open file");
-    let fileiter = std::io::BufReader::new(file).lines();
 
-    let outfilename = if args.fileout.is_some() {
+    let out_filename = if args.fileout.is_some() {
 	args.fileout.unwrap() // unwrap() to get the value, which we know exists.
     } else {
 	create_outputfilename(&filename)
     };
-    if !args.force && Path::new(&outfilename).exists() == true {
-	error!("Error: {} exists! Use --force to overwrite.", outfilename);
+    if !args.force && Path::new(&out_filename).exists() == true {
+	error!("Error: {} exists! Use --force to overwrite.", out_filename);
+	std::process::exit(1); // Or use Ulid to generate a filename? (https://github.com/huxi/rusty_ulid)
+    }
+
+    let mut mocap_file = MoCapFile { filename: filename.clone(), ..Default::default() };
+    mocap_file.out_filename = out_filename;
+    
+    info!("Reading header file {}", filename);
+    parse_header(&mut mocap_file);
+    info!("Header contains {} lines, {} matched.", mocap_file.num_header_lines, mocap_file.num_matches);
+
+    parse_data(&mut mocap_file);
+
+    /*
+    let file = File::open(&filename).expect("could not open file");
+    let fileiter = std::io::BufReader::new(file).lines();
+
+    let out_filename = if args.fileout.is_some() {
+	args.fileout.unwrap() // unwrap() to get the value, which we know exists.
+    } else {
+	create_outputfilename(&filename)
+    };
+    if !args.force && Path::new(&out_filename).exists() == true {
+	error!("Error: {} exists! Use --force to overwrite.", out_filename);
 	std::process::exit(1);
 	// Or use Ulid to generate a filename? (https://github.com/huxi/rusty_ulid)
     }
-    let mut file_out = File::create(&outfilename)?;
+    let mut file_out = File::create(&out_filename)?;
     let mut buffer_out = BufWriter::new(file_out);
     
     info!("Reading file {}", filename);
-    info!("Writing file {}", outfilename);
+    info!("Writing file {}", out_filename);
 
     // Metadata structure.
-    let mut myfile = MoCapFile { name: filename, ..Default::default() };
+    let mut myfile = MoCapFile { filename: filename, ..Default::default() };
+     */
     
     let mut line_no: usize = 0; // Counts line in the file.
     let mut num_matches:usize = 0; // Counts the number of matches regexs.
@@ -133,7 +150,7 @@ fn main() -> Result<()> {
     let mut output_bits = Vec::<SensorFloat>::new(); // Sensor values as SensorFloat.
     
     let time_start = Instant::now();
-    
+    /*
     for line in fileiter {
         if let Ok(l) = line {
             //Println!("{}", l);
@@ -256,7 +273,8 @@ fn main() -> Result<()> {
 	    } // If sensor data.
 	    line_no += 1;
         }
-    }
+}
+    
     let time_duration = time_start.elapsed().as_millis() + 1; // Add one to avoid division by zero.
     let lps = frames_no as u128 * 1000 / time_duration; 
     info!("Ready, lines:{} data:{} (in {} ms)", line_no, frames_no, time_duration);
@@ -264,18 +282,19 @@ fn main() -> Result<()> {
     let bytes_written = buffer_out.into_inner()?.seek(SeekFrom::Current(0))?;
     if bytes_written == 0 {
 	error!("Created file is 0 bytes, removing it!");
-	remove_file(&outfilename)?;
+	remove_file(&out_filename)?;
     } else {
-	info!("{} -> {}, {} l/s", myfile.name, outfilename, lps);
+	info!("{} -> {}, {} l/s", myfile.filename, out_filename, lps);
     }
     
     if myfile.no_of_frames as usize != frames_no {
 	error!("Error, did not read the specified number ({}) of frames.", myfile.no_of_frames);
-    }
+}
+    */
 
     // The metadata.
     //myfile.no_of_frames = frames_no as u32; // Maybe not.
-    println!("{}", myfile);
+    println!("{}", mocap_file);
     
     Ok(())
 }
@@ -283,10 +302,10 @@ fn main() -> Result<()> {
 // What we want is a parse_header() function returning a MoCap structure, and then a
 // separate read_data function.
 
-fn parse_header(filename: &String) -> Option<MoCapFile> {
+fn parse_header(mocap_file: &mut MoCapFile) {
+    let filename = mocap_file.filename.clone();
     let file = File::open(&filename).expect("could not open file");
     let fileiter = std::io::BufReader::new(&file).lines();
-    let mut mocap_file = MoCapFile { name: filename.clone(), ..Default::default() };
     let mut line_no: usize = 0; // Counts lines in the file.
     let mut num_matches: usize = 0; // Counts regex matches.
     let mut bytes_read: u64 = 0;
@@ -318,15 +337,15 @@ fn parse_header(filename: &String) -> Option<MoCapFile> {
 		    num_matches += 1;
 		}
 		if let Some(x) = mocap::extract_marker_names(&l) {
-		    mocap_file.marker_names = x;
+		    mocap_file.marker_names = x.to_vec();
 		    num_matches += 1;
 		}		
 		if let Some(x) = mocap::extract_time_stamp(&l) {
-		    mocap_file.time_stamp = x;
+		    mocap_file.time_stamp = x.to_string();
 		    num_matches += 1;
 		}		
 		if let Some(x) = mocap::extract_description(&l) {
-		    mocap_file.description = x;
+		    mocap_file.description = x.to_string();
 		    num_matches += 1;
 		}
 		line_no += 1;
@@ -337,84 +356,53 @@ fn parse_header(filename: &String) -> Option<MoCapFile> {
     }
     mocap_file.num_header_lines = line_no;
     mocap_file.num_matches = num_matches;
-    
-    Some(mocap_file)
 }
 
-fn read_and_write(args: Args) {
-    let filename = args.file;
-    let file_size = std::fs::metadata(&filename).unwrap().len();
-    if file_size < 28 { // Arbitrary size... but to prevent creation of 0-byte files.
-	error!("Error: Inputfile is too small!");
-	std::process::exit(2);
+/*
+if let Some(first_row) = lines_iter.skip(1).next() {
+        println!("first_row: {:#?}", first_row?);
     }
-    let file = File::open(filename.clone()).expect("could not open file");
-    let fileiter = std::io::BufReader::new(file).lines();
+ */
 
-    let outfilename = if args.fileout.is_some() {
-	args.fileout.unwrap() // unwrap() to get the value, which we know exists.
-    } else {
-	create_outputfilename(&filename)
-    };
-    if !args.force && Path::new(&outfilename).exists() == true {
-	error!("Error: {} exists! Use --force to overwrite.", outfilename);
-	std::process::exit(1);
-	// Or use Ulid to generate a filename? (https://github.com/huxi/rusty_ulid)
+/// Parse the data (must be run after having parsed the header).
+fn parse_data(mut mocap_file: &MoCapFile) {
+    let filename = mocap_file.filename.clone();
+    let file = File::open(&filename).expect("could not open file");
+    let mut fileiter = std::io::BufReader::new(file).lines();
+
+    // Skip the header.
+    for _ in fileiter.by_ref().take(mocap_file.num_header_lines) {
+	// print, save, shopw?
     }
-    let mut file_out = File::create(&outfilename).unwrap();
+    
+    let out_filename = &mocap_file.out_filename;
+    let mut file_out = File::create(out_filename).unwrap();
     let mut buffer_out = BufWriter::new(file_out);
     
     info!("Reading file {}", filename);
-    info!("Writing file {}", outfilename);
+    info!("Writing file {}", out_filename);
 
-    // Metadata structure.
-    let mut myfile = MoCapFile { name: filename, ..Default::default() };
-    
     let mut line_no: usize = 0; // Counts line in the file.
     let mut frames_no: usize = 0; // Counts the lines with sensor data.
     let mut prev_bits: Option<Vec<SensorFloat>> = None; // Previous line used in calculations.
     let mut prev_slice: &[SensorFloat] = &[0.0, 0.0, 0.0]; // Previous X, Y and Z coordinates.
-    let mut wrote_header = !args.header; // If we specify --header, wrote_header becomes false.
+    let mut wrote_header = true; // !args.header; // If we specify --header, wrote_header becomes false.
     let mut output_bits = Vec::<SensorFloat>::new(); // Sensor values as SensorFloat.
     
     let time_start = Instant::now();
     
     for line in fileiter {
         if let Ok(l) = line {
-            //println!("{}", l);
+            println!("{}", l);
 	    if l.len() < 1 {
 		continue;
 	    }
 	    let ch = &l.chars().take(1).last().unwrap(); // Surely, this could be simplified?!
-	    if ch.is_ascii_uppercase() { // Assume we are still parsing the header.
-		if args.verbose {
-		    info!("{}", l);
-		}
-		// Some matching for testing.
-		if let Some(x) = mocap::extract_no_of_frames(&l) {
-		    myfile.no_of_frames = x;
-		}
-		if let Some(x) = mocap::extract_no_of_cameras(&l) {
-		    myfile.no_of_cameras = x;
-		}
-		if let Some(x) = mocap::extract_no_of_markers(&l) {
-		    myfile.no_of_markers = x;
-		}		
-		if let Some(x) = mocap::extract_frequency(&l) {
-		    myfile.frequency = x;
-		}
-		if let Some(x) = mocap::extract_marker_names(&l) {
-		    myfile.marker_names = x;
-		}		
-		if let Some(x) = mocap::extract_time_stamp(&l) {
-		    myfile.time_stamp = x;
-		}		
-		if let Some(x) = mocap::extract_description(&l) {
-		    myfile.description = x;
-		}		
+	    if ch.is_ascii_uppercase() {
+		// this shouldn't happen
 	    } 
 	    else { // Assume we are in the data part.
-		if !myfile.is_valid() {
+		if !mocap_file.is_valid() {
 		    error!("The file does not seem to contain a header!");
 		    break; // This creates a zero byte file.
 		}
@@ -423,7 +411,7 @@ fn read_and_write(args: Args) {
 		//
 		if !wrote_header {
 		    let mut output_strs = Vec::new();
-		    for marker_name in &myfile.marker_names {
+		    for marker_name in &mocap_file.marker_names {
 			for marker_type in vec!["_X", "_Y", "_X", "_d3D"] {
 			    //print!("{}{}", marker_name, marker_type );
 			    output_strs.push(format!("{}{}", marker_name, marker_type));
@@ -444,12 +432,12 @@ fn read_and_write(args: Args) {
 		    filter_map(
 			|s| s.parse::<SensorFloat>().ok() // We assume all SensorFloat values for now.
 		    ).collect::<Vec<_>>();
-		if args.skip > 0 {
+		/*if args.skip > 0 {
 		    //let u: Vec<_> = bits.drain(0..args.skip).collect(); // Keep them, output them?
 		    bits.drain(0..args.skip);
-		}
+		}*/
 		let num_bits = bits.len(); // Should be 3 * marker_names.len()
-		let expected_num_bits = (myfile.no_of_markers * 3) as usize;
+		let expected_num_bits = (mocap_file.no_of_markers * 3) as usize;
 		if num_bits > expected_num_bits {
 		    // Two extra fields could mean a frame number and frame time!
 		    let num_extra = num_bits - expected_num_bits;
