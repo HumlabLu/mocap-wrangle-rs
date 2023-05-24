@@ -45,7 +45,9 @@ pub fn dist_3d(coords0: &[SensorFloat], coords1: &[SensorFloat]) -> SensorFloat 
 #[derive(Debug, Clone)]
 pub struct MoCapFile {
     pub name: String,
-    pub no_of_frames: SensorInt,
+    pub num_header_lines: usize,
+    pub checked_header: bool,
+    pub no_of_frames: SensorInt, // These should be Option<>s.
     pub no_of_cameras: SensorInt,
     pub no_of_markers: SensorInt,
     pub frequency: SensorInt,
@@ -60,6 +62,8 @@ impl Default for MoCapFile {
     fn default() -> MoCapFile {
         MoCapFile {
 	    name: String::new(),
+	    num_header_lines: 0,
+	    checked_header: false,
 	    no_of_frames: 0,
 	    no_of_cameras: 0,
 	    no_of_markers: 0,
@@ -91,6 +95,7 @@ impl MoCapFile {
     }
 }
 
+/// Outputs the header info in "mocap" style.
 impl std::fmt::Display for MoCapFile {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         // write!(f, "NAME {}\n", self.name); // Not part of original meta data.
@@ -126,6 +131,12 @@ lazy_static! {
     static ref RE_DESCRIPTION: Regex = Regex::new(r"DESCRIPTION\t(.+)").unwrap();
 }
 
+// If we add the MoCapFile struct as parameter, we can
+// store the matches directly in the function, meaning we can
+// save all the extract_X functins in a vector and loop
+// over it.
+// (or even give a regexp and the mocap field/type, so we only
+// need one generic match function).
 pub fn extract_no_of_frames(l: &str) -> Option<SensorInt> {
     match RE_FRAMES.captures(l) {
 	Some(caps) => {

@@ -97,8 +97,11 @@ fn main() -> Result<()> {
 	error!("Error: Inputfile is too small!");
 	std::process::exit(2);
     }
-    parse_header(&filename);
-
+    
+    info!("Reading header file {}", filename);
+    let mocap_file = parse_header(&filename).unwrap();
+    info!("Header contains {} lines.", mocap_file.num_header_lines);
+    
     let file = File::open(&filename).expect("could not open file");
     let fileiter = std::io::BufReader::new(file).lines();
 
@@ -122,6 +125,7 @@ fn main() -> Result<()> {
     let mut myfile = MoCapFile { name: filename, ..Default::default() };
     
     let mut line_no: usize = 0; // Counts line in the file.
+    let mut num_matches:usize = 0; // Counts the number of matches regexs.
     let mut frames_no: usize = 0; // Counts the lines with sensor data.
     let mut prev_bits: Option<Vec<SensorFloat>> = None; // Previous line used in calculations.
     let mut prev_slice: &[SensorFloat] = &[0.0, 0.0, 0.0]; // Previous X, Y and Z coordinates.
@@ -132,7 +136,7 @@ fn main() -> Result<()> {
     
     for line in fileiter {
         if let Ok(l) = line {
-            //println!("{}", l);
+            //Println!("{}", l);
 	    if l.len() < 1 {
 		continue;
 	    }
@@ -144,24 +148,31 @@ fn main() -> Result<()> {
 		// Some matching for testing.
 		if let Some(x) = mocap::extract_no_of_frames(&l) {
 		    myfile.no_of_frames = x;
+		    num_matches += 1;
 		}
 		if let Some(x) = mocap::extract_no_of_cameras(&l) {
 		    myfile.no_of_cameras = x;
+		    num_matches += 1;
 		}
 		if let Some(x) = mocap::extract_no_of_markers(&l) {
 		    myfile.no_of_markers = x;
+		    num_matches += 1;
 		}		
 		if let Some(x) = mocap::extract_frequency(&l) {
 		    myfile.frequency = x;
+		    num_matches += 1;
 		}
 		if let Some(x) = mocap::extract_marker_names(&l) {
 		    myfile.marker_names = x;
+		    num_matches += 1;
 		}		
 		if let Some(x) = mocap::extract_time_stamp(&l) {
 		    myfile.time_stamp = x;
+		    num_matches += 1;
 		}		
 		if let Some(x) = mocap::extract_description(&l) {
 		    myfile.description = x;
+		    num_matches += 1;
 		}		
 	    } 
 	    else { // Assume we are in the data part.
@@ -275,8 +286,9 @@ fn main() -> Result<()> {
 fn parse_header(filename: &String) -> Option<MoCapFile> {
     let file = File::open(&filename).expect("could not open file");
     let fileiter = std::io::BufReader::new(&file).lines();
-    let mut myfile = MoCapFile { name: filename.clone(), ..Default::default() };
+    let mut mocap_file = MoCapFile { name: filename.clone(), ..Default::default() };
     let mut line_no: usize = 0; // Counts lines in the file.
+    let mut num_matches: usize = 0; // Counts regex matches.
     let mut bytes_read: u64 = 0;
     let time_start = Instant::now();
     
@@ -287,37 +299,45 @@ fn parse_header(filename: &String) -> Option<MoCapFile> {
 		continue;
 	    }
 	    let ch = &l.chars().take(1).last().unwrap(); // Surely, this could be simplified?!
-	    if ch.is_ascii_uppercase() { // Assume we are still parsing the header.
+	    if ch.is_ascii_uppercase() { // Assume we are parsing the header.
 		// Some matching for testing.
 		if let Some(x) = mocap::extract_no_of_frames(&l) {
-		    myfile.no_of_frames = x;
+		    mocap_file.no_of_frames = x;
+		    num_matches += 1;
 		}
 		if let Some(x) = mocap::extract_no_of_cameras(&l) {
-		    myfile.no_of_cameras = x;
+		    mocap_file.no_of_cameras = x;
+		    num_matches += 1;
 		}
 		if let Some(x) = mocap::extract_no_of_markers(&l) {
-		    myfile.no_of_markers = x;
+		    mocap_file.no_of_markers = x;
+		    num_matches += 1;
 		}		
 		if let Some(x) = mocap::extract_frequency(&l) {
-		    myfile.frequency = x;
+		    mocap_file.frequency = x;
+		    num_matches += 1;
 		}
 		if let Some(x) = mocap::extract_marker_names(&l) {
-		    myfile.marker_names = x;
+		    mocap_file.marker_names = x;
+		    num_matches += 1;
 		}		
 		if let Some(x) = mocap::extract_time_stamp(&l) {
-		    myfile.time_stamp = x;
+		    mocap_file.time_stamp = x;
+		    num_matches += 1;
 		}		
 		if let Some(x) = mocap::extract_description(&l) {
-		    myfile.description = x;
+		    mocap_file.description = x;
+		    num_matches += 1;
 		}
 		line_no += 1;
-		bytes_read = (&file).stream_position().unwrap();
-	    } 
+	    } else {
+		break;
+	    }
 	}
-    }	
-    println!("{}", bytes_read);
+    }
+    mocap_file.num_header_lines = line_no;
     
-    Some(myfile)
+    Some(mocap_file)
 }
 
 fn read_and_write(args: Args) {
