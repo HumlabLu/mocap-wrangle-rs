@@ -119,7 +119,7 @@ fn main() -> Result<()> {
     parse_data(&mut mocap_file);
     let time_duration = time_start.elapsed().as_millis() + 1; // Add one to avoid division by zero.
     let lps = mocap_file.num_frames as u128 * 1000 / time_duration; 
-    info!("Ready, lines:{} (in {} ms)", mocap_file.num_frames, time_duration);
+    info!("Ready, frames: {} (in {} ms)", mocap_file.num_frames, time_duration);
     info!("{} -> {}, {} l/s", mocap_file.filename, mocap_file.out_filename, lps);
     
     //println!("{}", mocap_file);
@@ -184,12 +184,6 @@ fn parse_header(mocap_file: &mut MoCapFile) {
     mocap_file.num_matches = num_matches;
 }
 
-/*
-if let Some(first_row) = lines_iter.skip(1).next() {
-        println!("first_row: {:#?}", first_row?);
-    }
- */
-
 /// Parse the data (must be run after having parsed the header).
 fn parse_data(mocap_file: &mut MoCapFile) {
     let filename = mocap_file.filename.clone();
@@ -210,7 +204,7 @@ fn parse_data(mocap_file: &mut MoCapFile) {
     info!("Writing file {}", out_filename);
 
     let mut line_no: usize = 0; // Counts line in the file.
-    let mut frames_no: usize = 0; // Counts the lines with sensor data.
+    let mut frame_no: usize = 0; // Counts the lines with sensor data.
     let mut prev_bits: Option<Vec<SensorFloat>> = None; // Previous line used in calculations.
     let mut prev_slice: &[SensorFloat] = &[0.0, 0.0, 0.0]; // Previous X, Y and Z coordinates.
     let mut wrote_header = true; // !args.header; // If we specify --header, wrote_header becomes false.
@@ -281,7 +275,7 @@ fn parse_data(mocap_file: &mut MoCapFile) {
 			    let x = prev_bits.clone().unwrap();
 			    prev_slice = &x[triplet..triplet+3];
 			    let dist = dist_3d(slice, prev_slice);
-			    //println!("{} {:?} {:?} {}", frames_no, slice, prev_slice, dist);
+			    //println!("{} {:?} {:?} {}", frame_no, slice, prev_slice, dist);
 			    //write!(file_out, "{}\t{}\t{}\t{}", slice[0], slice[1], slice[2], dist);
 			    output_bits.extend_from_slice(&slice);
 			    output_bits.push(dist);
@@ -289,14 +283,14 @@ fn parse_data(mocap_file: &mut MoCapFile) {
 			    // No previous bits, the dist is 0 (our starting value).
 			    prev_slice = &slice;
 			    let dist = 0.0;
-			    //println!("{} {:?} {:?} {}", frames_no, slice, prev_slice, dist);
+			    //println!("{} {:?} {:?} {}", frame_no, slice, prev_slice, dist);
 			    //write!(file_out, "{}\t{}\t{}\t{}", slice[0], slice[1], slice[2], dist);
 			    output_bits.extend_from_slice(&slice);
 			    output_bits.push(dist);
 			}
 		    }
 		    prev_bits = Some(bits);
-		    frames_no += 1;
+		    frame_no += 1;
 		    for (i, value) in output_bits.iter().enumerate() {
 			if i > 0 {
 			    buffer_out.write(b"\t").unwrap();
@@ -310,7 +304,7 @@ fn parse_data(mocap_file: &mut MoCapFile) {
 	    line_no += 1;
         }
     }
-    mocap_file.num_frames = frames_no;
+    mocap_file.num_frames = frame_no;
 }
 
 /// Create a new output filename, tries to append "_d3D" to
