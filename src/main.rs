@@ -132,7 +132,7 @@ fn main() -> Result<()> {
 }
 
 /// Parse the header, fill in the fields in the struct.
-fn parse_header(mocap_file: &mut MoCapFile) {
+fn parse_header(mocap_file: &mut MoCapFile) -> Result<()> {
     let filename = mocap_file.filename.clone();
     let file = File::open(&filename).expect("could not open file");
     let fileiter = std::io::BufReader::new(&file).lines();
@@ -186,10 +186,12 @@ fn parse_header(mocap_file: &mut MoCapFile) {
     }
     mocap_file.num_header_lines = line_no;
     mocap_file.num_matches = num_matches;
+    
+    Ok(())
 }
 
 /// Parse the data (must be run after having parsed the header).
-fn parse_data(mocap_file: &mut MoCapFile, args: &Args) {
+fn parse_data(mocap_file: &mut MoCapFile, args: &Args) -> Result<()> {
     let filename = mocap_file.filename.clone();
     let file = File::open(&filename).expect("could not open file");
     let mut fileiter = std::io::BufReader::new(file).lines();
@@ -211,7 +213,7 @@ fn parse_data(mocap_file: &mut MoCapFile, args: &Args) {
     let mut frame_no: usize = 0; // Counts the lines with sensor data.
     let mut prev_bits: Option<Vec<SensorFloat>> = None; // Previous line used in calculations.
     let mut prev_slice: &[SensorFloat] = &[0.0, 0.0, 0.0]; // Previous X, Y and Z coordinates.
-    let mut wrote_header = true; // !args.header; // If we specify --header, wrote_header becomes false.
+    let mut wrote_header = !args.header; // If we specify --header, wrote_header becomes false.
     let mut output_bits = Vec::<SensorFloat>::new(); // Sensor values as SensorFloat.
     
     let time_start = Instant::now();
@@ -309,6 +311,7 @@ fn parse_data(mocap_file: &mut MoCapFile, args: &Args) {
         }
     }
     mocap_file.num_frames = frame_no;
+    Ok(())
 }
 
 /// Create a new output filename, tries to append "_d3D" to
