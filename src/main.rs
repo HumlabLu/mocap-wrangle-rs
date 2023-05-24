@@ -21,7 +21,7 @@ use simplelog::*;
 // Command line arguments.
 // =====================================================================
 
-#[derive(Parser, Debug)]
+#[derive(Parser, Debug, Clone)]
 struct Args {
     // Filename
     #[arg(short, long, default_value_t = String::from("street_adapt_1.tsv"))]
@@ -91,7 +91,7 @@ fn main() -> Result<()> {
     // About 1 GB per hour of video.
     // =====================================================================
     
-    let filename = args.file;
+    let filename = &args.file;
     let file_size = std::fs::metadata(&filename)?.len();
     if file_size < 28 { // Arbitrary size... but to prevent creation of 0-byte files.
 	error!("Error: Inputfile is too small!");
@@ -99,30 +99,34 @@ fn main() -> Result<()> {
     }
 
     let out_filename = if args.fileout.is_some() {
-	args.fileout.unwrap() // unwrap() to get the value, which we know exists.
+	args.clone().fileout.unwrap() // unwrap() to get the value, which we know exists.
     } else {
 	create_outputfilename(&filename)
     };
-    if !args.force && Path::new(&out_filename).exists() == true {
+    if !&args.force && Path::new(&out_filename).exists() == true {
 	error!("Error: {} exists! Use --force to overwrite.", out_filename);
 	std::process::exit(1); // Or use Ulid to generate a filename? (https://github.com/huxi/rusty_ulid)
     }
 
-    let mut mocap_file = MoCapFile { filename: filename.clone(), ..Default::default() };
-    mocap_file.out_filename = out_filename;
+    // We have the filenames, create the structure.
+    let mut mocap_file = MoCapFile{ filename: filename.clone(), out_filename: out_filename, ..Default::default() };
     
     info!("Reading header file {}", filename);
     parse_header(&mut mocap_file);
     info!("Header contains {} lines, {} matched.", mocap_file.num_header_lines, mocap_file.num_matches);
 
+    info!("Expecting {} frames.", mocap_file.no_of_frames );
+    
     let time_start = Instant::now();
-    parse_data(&mut mocap_file);
+    parse_data(&mut mocap_file, &args);
     let time_duration = time_start.elapsed().as_millis() + 1; // Add one to avoid division by zero.
     let lps = mocap_file.num_frames as u128 * 1000 / time_duration; 
     info!("Ready, frames: {} (in {} ms)", mocap_file.num_frames, time_duration);
     info!("{} -> {}, {} l/s", mocap_file.filename, mocap_file.out_filename, lps);
-    
-    //println!("{}", mocap_file);
+
+    if args.verbose {
+	println!("{}", mocap_file);
+    }
     
     Ok(())
 }
@@ -185,7 +189,7 @@ fn parse_header(mocap_file: &mut MoCapFile) {
 }
 
 /// Parse the data (must be run after having parsed the header).
-fn parse_data(mocap_file: &mut MoCapFile) {
+fn parse_data(mocap_file: &mut MoCapFile, args: &Args) {
     let filename = mocap_file.filename.clone();
     let file = File::open(&filename).expect("could not open file");
     let mut fileiter = std::io::BufReader::new(file).lines();
