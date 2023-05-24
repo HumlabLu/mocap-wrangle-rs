@@ -115,17 +115,19 @@ fn main() -> Result<()> {
     parse_header(&mut mocap_file);
     info!("Header contains {} lines, {} matched.", mocap_file.num_header_lines, mocap_file.num_matches);
 
+    let time_start = Instant::now();
     parse_data(&mut mocap_file);
-
-    //myfile.no_of_frames = frames_no as u32; // Maybe not.
-    println!("{}", mocap_file);
+    let time_duration = time_start.elapsed().as_millis() + 1; // Add one to avoid division by zero.
+    let lps = mocap_file.num_frames as u128 * 1000 / time_duration; 
+    info!("Ready, lines:{} (in {} ms)", mocap_file.num_frames, time_duration);
+    info!("{} -> {}, {} l/s", mocap_file.filename, mocap_file.out_filename, lps);
+    
+    //println!("{}", mocap_file);
     
     Ok(())
 }
 
-// What we want is a parse_header() function returning a MoCap structure, and then a
-// separate read_data function.
-
+/// Parse the header, fill in the fields in the struct.
 fn parse_header(mocap_file: &mut MoCapFile) {
     let filename = mocap_file.filename.clone();
     let file = File::open(&filename).expect("could not open file");
@@ -189,14 +191,15 @@ if let Some(first_row) = lines_iter.skip(1).next() {
  */
 
 /// Parse the data (must be run after having parsed the header).
-fn parse_data(mut mocap_file: &MoCapFile) {
+fn parse_data(mocap_file: &mut MoCapFile) {
     let filename = mocap_file.filename.clone();
     let file = File::open(&filename).expect("could not open file");
     let mut fileiter = std::io::BufReader::new(file).lines();
 
     // Skip the header.
+    info!("Skipping {} header lines.", mocap_file.num_header_lines);
     for _ in fileiter.by_ref().take(mocap_file.num_header_lines) {
-	// print, save, shopw?
+	// print, save, show?
     }
     
     let out_filename = &mocap_file.out_filename;
@@ -217,7 +220,7 @@ fn parse_data(mut mocap_file: &MoCapFile) {
     
     for line in fileiter {
         if let Ok(l) = line {
-            println!("{}", l);
+            //println!("{}", l);
 	    if l.len() < 1 {
 		continue;
 	    }
@@ -307,6 +310,7 @@ fn parse_data(mut mocap_file: &MoCapFile) {
 	    line_no += 1;
         }
     }
+    mocap_file.num_frames = frames_no;
 }
 
 /// Create a new output filename, tries to append "_d3D" to

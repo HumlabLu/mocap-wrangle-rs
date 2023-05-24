@@ -47,6 +47,7 @@ pub struct MoCapFile {
     pub filename: String,
     pub out_filename: String,
     pub num_header_lines: usize,
+    pub num_frames: usize,
     pub num_matches: usize,
     pub checked_header: bool,
     pub no_of_frames: SensorInt, // These should be Option<>s.
@@ -66,6 +67,7 @@ impl Default for MoCapFile {
 	    filename: String::new(),
 	    out_filename: String::new(),
 	    num_header_lines: 0,
+	    num_frames: 0,
 	    num_matches: 0,
 	    checked_header: false,
 	    no_of_frames: 0,
