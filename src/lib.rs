@@ -135,6 +135,7 @@ lazy_static! {
     static ref RE_MARKER_NAMES: Regex = Regex::new(r"MARKER_NAMES\t(.+)").unwrap();
     static ref RE_TIME_STAMP: Regex = Regex::new(r"TIME_STAMP\t(.+?)(\t(.+)|\z)").unwrap();
     static ref RE_DESCRIPTION: Regex = Regex::new(r"DESCRIPTION\t(.+)").unwrap();
+    static ref RE_DATA_INCLUDED: Regex = Regex::new(r"DATA_INCLUDED\t(.+)").unwrap();
 }
 
 // If we add the MoCapFile struct as parameter, we can
@@ -238,6 +239,20 @@ pub fn extract_time_stamp(l: &str) -> Option<String> {
 
 pub fn extract_description(l: &str) -> Option<String> {
     match RE_DESCRIPTION.captures(&l) {
+	Some(caps) => {
+	    //println!("caps {:?}", caps);
+	    let cap = caps.get(1).unwrap().as_str();
+	    Some(cap.to_string())
+	}
+	None => {
+	    // No match.
+	    None
+	}
+    }
+}
+
+pub fn extract_data_included(l: &str) -> Option<String> {
+    match RE_DATA_INCLUDED.captures(&l) {
 	Some(caps) => {
 	    //println!("caps {:?}", caps);
 	    let cap = caps.get(1).unwrap().as_str();

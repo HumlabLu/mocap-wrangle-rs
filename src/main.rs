@@ -120,7 +120,8 @@ fn main() -> Result<()> {
     let time_start = Instant::now();
     parse_data(&mut mocap_file, &args);
     let time_duration = time_start.elapsed().as_millis() + 1; // Add one to avoid division by zero.
-    let lps = mocap_file.num_frames as u128 * 1000 / time_duration; 
+    let lps = mocap_file.num_frames as u128 * 1000 / time_duration;
+    
     info!("Ready, frames: {} (in {} ms)", mocap_file.num_frames, time_duration);
     info!("{} -> {}, {} l/s", mocap_file.filename, mocap_file.out_filename, lps);
 
@@ -176,6 +177,10 @@ fn parse_header(mocap_file: &mut MoCapFile) -> Result<()> {
 		}		
 		if let Some(x) = mocap::extract_description(&l) {
 		    mocap_file.description = x.to_string();
+		    num_matches += 1;
+		}
+		if let Some(x) = mocap::extract_data_included(&l) {
+		    mocap_file.data_included = x.to_string();
 		    num_matches += 1;
 		}
 		line_no += 1;
@@ -259,10 +264,11 @@ fn parse_data(mocap_file: &mut MoCapFile, args: &Args) -> Result<()> {
 		    filter_map(
 			|s| s.parse::<SensorFloat>().ok() // We assume all SensorFloat values for now.
 		    ).collect::<Vec<_>>();
-		/*if args.skip > 0 {
+		// We we requested to skip, we remove the first args.skip.
+		if args.skip > 0 {
 		    //let u: Vec<_> = bits.drain(0..args.skip).collect(); // Keep them, output them?
 		    bits.drain(0..args.skip);
-		}*/
+		}
 		let num_bits = bits.len(); // Should be 3 * marker_names.len()
 		let expected_num_bits = (mocap_file.no_of_markers * 3) as usize;
 		if num_bits > expected_num_bits {

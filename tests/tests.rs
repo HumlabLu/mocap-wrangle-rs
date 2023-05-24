@@ -112,5 +112,11 @@ mod tests {
 	let result = mocap::extract_description("DESCRIPTION\tThe answer is 42!").unwrap();
 	assert!(result=="The answer is 42!");
     }
-    
+
+    #[test]
+    fn extract_data_included() {
+	let result = mocap::extract_data_included("DATA_INCLUDED\t3D").unwrap();
+	assert!(result=="3D");
+    }
+
 }
