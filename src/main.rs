@@ -100,7 +100,7 @@ fn main() -> Result<()> {
     
     info!("Reading header file {}", filename);
     let mocap_file = parse_header(&filename).unwrap();
-    info!("Header contains {} lines.", mocap_file.num_header_lines);
+    info!("Header contains {} lines, {} matched.", mocap_file.num_header_lines, mocap_file.num_matches);
     
     let file = File::open(&filename).expect("could not open file");
     let fileiter = std::io::BufReader::new(file).lines();
@@ -336,6 +336,7 @@ fn parse_header(filename: &String) -> Option<MoCapFile> {
 	}
     }
     mocap_file.num_header_lines = line_no;
+    mocap_file.num_matches = num_matches;
     
     Some(mocap_file)
 }

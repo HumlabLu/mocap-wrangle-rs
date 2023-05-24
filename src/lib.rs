@@ -46,6 +46,7 @@ pub fn dist_3d(coords0: &[SensorFloat], coords1: &[SensorFloat]) -> SensorFloat 
 pub struct MoCapFile {
     pub name: String,
     pub num_header_lines: usize,
+    pub num_matches: usize,
     pub checked_header: bool,
     pub no_of_frames: SensorInt, // These should be Option<>s.
     pub no_of_cameras: SensorInt,
@@ -63,6 +64,7 @@ impl Default for MoCapFile {
         MoCapFile {
 	    name: String::new(),
 	    num_header_lines: 0,
+	    num_matches: 0,
 	    checked_header: false,
 	    no_of_frames: 0,
 	    no_of_cameras: 0,
