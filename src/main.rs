@@ -11,7 +11,7 @@ use std::path::Path;
 use std::time::{Duration, Instant};
 
 use mocap::{dist_3d, dist_3d_t, MoCapFile};
-use mocap::{SensorFloat, SensorInt, Triplet, Frame, Frames};
+use mocap::{SensorFloat, SensorInt, Triplet, Frame, Frames, Distances};
 
 #[macro_use] extern crate log;
 extern crate simplelog;
@@ -128,7 +128,8 @@ fn main() -> Result<()> {
     let time_start = Instant::now();
     let frames: Frames = read_frames(&mut mocap_file, &args);
 
-    calculate_distances(&mocap_file, &frames);
+    let distances: Distances = calculate_distances(&mocap_file, &frames);
+    println!("{:?}", distances);
     
     let time_duration = time_start.elapsed().as_millis() + 1; // Add one to avoid division by zero.
     let lps = mocap_file.num_frames as u128 * 1000 / time_duration;
@@ -410,15 +411,19 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> Frames {
     frames
 }
 
-fn calculate_distances(mocap_file: &MoCapFile, frames: &Frames) -> Result<()> {
+/// Calculates the distances on the in-memory data frame.
+fn calculate_distances(mocap_file: &MoCapFile, frames: &Frames) -> Distances {
     let mut dist = 0.0;
     let mut prev_triplet: Option<&Triplet> = None;
+    let mut distances: Distances = vec![]; // HashMap?
     
     let it = mocap_file.marker_names.iter();
     for (i, marker_name) in it.enumerate() {
 	println!("{}", marker_name);
 	dist = 0.0;
-	prev_triplet = None; 
+	prev_triplet = None;
+	distances.push(Vec::new());
+	
 	for frame in frames {
 	    let curr_triplet: &Triplet = &frame[i];
 
@@ -426,13 +431,14 @@ fn calculate_distances(mocap_file: &MoCapFile, frames: &Frames) -> Result<()> {
 		let x = prev_triplet.clone().unwrap();
 		dist = dist_3d_t(&curr_triplet, &x);
 	    }
-				    
+	    distances[i].push(dist);
+	    
 	    println!("{:?} {}", curr_triplet, dist); //, dist_3d_t(&curr_triplet, &prev_triplet));
 	    prev_triplet = Some(curr_triplet);
 	}
     }
 
-    Ok(())
+    distances
 }
 
 /// Create a new output filename, tries to append "_d3D" to

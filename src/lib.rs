@@ -9,6 +9,7 @@ pub type SensorInt = u32;
 pub type Triplet = Vec<SensorFloat>;
 pub type Frame = Vec<Triplet>;
 pub type Frames = Vec<Frame>;
+pub type Distances = Vec<Vec<SensorFloat>>;
 
 /// Calculate the distance in 3D.
 ///
