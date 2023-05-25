@@ -137,19 +137,6 @@ fn main() -> Result<()> {
     info!("Ready, frames: {} (in {} ms)", mocap_file.num_frames, time_duration);
     info!("{} -> {}, {} l/s", mocap_file.filename, mocap_file.out_filename, lps);
 
-    /*
-    let it = mocap_file.marker_names.iter();
-    for (i, marker_name) in it.enumerate() {
-	println!("{}", marker_name);
-	let mut it_d = distances[i].iter();
-	for frame in &frames {
-	    let curr_triplet: &Triplet = &frame[i];
-	    let curr_dist = &it_d.next();
-            println!("{:?} -> {:.3}", curr_triplet, curr_dist.unwrap()); //, dist_3d_t(&curr_triplet, &prev_triplet));
-	}
-    }
-    */
-
     for d in &distances {
 	println!("{}", d.iter().fold(f32::INFINITY, |a, &b| a.min(b)));
 	println!("{}", d.iter().fold(-f32::INFINITY, |a, &b| a.max(b)));
@@ -169,6 +156,26 @@ fn main() -> Result<()> {
     for a in &accelerations {
 	println!("{}", a.iter().fold(f32::INFINITY, |a, &b| a.min(b)));
 	println!("{}", a.iter().fold(-f32::INFINITY, |a, &b| a.max(b)));
+    }
+
+    let mut max_lines = 10;
+    let it = mocap_file.marker_names.iter();
+    for (i, marker_name) in it.enumerate() {
+	println!("{}", marker_name);
+	let mut it_d = distances[i].iter();
+	let mut it_v = velocities[i].iter();
+	let mut it_a = accelerations[i].iter();
+	for frame in &frames {
+	    let curr_triplet: &Triplet = &frame[i];
+	    let curr_d = &it_d.next();
+	    let curr_v = &it_v.next();
+	    let curr_a = &it_a.next();
+            println!("{:?} -> {:.3} {:.3} {:.3}", curr_triplet, curr_d.unwrap(), curr_v.unwrap(), curr_a.unwrap());
+	}
+	max_lines -= 1;
+	if max_lines == 0 {
+	    break;
+	}
     }
 
     if args.verbose {
@@ -191,7 +198,7 @@ fn parse_header(mocap_file: &mut MoCapFile) -> Result<()> {
     for line in fileiter {
         if let Ok(l) = line {
             //println!("{}", l);
-	    if l.len() < 1 {
+	    if l.len() < 1 { // In case of empty lines.
 		continue;
 	    }
 	    let ch = &l.chars().take(1).last().unwrap(); // Surely, this could be simplified?!
