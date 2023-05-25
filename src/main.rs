@@ -129,7 +129,7 @@ fn main() -> Result<()> {
     let frames: Frames = read_frames(&mut mocap_file, &args);
 
     let distances: Distances = calculate_distances(&mocap_file, &frames);
-    println!("{:?}", distances);
+    //println!("{:?}", distances);
     
     let time_duration = time_start.elapsed().as_millis() + 1; // Add one to avoid division by zero.
     let lps = mocap_file.num_frames as u128 * 1000 / time_duration;
@@ -137,6 +137,7 @@ fn main() -> Result<()> {
     info!("Ready, frames: {} (in {} ms)", mocap_file.num_frames, time_duration);
     info!("{} -> {}, {} l/s", mocap_file.filename, mocap_file.out_filename, lps);
 
+    /*
     let it = mocap_file.marker_names.iter();
     for (i, marker_name) in it.enumerate() {
 	println!("{}", marker_name);
@@ -145,6 +146,7 @@ fn main() -> Result<()> {
             println!("{:?}", curr_triplet); //, dist_3d_t(&curr_triplet, &prev_triplet));
 	}
     }
+     */
     
     if args.verbose {
 	println!("{}", mocap_file);
@@ -411,18 +413,25 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> Frames {
     frames
 }
 
-/// Calculates the distances on the in-memory data frame.
+/// Calculates the distances on the in-memory data frame. Returns a
+/// vector with a vector containing distances for each sensor. Indexed
+/// by position in the marker_names vector.
 fn calculate_distances(mocap_file: &MoCapFile, frames: &Frames) -> Distances {
     let mut dist = 0.0;
     let mut prev_triplet: Option<&Triplet> = None;
-    let mut distances: Distances = vec![]; // HashMap?
-    
+    let mut distances: Distances = vec![Vec::<SensorFloat>::new(); mocap_file.marker_names.len()]; // HashMap?
+
+    // We can even reserve the size of the distance vectors...
+    for v in &mut distances {
+	v.reserve_exact(mocap_file.num_frames);
+    }
+	
     let it = mocap_file.marker_names.iter();
     for (i, marker_name) in it.enumerate() {
-	println!("{}", marker_name);
+	info!("Calculating distances for {}", marker_name);
+	
 	dist = 0.0;
 	prev_triplet = None;
-	distances.push(Vec::new());
 	
 	for frame in frames {
 	    let curr_triplet: &Triplet = &frame[i];
@@ -433,7 +442,7 @@ fn calculate_distances(mocap_file: &MoCapFile, frames: &Frames) -> Distances {
 	    }
 	    distances[i].push(dist);
 	    
-	    println!("{:?} {}", curr_triplet, dist); //, dist_3d_t(&curr_triplet, &prev_triplet));
+	    //println!("{:?} {}", curr_triplet, dist); //, dist_3d_t(&curr_triplet, &prev_triplet));
 	    prev_triplet = Some(curr_triplet);
 	}
     }
