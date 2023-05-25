@@ -136,7 +136,8 @@ fn main() -> Result<()> {
 
     info!("Ready, frames: {} (in {} ms)", mocap_file.num_frames, time_duration);
     info!("{} -> {}, {} l/s", mocap_file.filename, mocap_file.out_filename, lps);
-    
+
+    /*
     let it = mocap_file.marker_names.iter();
     for (i, marker_name) in it.enumerate() {
 	println!("{}", marker_name);
@@ -146,9 +147,11 @@ fn main() -> Result<()> {
 	    let curr_dist = &it_d.next();
             println!("{:?} -> {:.3}", curr_triplet, curr_dist.unwrap()); //, dist_3d_t(&curr_triplet, &prev_triplet));
 	}
-    }
+}
+    */
 
-    calculate_accelerations(&mocap_file, &distances);
+    let accelerations: Accelerations = calculate_accelerations(&mocap_file, &distances);
+    println!("{:?}", accelerations);
     
     if args.verbose {
 	println!("{}", mocap_file);
@@ -461,10 +464,12 @@ fn calculate_accelerations(mocap_file: &MoCapFile, distances: &Distances) -> Acc
     let it = mocap_file.marker_names.iter();
     for (i, marker_name) in it.enumerate() {
 	info!("Calculating accelerations for {}", marker_name);
-	
-	accelerations[i] = distances[i].windows(2).map(|w| w[1] - w[0]).collect::<Vec<SensorFloat>>();
+
+	accelerations[i].push(0.0); // Need to anchor wity 0.
+	let mut result = distances[i].windows(2).map(|d| d[1] - d[0]).collect::<Vec<SensorFloat>>();
+	accelerations[i].append(&mut result);
     }
-    println!("{:?}", accelerations);
+
     accelerations
 }
 
