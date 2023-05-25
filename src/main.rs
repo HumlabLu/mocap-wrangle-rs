@@ -158,11 +158,19 @@ fn main() -> Result<()> {
     let velocities: Velocities = calculate_velocities(&mocap_file, &distances);
     //println!("{:?}", velocities);
 
-    for a in &velocities {
+    for v in &velocities {
+	println!("{}", v.iter().fold(f32::INFINITY, |a, &b| a.min(b)));
+	println!("{}", v.iter().fold(-f32::INFINITY, |a, &b| a.max(b)));
+    }
+
+    let accelerations: Accelerations = calculate_accelerations(&mocap_file, &velocities);
+    //println!("{:?}", accelerations);
+
+    for a in &accelerations {
 	println!("{}", a.iter().fold(f32::INFINITY, |a, &b| a.min(b)));
 	println!("{}", a.iter().fold(-f32::INFINITY, |a, &b| a.max(b)));
     }
-    
+
     if args.verbose {
 	println!("{:?}", mocap_file);
     }
@@ -481,6 +489,24 @@ fn calculate_velocities(mocap_file: &MoCapFile, distances: &Distances) -> Veloci
     }
 
     velocities
+}
+
+/// Calculates the accelerations on the supplied Acceleration data.
+/// Returns a vector with a vector containing accelerations for each sensor. Indexed
+/// by position in the marker_names vector.
+fn calculate_accelerations(mocap_file: &MoCapFile, velocities: &Velocities) -> Accelerations {
+    let mut accelerations: Accelerations = vec![SensorData::new(); mocap_file.marker_names.len()]; 
+	
+    let it = mocap_file.marker_names.iter();
+    for (i, marker_name) in it.enumerate() {
+	info!("Calculating accelerations for {}", marker_name);
+
+	accelerations[i].push(0.0); // Need to anchor wity 0.
+	let mut result = velocities[i].windows(2).map(|d| d[1] - d[0]).collect::<Vec<SensorFloat>>();
+	accelerations[i].append(&mut result);
+    }
+
+    accelerations
 }
 
 /// Create a new output filename, tries to append "_d3D" to
