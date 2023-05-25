@@ -2,8 +2,7 @@
 mod tests {
     use mocap::{dist_3d, MoCapFile};
     use mocap::SensorFloat;
-    
-    
+        
     #[test]
     fn test_zero_dist() {
 	let dist = dist_3d(&[0.0,0.0,0.0], &[0.0,0.0,0.0]);

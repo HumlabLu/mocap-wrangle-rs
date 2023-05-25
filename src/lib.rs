@@ -6,10 +6,12 @@ use lazy_static::lazy_static;
 /// # (Maybe use usize for all the integers?)
 pub type SensorFloat = f32;
 pub type SensorInt = u32;
+pub type SensorData = Vec<SensorFloat>;
 pub type Triplet = Vec<SensorFloat>;
 pub type Frame = Vec<Triplet>;
 pub type Frames = Vec<Frame>;
-pub type Distances = Vec<Vec<SensorFloat>>;
+pub type Distances = Vec<SensorData>;
+pub type Accelerations = Vec<SensorData>;
 
 /// Calculate the distance in 3D.
 ///
