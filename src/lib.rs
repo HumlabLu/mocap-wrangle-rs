@@ -11,6 +11,7 @@ pub type Triplet = Vec<SensorFloat>;
 pub type Frame = Vec<Triplet>;
 pub type Frames = Vec<Frame>;
 pub type Distances = Vec<SensorData>;
+pub type Velocities = Vec<SensorData>;
 pub type Accelerations = Vec<SensorData>;
 
 /// Calculate the distance in 3D.

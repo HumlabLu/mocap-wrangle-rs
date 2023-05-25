@@ -11,7 +11,7 @@ use std::path::Path;
 use std::time::{Duration, Instant};
 
 use mocap::{dist_3d, dist_3d_t, MoCapFile};
-use mocap::{SensorFloat, SensorInt, SensorData, Triplet, Frame, Frames, Distances, Accelerations};
+use mocap::{SensorFloat, SensorInt, SensorData, Triplet, Frame, Frames, Distances, Velocities, Accelerations};
 
 #[macro_use] extern crate log;
 extern crate simplelog;
@@ -147,14 +147,24 @@ fn main() -> Result<()> {
 	    let curr_dist = &it_d.next();
             println!("{:?} -> {:.3}", curr_triplet, curr_dist.unwrap()); //, dist_3d_t(&curr_triplet, &prev_triplet));
 	}
-}
+    }
     */
 
-    let accelerations: Accelerations = calculate_accelerations(&mocap_file, &distances);
-    println!("{:?}", accelerations);
+    for d in &distances {
+	println!("{}", d.iter().fold(f32::INFINITY, |a, &b| a.min(b)));
+	println!("{}", d.iter().fold(-f32::INFINITY, |a, &b| a.max(b)));
+    }
+   
+    let velocities: Velocities = calculate_velocities(&mocap_file, &distances);
+    //println!("{:?}", velocities);
+
+    for a in &velocities {
+	println!("{}", a.iter().fold(f32::INFINITY, |a, &b| a.min(b)));
+	println!("{}", a.iter().fold(-f32::INFINITY, |a, &b| a.max(b)));
+    }
     
     if args.verbose {
-	println!("{}", mocap_file);
+	println!("{:?}", mocap_file);
     }
     
     Ok(())
@@ -455,22 +465,22 @@ fn calculate_distances(mocap_file: &MoCapFile, frames: &Frames) -> Distances {
     distances
 }
 
-/// Calculates the accelerations on the supplied Distance data.
-/// Returns a vector with a vector containing accelerations for each sensor. Indexed
+/// Calculates the velocities on the supplied Distance data.
+/// Returns a vector with a vector containing velocities for each sensor. Indexed
 /// by position in the marker_names vector.
-fn calculate_accelerations(mocap_file: &MoCapFile, distances: &Distances) -> Accelerations {
-    let mut accelerations: Accelerations = vec![SensorData::new(); mocap_file.marker_names.len()]; 
+fn calculate_velocities(mocap_file: &MoCapFile, distances: &Distances) -> Velocities {
+    let mut velocities: Velocities = vec![SensorData::new(); mocap_file.marker_names.len()]; 
 	
     let it = mocap_file.marker_names.iter();
     for (i, marker_name) in it.enumerate() {
-	info!("Calculating accelerations for {}", marker_name);
+	info!("Calculating velocities for {}", marker_name);
 
-	accelerations[i].push(0.0); // Need to anchor wity 0.
+	velocities[i].push(0.0); // Need to anchor wity 0.
 	let mut result = distances[i].windows(2).map(|d| d[1] - d[0]).collect::<Vec<SensorFloat>>();
-	accelerations[i].append(&mut result);
+	velocities[i].append(&mut result);
     }
 
-    accelerations
+    velocities
 }
 
 /// Create a new output filename, tries to append "_d3D" to
