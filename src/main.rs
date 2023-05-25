@@ -113,8 +113,8 @@ fn main() -> Result<()> {
     
     info!("Reading header file {}", filename);
     parse_header(&mut mocap_file);
+    
     info!("Header contains {} lines, {} matched.", mocap_file.num_header_lines, mocap_file.num_matches);
-
     info!("Expecting {} frames.", mocap_file.no_of_frames );
     
     let time_start = Instant::now();
@@ -136,6 +136,15 @@ fn main() -> Result<()> {
     info!("Ready, frames: {} (in {} ms)", mocap_file.num_frames, time_duration);
     info!("{} -> {}, {} l/s", mocap_file.filename, mocap_file.out_filename, lps);
 
+    let it = mocap_file.marker_names.iter();
+    for (i, marker_name) in it.enumerate() {
+	println!("{}", marker_name);
+	for frame in &frames {
+	    let curr_triplet: &Triplet = &frame[i];
+            println!("{:?}", curr_triplet); //, dist_3d_t(&curr_triplet, &prev_triplet));
+	}
+    }
+    
     if args.verbose {
 	println!("{}", mocap_file);
     }
@@ -396,14 +405,14 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> Frames {
         }
     }
     mocap_file.num_frames = frame_no;
-    println!("Frames {:?}, capacity {:?}", frames.len(), frames.capacity());
+    info!("Frames {:?}, capacity {:?}", frames.len(), frames.capacity());
     
     frames
 }
 
 fn calculate_distances(mocap_file: &MoCapFile, frames: &Frames) -> Result<()> {
     let mut dist = 0.0;
-    let mut prev_triplet: Option<&Triplet> = None; //&vec![0.0, 0.0, 0.0];
+    let mut prev_triplet: Option<&Triplet> = None;
     
     let it = mocap_file.marker_names.iter();
     for (i, marker_name) in it.enumerate() {
