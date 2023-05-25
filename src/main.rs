@@ -10,7 +10,7 @@ use clap::Parser;
 use std::path::Path;
 use std::time::{Duration, Instant};
 
-use mocap::{dist_3d, MoCapFile};
+use mocap::{dist_3d, dist_3d_t, MoCapFile};
 use mocap::{SensorFloat, SensorInt, Triplet};
 
 #[macro_use] extern crate log;
@@ -126,7 +126,28 @@ fn main() -> Result<()> {
     info!("{} -> {}, {} l/s", mocap_file.filename, mocap_file.out_filename, lps);
 
     let time_start = Instant::now();
-    let foo:Vec<Vec<Triplet>> = read_frames(&mut mocap_file, &args);
+    let frames:Vec<Vec<Triplet>> = read_frames(&mut mocap_file, &args);
+    let mut dist = 0.0;
+    let mut prev_triplet: Option<&Triplet> = None; //&vec![0.0, 0.0, 0.0];
+    
+    let it = mocap_file.marker_names.iter();
+    for (i, marker_name) in it.enumerate() {
+	println!("{}", marker_name);
+	dist = 0.0;
+	prev_triplet = None; 
+	for frame in &frames {
+	    let curr_triplet: &Triplet = &frame[i];
+
+	    if prev_triplet.is_some() { // Do we have a saved "previous line/triplet"?
+		let x = prev_triplet.clone().unwrap();
+		dist = dist_3d_t(&curr_triplet, &x);
+	    }
+				    
+	    println!("{:?} {}", curr_triplet, dist); //, dist_3d_t(&curr_triplet, &prev_triplet));
+	    prev_triplet = Some(curr_triplet);
+	}
+    }
+    
     let time_duration = time_start.elapsed().as_millis() + 1; // Add one to avoid division by zero.
     let lps = mocap_file.num_frames as u128 * 1000 / time_duration;
 
