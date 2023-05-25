@@ -7,6 +7,8 @@ use lazy_static::lazy_static;
 pub type SensorFloat = f32;
 pub type SensorInt = u32;
 pub type Triplet = Vec<SensorFloat>;
+pub type Frame = Vec<Triplet>;
+pub type Frames = Vec<Frame>;
 
 /// Calculate the distance in 3D.
 ///

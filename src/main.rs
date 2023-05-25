@@ -11,7 +11,7 @@ use std::path::Path;
 use std::time::{Duration, Instant};
 
 use mocap::{dist_3d, dist_3d_t, MoCapFile};
-use mocap::{SensorFloat, SensorInt, Triplet};
+use mocap::{SensorFloat, SensorInt, Triplet, Frame, Frames};
 
 #[macro_use] extern crate log;
 extern crate simplelog;
@@ -126,27 +126,9 @@ fn main() -> Result<()> {
     info!("{} -> {}, {} l/s", mocap_file.filename, mocap_file.out_filename, lps);
 
     let time_start = Instant::now();
-    let frames:Vec<Vec<Triplet>> = read_frames(&mut mocap_file, &args);
-    let mut dist = 0.0;
-    let mut prev_triplet: Option<&Triplet> = None; //&vec![0.0, 0.0, 0.0];
-    
-    let it = mocap_file.marker_names.iter();
-    for (i, marker_name) in it.enumerate() {
-	println!("{}", marker_name);
-	dist = 0.0;
-	prev_triplet = None; 
-	for frame in &frames {
-	    let curr_triplet: &Triplet = &frame[i];
+    let frames: Frames = read_frames(&mut mocap_file, &args);
 
-	    if prev_triplet.is_some() { // Do we have a saved "previous line/triplet"?
-		let x = prev_triplet.clone().unwrap();
-		dist = dist_3d_t(&curr_triplet, &x);
-	    }
-				    
-	    println!("{:?} {}", curr_triplet, dist); //, dist_3d_t(&curr_triplet, &prev_triplet));
-	    prev_triplet = Some(curr_triplet);
-	}
-    }
+    calculate_distances(&mocap_file, &frames);
     
     let time_duration = time_start.elapsed().as_millis() + 1; // Add one to avoid division by zero.
     let lps = mocap_file.num_frames as u128 * 1000 / time_duration;
@@ -416,6 +398,31 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> Vec<Vec<Triplet>> {
     println!("Frames {:?}, capacity {:?}", frames.len(), frames.capacity());
     
     frames
+}
+
+fn calculate_distances(mocap_file: &MoCapFile, frames: &Vec<Vec<Triplet>>) -> Result<()> {
+    let mut dist = 0.0;
+    let mut prev_triplet: Option<&Triplet> = None; //&vec![0.0, 0.0, 0.0];
+    
+    let it = mocap_file.marker_names.iter();
+    for (i, marker_name) in it.enumerate() {
+	println!("{}", marker_name);
+	dist = 0.0;
+	prev_triplet = None; 
+	for frame in frames {
+	    let curr_triplet: &Triplet = &frame[i];
+
+	    if prev_triplet.is_some() { // Do we have a saved "previous line/triplet"?
+		let x = prev_triplet.clone().unwrap();
+		dist = dist_3d_t(&curr_triplet, &x);
+	    }
+				    
+	    println!("{:?} {}", curr_triplet, dist); //, dist_3d_t(&curr_triplet, &prev_triplet));
+	    prev_triplet = Some(curr_triplet);
+	}
+    }
+
+    Ok(())
 }
 
 /// Create a new output filename, tries to append "_d3D" to
