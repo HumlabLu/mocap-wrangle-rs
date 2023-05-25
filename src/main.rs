@@ -328,10 +328,11 @@ fn parse_data(mocap_file: &mut MoCapFile, args: &Args) -> Result<()> {
         }
     }
     mocap_file.num_frames = frame_no;
+    
     Ok(())
 }
 
-fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> Vec<Vec<Triplet>> {
+fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> Frames {
     let filename = mocap_file.filename.clone();
     let file = File::open(&filename).expect("could not open file");
     let mut fileiter = std::io::BufReader::new(file).lines();
@@ -346,7 +347,7 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> Vec<Vec<Triplet>> {
 
     let mut line_no: usize = 0; // Counts line in the file.
     let mut frame_no: usize = 0; // Counts the lines with sensor data.
-    let mut frames = Vec::<Vec<Triplet>>::new(); // or ::with_capacity(1000); 
+    let mut frames = Frames::new(); // or ::with_capacity(1000); 
     
     let time_start = Instant::now();
     
@@ -381,7 +382,7 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> Vec<Vec<Triplet>> {
 		    info!("Got {} ({}) missing fields in line {}, skip!",
 			  expected_num_bits - num_bits, expected_num_bits, line_no);
 		} else {
-		    let mut triplets = Vec::<Triplet>::new(); 
+		    let mut triplets = Frame::new(); 
 		    for triplet in (0..num_bits).step_by(3) { // Process per triple.
 			let slice = &bits[triplet..triplet+3];
 			let triplet: Triplet = bits[triplet..triplet+3].to_vec(); //vec![1.0, 2.0, 3.0];
@@ -400,7 +401,7 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> Vec<Vec<Triplet>> {
     frames
 }
 
-fn calculate_distances(mocap_file: &MoCapFile, frames: &Vec<Vec<Triplet>>) -> Result<()> {
+fn calculate_distances(mocap_file: &MoCapFile, frames: &Frames) -> Result<()> {
     let mut dist = 0.0;
     let mut prev_triplet: Option<&Triplet> = None; //&vec![0.0, 0.0, 0.0];
     
