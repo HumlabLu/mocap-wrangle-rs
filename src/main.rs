@@ -158,23 +158,18 @@ fn main() -> Result<()> {
 	println!("{}", a.iter().fold(-f32::INFINITY, |a, &b| a.max(b)));
     }
 
-    let mut max_lines = 10;
-    let it = mocap_file.marker_names.iter();
+    let it = mocap_file.marker_names[0..3.min(mocap_file.marker_names.len())].iter();
     for (i, marker_name) in it.enumerate() {
 	println!("{}", marker_name);
 	let mut it_d = distances[i].iter();
 	let mut it_v = velocities[i].iter();
 	let mut it_a = accelerations[i].iter();
-	for frame in &frames {
+	for frame in &frames[0..4.min(frames.len())] {	    
 	    let curr_triplet: &Triplet = &frame[i];
 	    let curr_d = &it_d.next();
 	    let curr_v = &it_v.next();
 	    let curr_a = &it_a.next();
             println!("{:?} -> {:.3} {:.3} {:.3}", curr_triplet, curr_d.unwrap(), curr_v.unwrap(), curr_a.unwrap());
-	}
-	max_lines -= 1;
-	if max_lines == 0 {
-	    break;
 	}
     }
 
