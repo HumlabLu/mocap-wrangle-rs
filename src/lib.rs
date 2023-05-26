@@ -282,9 +282,43 @@ pub fn extract_data_included(l: &str) -> Option<String> {
 
 /// Struct for calculated data, such as distance, velocity, &c.
 // Add to MoCapFile?
+// Add min/max traits?
 #[derive(Debug, Clone)]
 pub struct Calculated {
-    pub distances: Distances,
-    pub velocities: Velocities,
-    pub accelerations: Accelerations
+    pub distances: Option<Distances>,
+    pub velocities: Option<Velocities>,
+    pub accelerations: Option<Accelerations>,
+    pub min_distances: Option<SensorData>,
+    pub max_distances: Option<SensorData>,
+}
+
+impl Default for Calculated {
+    fn default() -> Calculated {
+        Calculated {
+	    distances: None,
+	    velocities: None,
+	    accelerations: None,
+	    min_distances: None,
+	    max_distances: None
+        }
+    }
+}
+
+impl Calculated {
+
+    fn is_valid(&self) -> bool {
+	self.distances.is_some() &&
+	    self.velocities.is_some() &&
+	    self.accelerations.is_some()
+    }
+    
+    fn calculate_min_dist(&mut self) {
+	/*
+	for d in &self.distances {
+	    let min_d: SensorFloat = d.iter().fold(f32::INFINITY, |a, &b| a.min(b));
+	    self.min_distances.push(min_d);
+    }
+	*/
+    }
+    
 }

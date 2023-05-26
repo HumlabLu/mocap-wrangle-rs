@@ -160,23 +160,29 @@ fn main() -> Result<()> {
 
     // Move them into the structure.
     let mut calculated = Calculated {
-	distances: distances,
-	velocities: velocities, 
-	accelerations: accelerations, 
+	distances: Some(distances),
+	velocities: Some(velocities), 
+	accelerations: Some(accelerations),
+	..Default::default()
     };
     
     let it = mocap_file.marker_names[0..3.min(mocap_file.marker_names.len())].iter();
+    let mut d = &calculated.distances.unwrap();
+    let mut v = &calculated.velocities.unwrap();
+    let mut a = &calculated.accelerations.unwrap();
     for (i, marker_name) in it.enumerate() {
 	println!("{}", marker_name);
-	let mut it_d = calculated.distances[i].iter();
-	let mut it_v = calculated.velocities[i].iter();
-	let mut it_a = calculated.accelerations[i].iter();
-	for frame in &frames[0..4.min(frames.len())] {	    
-	    let curr_triplet: &Triplet = &frame[i];
-	    let curr_d = &it_d.next();
-	    let curr_v = &it_v.next();
-	    let curr_a = &it_a.next();
-            println!("{:?} -> {:.3} {:.3} {:.3}", curr_triplet, curr_d.unwrap(), curr_v.unwrap(), curr_a.unwrap());
+	if true {
+	    let it_d = &mut d[i].iter();
+	    let it_v = &mut v[i].iter();
+	    let it_a = &mut a[i].iter();
+	    for frame in &frames[0..4.min(frames.len())] {	    
+		let curr_triplet: &Triplet = &frame[i];
+		let curr_d = &it_d.next();
+		let curr_v = &it_v.next();
+		let curr_a = &it_a.next();
+		println!("{:?} -> {:.3} {:.3} {:.3}", curr_triplet, curr_d.unwrap(), curr_v.unwrap(), curr_a.unwrap());
+	    }
 	}
     }
 
