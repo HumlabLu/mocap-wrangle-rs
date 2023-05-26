@@ -10,7 +10,7 @@ use clap::Parser;
 use std::path::Path;
 use std::time::{Duration, Instant};
 
-use mocap::{dist_3d, dist_3d_t, MoCapFile};
+use mocap::{dist_3d, dist_3d_t, MoCapFile, Calculated};
 use mocap::{SensorFloat, SensorInt, SensorData, Triplet, Frame, Frames, Distances, Velocities, Accelerations};
 
 #[macro_use] extern crate log;
@@ -127,7 +127,7 @@ fn main() -> Result<()> {
 
     let time_start = Instant::now();
     let frames: Frames = read_frames(&mut mocap_file, &args);
-
+    
     let distances: Distances = calculate_distances(&mocap_file, &frames);
     //println!("{:?}", distances);
     
@@ -158,12 +158,19 @@ fn main() -> Result<()> {
 	println!("{}", a.iter().fold(-f32::INFINITY, |a, &b| a.max(b)));
     }
 
+    // Move them into the structure.
+    let mut calculated = Calculated {
+	distances: distances,
+	velocities: velocities, 
+	accelerations: accelerations, 
+    };
+    
     let it = mocap_file.marker_names[0..3.min(mocap_file.marker_names.len())].iter();
     for (i, marker_name) in it.enumerate() {
 	println!("{}", marker_name);
-	let mut it_d = distances[i].iter();
-	let mut it_v = velocities[i].iter();
-	let mut it_a = accelerations[i].iter();
+	let mut it_d = calculated.distances[i].iter();
+	let mut it_v = calculated.velocities[i].iter();
+	let mut it_a = calculated.accelerations[i].iter();
 	for frame in &frames[0..4.min(frames.len())] {	    
 	    let curr_triplet: &Triplet = &frame[i];
 	    let curr_d = &it_d.next();

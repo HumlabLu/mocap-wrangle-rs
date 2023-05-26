@@ -280,3 +280,11 @@ pub fn extract_data_included(l: &str) -> Option<String> {
     }
 }
 
+/// Struct for calculated data, such as distance, velocity, &c.
+// Add to MoCapFile?
+#[derive(Debug, Clone)]
+pub struct Calculated {
+    pub distances: Distances,
+    pub velocities: Velocities,
+    pub accelerations: Accelerations
+}
