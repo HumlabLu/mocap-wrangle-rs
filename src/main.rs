@@ -116,6 +116,12 @@ fn main() -> Result<()> {
     
     info!("Header contains {} lines, {} matched.", mocap_file.num_header_lines, mocap_file.num_matches);
     info!("Expecting {} frames.", mocap_file.no_of_frames );
+
+    // Without a header, we abort.
+    if (mocap_file.num_header_lines == 0) || (mocap_file.num_matches == 0) {
+	error!("File contains no header!");
+	std::process::exit(3);
+    }
     
     let time_start = Instant::now();
     parse_data(&mut mocap_file, &args);
@@ -126,23 +132,24 @@ fn main() -> Result<()> {
     info!("{} -> {}, {} l/s", mocap_file.filename, mocap_file.out_filename, lps);
 
     let time_start = Instant::now();
-    let frames: Frames = read_frames(&mut mocap_file, &args);
-    
-    let distances: Distances = calculate_distances(&mocap_file, &frames);
-    //println!("{:?}", distances);
-    
+    let frames: Frames = read_frames(&mut mocap_file, &args);    
     let time_duration = time_start.elapsed().as_millis() + 1; // Add one to avoid division by zero.
     let lps = mocap_file.num_frames as u128 * 1000 / time_duration;
 
     info!("Ready, frames: {} (in {} ms)", mocap_file.num_frames, time_duration);
     info!("{} -> {}, {} l/s", mocap_file.filename, mocap_file.out_filename, lps);
 
+    info!("Calculating distances.");
+    let distances: Distances = calculate_distances(&mocap_file, &frames);
+    //println!("{:?}", distances);
+
     /*
     for d in &distances {
 	println!("{}", d.iter().fold(f32::INFINITY, |a, &b| a.min(b)));
 	println!("{}", d.iter().fold(-f32::INFINITY, |a, &b| a.max(b)));
     }
-    */
+     */
+    info!("Calculating velocities.");
     let velocities: Velocities = calculate_velocities(&mocap_file, &distances);
     //println!("{:?}", velocities);
 
@@ -151,8 +158,8 @@ fn main() -> Result<()> {
 	println!("{}", v.iter().fold(f32::INFINITY, |a, &b| a.min(b)));
 	println!("{}", v.iter().fold(-f32::INFINITY, |a, &b| a.max(b)));
     }
-     */
-    
+    */
+    info!("Calculating acceleratioons.");
     let accelerations: Accelerations = calculate_accelerations(&mocap_file, &velocities);
     //println!("{:?}", accelerations);
 
@@ -170,18 +177,22 @@ fn main() -> Result<()> {
 	accelerations: Some(accelerations),
 	..Default::default()
     };
+
+    info!("Calculating min/max.");
     calculated.calculate_min_distances();
     calculated.calculate_max_distances();
     calculated.calculate_min_velocities();
     calculated.calculate_max_velocities();
     calculated.calculate_min_accelerations();
     calculated.calculate_max_accelerations();
+    /*
     println!("Min d {:?}", calculated.min_distances);
     println!("Max d {:?}", calculated.max_distances);
     println!("Min v {:?}", calculated.min_velocities);
     println!("Max v {:?}", calculated.max_velocities);
     println!("Min a {:?}", calculated.min_accelerations);
     println!("Max a {:?}", calculated.max_accelerations);
+    */
     
     let it = mocap_file.marker_names[0..3.min(mocap_file.marker_names.len())].iter();
     let mut d = calculated.distances.as_mut().unwrap();
@@ -401,6 +412,7 @@ fn parse_data(mocap_file: &mut MoCapFile, args: &Args) -> Result<()> {
 
 fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> Frames {
     let filename = mocap_file.filename.clone();
+    info!("Reading file {} into memory", filename);
     let file = File::open(&filename).expect("could not open file");
     let mut fileiter = std::io::BufReader::new(file).lines();
 
@@ -410,11 +422,9 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> Frames {
 	// print, save, show?
     }
     
-    info!("Reading file {}", filename);
-
     let mut line_no: usize = 0; // Counts line in the file.
     let mut frame_no: usize = 0; // Counts the lines with sensor data.
-    let mut frames = Frames::new(); // or ::with_capacity(1000); 
+    let mut frames = Frames::with_capacity(mocap_file.no_of_frames as usize); 
     
     let time_start = Instant::now();
     
@@ -483,7 +493,7 @@ fn calculate_distances(mocap_file: &MoCapFile, frames: &Frames) -> Distances {
 	
     let it = mocap_file.marker_names.iter();
     for (i, marker_name) in it.enumerate() {
-	info!("Calculating distances for {}", marker_name);
+	//info!("Calculating distances for {}", marker_name);
 	
 	dist = 0.0;
 	prev_triplet = None;
@@ -513,7 +523,7 @@ fn calculate_velocities(mocap_file: &MoCapFile, distances: &Distances) -> Veloci
 	
     let it = mocap_file.marker_names.iter();
     for (i, marker_name) in it.enumerate() {
-	info!("Calculating velocities for {}", marker_name);
+	//info!("Calculating velocities for {}", marker_name);
 
 	velocities[i].push(0.0); // Need to anchor wity 0.
 	let mut result = distances[i].windows(2).map(|d| d[1] - d[0]).collect::<Vec<SensorFloat>>();
@@ -531,7 +541,7 @@ fn calculate_accelerations(mocap_file: &MoCapFile, velocities: &Velocities) -> A
 	
     let it = mocap_file.marker_names.iter();
     for (i, marker_name) in it.enumerate() {
-	info!("Calculating accelerations for {}", marker_name);
+	//info!("Calculating accelerations for {}", marker_name);
 
 	accelerations[i].push(0.0); // Need to anchor wity 0.
 	let mut result = velocities[i].windows(2).map(|d| d[1] - d[0]).collect::<Vec<SensorFloat>>();
