@@ -290,6 +290,10 @@ pub struct Calculated {
     pub accelerations: Option<Accelerations>,
     pub min_distances: Option<SensorData>,
     pub max_distances: Option<SensorData>,
+    pub min_velocities: Option<SensorData>,
+    pub max_velocities: Option<SensorData>,
+    pub min_accelerations: Option<SensorData>,
+    pub max_accelerations: Option<SensorData>,
 }
 
 impl Default for Calculated {
@@ -299,7 +303,11 @@ impl Default for Calculated {
 	    velocities: None,
 	    accelerations: None,
 	    min_distances: None,
-	    max_distances: None
+	    max_distances: None,
+	    min_velocities: None,
+	    max_velocities: None,
+	    min_accelerations: None,
+	    max_accelerations: None,
         }
     }
 }
@@ -315,6 +323,7 @@ impl Calculated {
     pub fn calculate_min_distances(&mut self) {
 	if self.min_distances.is_none() {
 	    let mut min_distances: SensorData = vec![];
+	    // .as_mut() returns a mutable reference.
 	    let distances = self.distances.as_mut().unwrap();
 	    for d in distances {
 		let min_d: SensorFloat = d.iter().fold(f32::INFINITY, |a, &b| a.min(b));
@@ -333,6 +342,56 @@ impl Calculated {
 		max_distances.push(max_d);
 	    }
 	    self.max_distances = Some(max_distances);
+	}
+    }
+
+    pub fn calculate_min_velocities(&mut self) {
+	if self.min_velocities.is_none() {
+	    let mut min_velocities: SensorData = vec![];
+	    // .as_mut() returns a mutable reference.
+	    let velocities = self.velocities.as_mut().unwrap();
+	    for d in velocities {
+		let min_d: SensorFloat = d.iter().fold(f32::INFINITY, |a, &b| a.min(b));
+		min_velocities.push(min_d);
+	    }
+	    self.min_velocities = Some(min_velocities);
+	}
+    }
+    
+    pub fn calculate_max_velocities(&mut self) {
+	if self.max_velocities.is_none() {
+	    let mut max_velocities: SensorData = vec![];
+	    let velocities = self.velocities.as_mut().unwrap();
+	    for d in velocities {
+		let max_d: SensorFloat = d.iter().fold(-f32::INFINITY, |a, &b| a.max(b));
+		max_velocities.push(max_d);
+	    }
+	    self.max_velocities = Some(max_velocities);
+	}
+    }
+
+    pub fn calculate_min_accelerations(&mut self) {
+	if self.min_accelerations.is_none() {
+	    let mut min_accelerations: SensorData = vec![];
+	    // .as_mut() returns a mutable reference.
+	    let accelerations = self.accelerations.as_mut().unwrap();
+	    for d in accelerations {
+		let min_d: SensorFloat = d.iter().fold(f32::INFINITY, |a, &b| a.min(b));
+		min_accelerations.push(min_d);
+	    }
+	    self.min_accelerations = Some(min_accelerations);
+	}
+    }
+    
+    pub fn calculate_max_accelerations(&mut self) {
+	if self.max_accelerations.is_none() {
+	    let mut max_accelerations: SensorData = vec![];
+	    let accelerations = self.accelerations.as_mut().unwrap();
+	    for d in accelerations {
+		let max_d: SensorFloat = d.iter().fold(-f32::INFINITY, |a, &b| a.max(b));
+		max_accelerations.push(max_d);
+	    }
+	    self.max_accelerations = Some(max_accelerations);
 	}
     }
 

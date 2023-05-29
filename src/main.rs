@@ -165,6 +165,18 @@ fn main() -> Result<()> {
 	accelerations: Some(accelerations),
 	..Default::default()
     };
+    calculated.calculate_min_distances();
+    calculated.calculate_max_distances();
+    calculated.calculate_min_velocities();
+    calculated.calculate_max_velocities();
+    calculated.calculate_min_accelerations();
+    calculated.calculate_max_accelerations();
+    println!("Min d {:?}", calculated.min_distances);
+    println!("Max d {:?}", calculated.max_distances);
+    println!("Min v {:?}", calculated.min_velocities);
+    println!("Max v {:?}", calculated.max_velocities);
+    println!("Min a {:?}", calculated.min_accelerations);
+    println!("Max a {:?}", calculated.max_accelerations);
     
     let it = mocap_file.marker_names[0..3.min(mocap_file.marker_names.len())].iter();
     let mut d = calculated.distances.as_mut().unwrap();
@@ -185,9 +197,6 @@ fn main() -> Result<()> {
 	    }
 	}
     }
-
-    calculated.calculate_min_distances();
-    calculated.calculate_max_distances();
 
     if args.verbose {
 	println!("{:?}", mocap_file);
