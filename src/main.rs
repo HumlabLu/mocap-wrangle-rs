@@ -167,9 +167,9 @@ fn main() -> Result<()> {
     };
     
     let it = mocap_file.marker_names[0..3.min(mocap_file.marker_names.len())].iter();
-    let mut d = &calculated.distances.unwrap();
-    let mut v = &calculated.velocities.unwrap();
-    let mut a = &calculated.accelerations.unwrap();
+    let mut d = calculated.distances.as_mut().unwrap();
+    let mut v = calculated.velocities.as_mut().unwrap();
+    let mut a = calculated.accelerations.as_mut().unwrap();
     for (i, marker_name) in it.enumerate() {
 	println!("{}", marker_name);
 	if true {
@@ -185,6 +185,9 @@ fn main() -> Result<()> {
 	    }
 	}
     }
+
+    calculated.calculate_min_distances();
+    calculated.calculate_max_distances();
 
     if args.verbose {
 	println!("{:?}", mocap_file);

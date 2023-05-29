@@ -306,19 +306,34 @@ impl Default for Calculated {
 
 impl Calculated {
 
-    fn is_valid(&self) -> bool {
+    pub fn is_valid(&self) -> bool {
 	self.distances.is_some() &&
 	    self.velocities.is_some() &&
 	    self.accelerations.is_some()
     }
     
-    fn calculate_min_dist(&mut self) {
-	/*
-	for d in &self.distances {
-	    let min_d: SensorFloat = d.iter().fold(f32::INFINITY, |a, &b| a.min(b));
-	    self.min_distances.push(min_d);
-    }
-	*/
+    pub fn calculate_min_distances(&mut self) {
+	if self.min_distances.is_none() {
+	    let mut min_distances: SensorData = vec![];
+	    let distances = self.distances.as_mut().unwrap();
+	    for d in distances {
+		let min_d: SensorFloat = d.iter().fold(f32::INFINITY, |a, &b| a.min(b));
+		min_distances.push(min_d);
+	    }
+	    self.min_distances = Some(min_distances);
+	}
     }
     
+    pub fn calculate_max_distances(&mut self) {
+	if self.max_distances.is_none() {
+	    let mut max_distances: SensorData = vec![];
+	    let distances = self.distances.as_mut().unwrap();
+	    for d in distances {
+		let max_d: SensorFloat = d.iter().fold(-f32::INFINITY, |a, &b| a.max(b));
+		max_distances.push(max_d);
+	    }
+	    self.max_distances = Some(max_distances);
+	}
+    }
+
 }
