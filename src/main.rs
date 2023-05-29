@@ -193,7 +193,8 @@ fn main() -> Result<()> {
     println!("Min a {:?}", calculated.min_accelerations);
     println!("Max a {:?}", calculated.max_accelerations);
     */
-    
+
+    /*
     let it = mocap_file.marker_names[0..3.min(mocap_file.marker_names.len())].iter();
     let mut d = calculated.distances.as_mut().unwrap();
     let mut v = calculated.velocities.as_mut().unwrap();
@@ -213,39 +214,97 @@ fn main() -> Result<()> {
 	    }
 	}
     }
-
-    // Print distance and normalised distance.
+    */
+    
+    // Print values, normalised values.
+    // Probably want to pivot this table.
+    /*
     let it = mocap_file.marker_names[0..3.min(mocap_file.marker_names.len())].iter();
-    let mut d = calculated.distances.as_mut().unwrap();
     for (i, marker_name) in it.enumerate() {
-	println!("{}", marker_name);
+	println!("{}_X\t{}_Y\t{}_Z\t{}_d\t{}_dN\t{}_v\t{}_vN\t{}_a\t{}_aN",
+		 marker_name, marker_name, marker_name,
+		 marker_name, marker_name,
+		 marker_name, marker_name,
+		 marker_name, marker_name, 
+	);
 	let min_d = calculated.min_distances.as_ref().unwrap().get(i).unwrap();
 	let max_d = calculated.max_distances.as_ref().unwrap().get(i).unwrap();
-	let it_d = &mut d[i].iter();
-	for frame in &frames[0..frames.len()] {	    
-	    let curr_triplet: &Triplet = &frame[i];
-	    let curr_d = &it_d.next().unwrap();
-	    let norm_d = mocap::normalise_minmax(&curr_d, &min_d, &max_d);
-	    println!("d {:?} -> {:.3} {:.3}", curr_triplet, curr_d, norm_d);
-	}
-    }
-
-    // And velocities/normalised.
-    let it = mocap_file.marker_names[0..3.min(mocap_file.marker_names.len())].iter();
-    let mut v = calculated.velocities.as_mut().unwrap();
-    for (i, marker_name) in it.enumerate() {
-	println!("{}", marker_name);
 	let min_v = calculated.min_velocities.as_ref().unwrap().get(i).unwrap();
 	let max_v = calculated.max_velocities.as_ref().unwrap().get(i).unwrap();
+	let min_a = calculated.min_accelerations.as_ref().unwrap().get(i).unwrap();
+	let max_a = calculated.max_accelerations.as_ref().unwrap().get(i).unwrap();
+	let it_d = &mut d[i].iter();
 	let it_v = &mut v[i].iter();
+	let it_a = &mut a[i].iter();
 	for frame in &frames[0..frames.len()] {	    
 	    let curr_triplet: &Triplet = &frame[i];
+	    
+	    let curr_d = &it_d.next().unwrap();
+	    let norm_d = mocap::normalise_minmax(&curr_d, &min_d, &max_d);
 	    let curr_v = &it_v.next().unwrap();
 	    let norm_v = mocap::normalise_minmax(&curr_v, &min_v, &max_v);
-	    println!("v {:?} -> {:.3} {:.3}", curr_triplet, curr_v, norm_v);
+	    let curr_a = &it_a.next().unwrap();
+	    let norm_a = mocap::normalise_minmax(&curr_a, &min_a, &max_a);
+
+	    println!("{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}",
+		     curr_triplet.get(0).unwrap(), curr_triplet.get(1).unwrap(), curr_triplet.get(2).unwrap(), 
+		     curr_d, norm_d,
+		     curr_v, norm_v,
+		     curr_a, norm_a
+	    );
 	}
     }
+     */
+    
+    // Pivoted!
+    let mut distances = calculated.distances.as_ref().unwrap(); // distances, per sensor!!!
+    let mut velocities = calculated.velocities.as_ref().unwrap();
+    let mut accelerations = calculated.accelerations.as_ref().unwrap();
+    println!("{:?}", distances); // vec containing num-sensor vecs with num-frames distances
+    for marker_name in &mocap_file.marker_names {
+	println!("{}_X\t{}_Y\t{}_Z\t{}_d\t{}_dN\t{}_v\t{}_vN\t{}_a\t{}_aN",
+		 marker_name, marker_name, marker_name,
+		 marker_name, marker_name,
+		 marker_name, marker_name,
+		 marker_name, marker_name, 
+	);
+    }
+    let f_it = frames.iter();
+    for (f, frame) in f_it.enumerate() {
+	let it = mocap_file.marker_names.iter();
+	//let distances = it_d.next().unwrap(); // contains "sensor" number of distances
+	//let velocities = it_v.next().unwrap();
+	//let accelerations = it_a.next().unwrap();
+	
+	for (i, marker_name) in it.enumerate() { // "i" is the i-th column of triplets (a sensor)
+	    let the_triplet = &frame[i];
+	    
+	    let the_d = calculated.distances.as_ref().unwrap().get(i).unwrap().get(f).unwrap(); // uhm
+	    let min_d = calculated.min_distances.as_ref().unwrap().get(i).unwrap();
+	    let max_d = calculated.max_distances.as_ref().unwrap().get(i).unwrap();
+	    let nor_d = mocap::normalise_minmax(&the_d, &min_d, &max_d);
 
+	    let the_v = calculated.velocities.as_ref().unwrap().get(i).unwrap().get(f).unwrap(); // uhm
+	    let min_v = calculated.min_velocities.as_ref().unwrap().get(i).unwrap();
+	    let max_v = calculated.max_velocities.as_ref().unwrap().get(i).unwrap();
+	    let nor_v = mocap::normalise_minmax(&the_v, &min_v, &max_v);
+
+	    let the_a = calculated.accelerations.as_ref().unwrap().get(i).unwrap().get(f).unwrap(); // uhm
+	    let min_a = calculated.min_accelerations.as_ref().unwrap().get(i).unwrap();
+	    let max_a = calculated.max_accelerations.as_ref().unwrap().get(i).unwrap();
+	    let nor_a = mocap::normalise_minmax(&the_a, &min_a, &max_a);
+	    
+	    print!("{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}\t",
+		   the_triplet.get(0).unwrap(), the_triplet.get(1).unwrap(), the_triplet.get(2).unwrap(), 
+		   the_d, nor_d,
+		   the_v, nor_v,
+		   the_a, nor_a
+	    );
+	}
+	println!();
+
+    }
+    
     if args.verbose {
 	println!("{:?}", mocap_file);
     }
