@@ -137,27 +137,32 @@ fn main() -> Result<()> {
     info!("Ready, frames: {} (in {} ms)", mocap_file.num_frames, time_duration);
     info!("{} -> {}, {} l/s", mocap_file.filename, mocap_file.out_filename, lps);
 
+    /*
     for d in &distances {
 	println!("{}", d.iter().fold(f32::INFINITY, |a, &b| a.min(b)));
 	println!("{}", d.iter().fold(-f32::INFINITY, |a, &b| a.max(b)));
     }
-   
+    */
     let velocities: Velocities = calculate_velocities(&mocap_file, &distances);
     //println!("{:?}", velocities);
 
+    /*
     for v in &velocities {
 	println!("{}", v.iter().fold(f32::INFINITY, |a, &b| a.min(b)));
 	println!("{}", v.iter().fold(-f32::INFINITY, |a, &b| a.max(b)));
     }
-
+     */
+    
     let accelerations: Accelerations = calculate_accelerations(&mocap_file, &velocities);
     //println!("{:?}", accelerations);
 
+    /*
     for a in &accelerations {
 	println!("{}", a.iter().fold(f32::INFINITY, |a, &b| a.min(b)));
 	println!("{}", a.iter().fold(-f32::INFINITY, |a, &b| a.max(b)));
     }
-
+     */
+    
     // Move them into the structure.
     let mut calculated = Calculated {
 	distances: Some(distances),

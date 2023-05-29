@@ -396,3 +396,11 @@ impl Calculated {
     }
 
 }
+
+pub fn normalise_minmax(val: &SensorFloat, min: &SensorFloat, max: &SensorFloat) -> SensorFloat {
+    (val - min) / (max - min)
+}
+
+pub fn nn(data: &SensorData, min: &SensorFloat, max: &SensorFloat) {
+    let _x = data.into_iter().map(|x| normalise_minmax(x, min, max)).collect::<SensorData>();
+}
