@@ -1,7 +1,6 @@
 #[cfg(test)]
 mod tests {
     use mocap::{dist_3d, MoCapFile};
-    use mocap::SensorFloat;
         
     #[test]
     fn test_zero_dist() {
@@ -29,7 +28,7 @@ mod tests {
 
     #[test]
     fn struct_is_valid() {
-	let mut myfile = MoCapFile {
+	let myfile = MoCapFile {
 	    filename: String::new(),
 	    out_filename: String::new(),
 	    num_header_lines: 0,
@@ -51,7 +50,7 @@ mod tests {
 
     #[test]
     fn struct_is_invalid() {
-	let mut myfile = MoCapFile {
+	let myfile = MoCapFile {
 	    filename: String::new(),
 	    out_filename: String::new(),
 	    num_header_lines: 0,

@@ -229,10 +229,6 @@ fn main() -> Result<()> {
 	    //continue;
 	}
 	let it = mocap_file.marker_names.iter();
-	//let distances = it_d.next().unwrap(); // contains "sensor" number of distances
-	//let velocities = it_v.next().unwrap();
-	//let accelerations = it_a.next().unwrap();
-	
 	for (sensor_id, marker_name) in it.enumerate() { // The sensor_id-th column of triplets (a sensor)
 	    let the_triplet = &frame[sensor_id];
 
