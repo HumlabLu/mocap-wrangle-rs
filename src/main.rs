@@ -61,8 +61,7 @@ fn main() -> Result<()> {
         vec![
             TermLogger::new(LevelFilter::Info,
 			    Config::default(),
-			    //TerminalMode::Mixed,
-			    TerminalMode::Stderr,
+			    TerminalMode::Stderr, // was Mixed
 			    ColorChoice::Auto
 	    ),
             WriteLogger::new(LevelFilter::Info,
@@ -279,8 +278,18 @@ fn main() -> Result<()> {
 	for (i, marker_name) in it.enumerate() { // "i" is the i-th column of triplets (a sensor)
 	    let the_triplet = &frame[i];
 	    
-	    let the_d = calculated.distances.as_ref().unwrap().get(i).unwrap().get(f).unwrap(); // uhm
-	    let min_d = calculated.min_distances.as_ref().unwrap().get(i).unwrap();
+	    let the_d = calculated.distances
+		.as_ref()
+		.unwrap()
+		.get(i) // Get the data for the i-th sensor.
+		.unwrap()
+		.get(f) // Get the value for the f-th frame.
+		.unwrap();
+	    let min_d = calculated.min_distances
+		.as_ref()
+		.unwrap()
+		.get(i) // The minimum value of the i-th sensor.
+		.unwrap();
 	    let max_d = calculated.max_distances.as_ref().unwrap().get(i).unwrap();
 	    let nor_d = mocap::normalise_minmax(&the_d, &min_d, &max_d);
 
