@@ -465,6 +465,8 @@ pub fn calculate_means(data: &Vec<SensorData>) -> SensorData {
 }
 
 /// A general version of the calculate_stdev function.
+//  let mut velocities = calculated.velocities.as_ref().unwrap();
+//  let foo = mocap::calculate_stdevs(&velocities);
 pub fn calculate_stdevs(data: &Vec<SensorData>) -> SensorData {
     let mut stdevs: SensorData = vec![];
     for d in data {
