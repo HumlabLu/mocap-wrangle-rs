@@ -141,32 +141,13 @@ fn main() -> Result<()> {
     let distances: Distances = calculate_distances(&mocap_file, &frames);
     //println!("{:?}", distances);
 
-    /*
-    for d in &distances {
-	println!("{}", d.iter().fold(f32::INFINITY, |a, &b| a.min(b)));
-	println!("{}", d.iter().fold(-f32::INFINITY, |a, &b| a.max(b)));
-    }
-     */
     info!("Calculating velocities.");
     let velocities: Velocities = calculate_velocities(&mocap_file, &distances);
     //println!("{:?}", velocities);
 
-    /*
-    for v in &velocities {
-	println!("{}", v.iter().fold(f32::INFINITY, |a, &b| a.min(b)));
-	println!("{}", v.iter().fold(-f32::INFINITY, |a, &b| a.max(b)));
-    }
-    */
     info!("Calculating acceleratioons.");
     let accelerations: Accelerations = calculate_accelerations(&mocap_file, &velocities);
     //println!("{:?}", accelerations);
-
-    /*
-    for a in &accelerations {
-	println!("{}", a.iter().fold(f32::INFINITY, |a, &b| a.min(b)));
-	println!("{}", a.iter().fold(-f32::INFINITY, |a, &b| a.max(b)));
-    }
-     */
     
     // Move them into the structure.
     let mut calculated = Calculated {
@@ -193,8 +174,6 @@ fn main() -> Result<()> {
     println!("Min a {:?}", calculated.min_accelerations);
     println!("Max a {:?}", calculated.max_accelerations);
     */
-    println!("Mean d {:?}", calculated.mean_distances);
-    println!("Stdev d {:?}", calculated.stdev_distances);
     
     /*
     let it = mocap_file.marker_names[0..3.min(mocap_file.marker_names.len())].iter();
@@ -217,48 +196,8 @@ fn main() -> Result<()> {
 	}
     }
     */
-    
-    // Print values, normalised values.
-    // Probably want to pivot this table.
-    /*
-    let it = mocap_file.marker_names[0..3.min(mocap_file.marker_names.len())].iter();
-    for (i, marker_name) in it.enumerate() {
-	println!("{}_X\t{}_Y\t{}_Z\t{}_d\t{}_dN\t{}_v\t{}_vN\t{}_a\t{}_aN",
-		 marker_name, marker_name, marker_name,
-		 marker_name, marker_name,
-		 marker_name, marker_name,
-		 marker_name, marker_name, 
-	);
-	let min_d = calculated.min_distances.as_ref().unwrap().get(i).unwrap();
-	let max_d = calculated.max_distances.as_ref().unwrap().get(i).unwrap();
-	let min_v = calculated.min_velocities.as_ref().unwrap().get(i).unwrap();
-	let max_v = calculated.max_velocities.as_ref().unwrap().get(i).unwrap();
-	let min_a = calculated.min_accelerations.as_ref().unwrap().get(i).unwrap();
-	let max_a = calculated.max_accelerations.as_ref().unwrap().get(i).unwrap();
-	let it_d = &mut d[i].iter();
-	let it_v = &mut v[i].iter();
-	let it_a = &mut a[i].iter();
-	for frame in &frames[0..frames.len()] {	    
-	    let curr_triplet: &Triplet = &frame[i];
-	    
-	    let curr_d = &it_d.next().unwrap();
-	    let norm_d = mocap::normalise_minmax(&curr_d, &min_d, &max_d);
-	    let curr_v = &it_v.next().unwrap();
-	    let norm_v = mocap::normalise_minmax(&curr_v, &min_v, &max_v);
-	    let curr_a = &it_a.next().unwrap();
-	    let norm_a = mocap::normalise_minmax(&curr_a, &min_a, &max_a);
 
-	    println!("{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}",
-		     curr_triplet.get(0).unwrap(), curr_triplet.get(1).unwrap(), curr_triplet.get(2).unwrap(), 
-		     curr_d, norm_d,
-		     curr_v, norm_v,
-		     curr_a, norm_a
-	    );
-	}
-    }
-     */
-    
-    // Pivoted!
+    /// Output to std out.
     info!("Outputting data.");
     let time_start = Instant::now();
     
@@ -266,13 +205,15 @@ fn main() -> Result<()> {
     let mut velocities = calculated.velocities.as_ref().unwrap();
     let mut accelerations = calculated.accelerations.as_ref().unwrap();
     for marker_name in &mocap_file.marker_names {
-	println!("{}_X\t{}_Y\t{}_Z\t{}_d\t{}_dN\t{}_dS\t{}_v\t{}_vN\t{}_a\t{}_aN",
+	print!("{}_X\t{}_Y\t{}_Z\t{}_d\t{}_dN\t{}_dS\t{}_v\t{}_vN\t{}_a\t{}_aN",
 		 marker_name, marker_name, marker_name,
 		 marker_name, marker_name, marker_name,
 		 marker_name, marker_name,
 		 marker_name, marker_name, 
 	);
     }
+    println!();
+    
     let f_it = frames.iter();
     for (frame_no, frame) in f_it.enumerate() {
 	// Skip the first one (normalising the 0's doesn't make sense?
@@ -545,6 +486,8 @@ fn parse_data(mocap_file: &mut MoCapFile, args: &Args) -> Result<()> {
     Ok(())
 }
 
+/// Read the data into memory. Can only be run after parse_header(...).
+/// Returns a Frames structure containing a vector with vectors with triplets.
 fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> Frames {
     let filename = mocap_file.filename.clone();
     info!("Reading file {} into memory", filename);
