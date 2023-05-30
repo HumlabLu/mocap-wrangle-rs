@@ -342,7 +342,7 @@ impl Calculated {
 	    let mut max_distances: SensorData = vec![];
 	    let distances = self.distances.as_mut().unwrap();
 	    for d in distances {
-		let max_d: SensorFloat = d.iter().fold(-f32::INFINITY, |a, &b| a.max(b));
+		let max_d: SensorFloat = d.iter().fold(f32::NEG_INFINITY, |a, &b| a.max(b));
 		max_distances.push(max_d);
 	    }
 	    self.max_distances = Some(max_distances);
@@ -367,7 +367,7 @@ impl Calculated {
 	    let mut max_velocities: SensorData = vec![];
 	    let velocities = self.velocities.as_mut().unwrap();
 	    for d in velocities {
-		let max_d: SensorFloat = d.iter().fold(-f32::INFINITY, |a, &b| a.max(b));
+		let max_d: SensorFloat = d.iter().fold(f32::NEG_INFINITY, |a, &b| a.max(b));
 		max_velocities.push(max_d);
 	    }
 	    self.max_velocities = Some(max_velocities);
@@ -392,7 +392,7 @@ impl Calculated {
 	    let mut max_accelerations: SensorData = vec![];
 	    let accelerations = self.accelerations.as_mut().unwrap();
 	    for d in accelerations {
-		let max_d: SensorFloat = d.iter().fold(-f32::INFINITY, |a, &b| a.max(b));
+		let max_d: SensorFloat = d.iter().fold(f32::NEG_INFINITY, |a, &b| a.max(b));
 		max_accelerations.push(max_d);
 	    }
 	    self.max_accelerations = Some(max_accelerations);
