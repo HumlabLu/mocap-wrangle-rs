@@ -204,9 +204,17 @@ fn main() -> Result<()> {
     let mut distances = calculated.distances.as_ref().unwrap(); // distances, per sensor!!!
     let mut velocities = calculated.velocities.as_ref().unwrap();
     let mut accelerations = calculated.accelerations.as_ref().unwrap();
-    for marker_name in &mocap_file.marker_names {
-	print!("{}_X\t{}_Y\t{}_Z\t{}_d\t{}_dN\t{}_dS\t{}_v\t{}_vN\t{}_a\t{}_aN",
+    for (i, marker_name) in mocap_file.marker_names.iter().enumerate() {
+	if i > 0 {
+	    print!("\t"); // Separator, but not at start/end.
+	}
+	/*print!("{}_X\t{}_Y\t{}_Z\t{}_d\t{}_dN\t{}_dS\t{}_v\t{}_vN\t{}_a\t{}_aN",
 		 marker_name, marker_name, marker_name,
+		 marker_name, marker_name, marker_name,
+		 marker_name, marker_name,
+		 marker_name, marker_name, 
+	);*/
+	print!("{}_d\t{}_dN\t{}_dS\t{}_v\t{}_vN\t{}_a\t{}_aN",
 		 marker_name, marker_name, marker_name,
 		 marker_name, marker_name,
 		 marker_name, marker_name, 
@@ -227,7 +235,7 @@ fn main() -> Result<()> {
 	
 	for (sensor_id, marker_name) in it.enumerate() { // The sensor_id-th column of triplets (a sensor)
 	    let the_triplet = &frame[sensor_id];
-	    
+
 	    let the_d = calculated.distances
 		.as_ref()
 		.unwrap()
@@ -276,8 +284,16 @@ fn main() -> Result<()> {
 		.get(sensor_id).unwrap();
 	    let nor_a = mocap::normalise_minmax(&the_a, &min_a, &max_a);
 
-	    print!("{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}\t",
+	    if sensor_id > 0 {
+		print!("\t");
+	    }
+	    /*print!("{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}",
 		   the_triplet.get(0).unwrap(), the_triplet.get(1).unwrap(), the_triplet.get(2).unwrap(), 
+		   the_d, nor_d, std_d,
+		   the_v, nor_v,
+		   the_a, nor_a
+	    );*/
+	    print!("{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}",
 		   the_d, nor_d, std_d,
 		   the_v, nor_v,
 		   the_a, nor_a
