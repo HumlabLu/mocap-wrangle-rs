@@ -419,3 +419,7 @@ pub fn standard_dev(data: &SensorData) -> SensorFloat {
     let variance = variance(&data);
     variance.sqrt()
 }
+
+pub fn standardise(val: &SensorFloat, mean: &SensorFloat, stddev: &SensorFloat) -> SensorFloat {
+    (val - mean) / stddev
+}
