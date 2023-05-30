@@ -118,4 +118,23 @@ mod tests {
 	assert!(result=="3D");
     }
 
+    // From the basic example at https://en.wikipedia.org/wiki/Standard_deviation.
+    #[test]
+    fn mean() {
+	let result = mocap::mean(&vec![2.0,4.0,4.0,4.0,5.0,5.0,7.0,9.0]);
+	assert!(result==5.0);
+    }
+    
+    #[test]
+    fn variance() {
+	let result = mocap::variance(&vec![2.0,4.0,4.0,4.0,5.0,5.0,7.0,9.0]);
+	assert!(result==4.0);
+    }
+    
+    #[test]
+    fn standard_dev() {
+	let result = mocap::standard_dev(&vec![2.0,4.0,4.0,4.0,5.0,5.0,7.0,9.0]);
+	assert!(result==2.0);
+    }
+
 }

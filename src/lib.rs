@@ -401,6 +401,21 @@ pub fn normalise_minmax(val: &SensorFloat, min: &SensorFloat, max: &SensorFloat)
     (val - min) / (max - min)
 }
 
-pub fn nn(data: &SensorData, min: &SensorFloat, max: &SensorFloat) {
-    let _x = data.into_iter().map(|x| normalise_minmax(x, min, max)).collect::<SensorData>();
+pub fn mean(data: &SensorData) -> SensorFloat {
+    let sum: SensorFloat = data.iter().sum();
+    sum / data.len() as SensorFloat
+}
+
+pub fn variance(data: &SensorData) -> SensorFloat {
+    let mean = mean(&data);
+    let sum_diffs = data.iter().map(|value| {
+        let diff = mean - (*value as SensorFloat);
+        diff * diff
+    }).sum::<SensorFloat>();
+    sum_diffs / data.len() as SensorFloat
+}
+
+pub fn standard_dev(data: &SensorData) -> SensorFloat {
+    let variance = variance(&data);
+    variance.sqrt()
 }

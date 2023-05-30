@@ -194,6 +194,9 @@ fn main() -> Result<()> {
     println!("Max a {:?}", calculated.max_accelerations);
     */
 
+    println!("mean d {:?}", mocap::mean(&calculated.distances.as_ref().unwrap().get(0).unwrap()));
+    println!("st.dev d {:?}", mocap::standard_dev(&calculated.distances.as_ref().unwrap().get(0).unwrap()));
+    
     /*
     let it = mocap_file.marker_names[0..3.min(mocap_file.marker_names.len())].iter();
     let mut d = calculated.distances.as_mut().unwrap();
@@ -275,7 +278,7 @@ fn main() -> Result<()> {
 	//let velocities = it_v.next().unwrap();
 	//let accelerations = it_a.next().unwrap();
 	
-	for (sensor_id, marker_name) in it.enumerate() { // "i" is the i-th column of triplets (a sensor)
+	for (sensor_id, marker_name) in it.enumerate() { // The sensor_id-th column of triplets (a sensor)
 	    let the_triplet = &frame[sensor_id];
 	    
 	    let the_d = calculated.distances
@@ -288,7 +291,7 @@ fn main() -> Result<()> {
 	    let min_d = calculated.min_distances
 		.as_ref()
 		.unwrap()
-		.get(sensor_id) // The minimum value of the i-th sensor.
+		.get(sensor_id) // The minimum value of the i-th sensor data.
 		.unwrap();
 	    let max_d = calculated.max_distances
 		.as_ref().unwrap()
