@@ -61,7 +61,8 @@ fn main() -> Result<()> {
         vec![
             TermLogger::new(LevelFilter::Info,
 			    Config::default(),
-			    TerminalMode::Mixed,
+			    //TerminalMode::Mixed,
+			    TerminalMode::Stderr,
 			    ColorChoice::Auto
 	    ),
             WriteLogger::new(LevelFilter::Info,
@@ -260,7 +261,6 @@ fn main() -> Result<()> {
     let mut distances = calculated.distances.as_ref().unwrap(); // distances, per sensor!!!
     let mut velocities = calculated.velocities.as_ref().unwrap();
     let mut accelerations = calculated.accelerations.as_ref().unwrap();
-    println!("{:?}", distances); // vec containing num-sensor vecs with num-frames distances
     for marker_name in &mocap_file.marker_names {
 	println!("{}_X\t{}_Y\t{}_Z\t{}_d\t{}_dN\t{}_v\t{}_vN\t{}_a\t{}_aN",
 		 marker_name, marker_name, marker_name,
