@@ -294,6 +294,8 @@ pub struct Calculated {
     pub max_velocities: Option<SensorData>,
     pub min_accelerations: Option<SensorData>,
     pub max_accelerations: Option<SensorData>,
+    pub mean_distances: Option<SensorData>,
+    pub stdev_distances: Option<SensorData>,
 }
 
 impl Default for Calculated {
@@ -308,6 +310,8 @@ impl Default for Calculated {
 	    max_velocities: None,
 	    min_accelerations: None,
 	    max_accelerations: None,
+	    mean_distances: None,
+	    stdev_distances: None,
         }
     }
 }
@@ -395,6 +399,32 @@ impl Calculated {
 	}
     }
 
+    pub fn calculate_mean_distances(&mut self) {
+	if self.mean_distances.is_none() {
+	    let mut mean_distances: SensorData = vec![];
+	    // .as_mut() returns a mutable reference.
+	    let distances = self.distances.as_mut().unwrap(); // Vector with the distances
+	    for d in distances {
+		let mean_d = mean(&d);
+		mean_distances.push(mean_d);
+	    }
+	    self.mean_distances = Some(mean_distances);
+	}
+    }
+    
+    pub fn calculate_stdev_distances(&mut self) {
+	if self.stdev_distances.is_none() {
+	    let mut stdev_distances: SensorData = vec![];
+	    // .as_mut() returns a mutable reference.
+	    let distances = self.distances.as_mut().unwrap(); // Vector with the distances
+	    for d in distances {
+		let stdev_d = standard_dev(&d);
+		stdev_distances.push(stdev_d);
+	    }
+	    self.stdev_distances = Some(stdev_distances);
+	}
+    }
+
 }
 
 pub fn normalise_minmax(val: &SensorFloat, min: &SensorFloat, max: &SensorFloat) -> SensorFloat {
@@ -422,4 +452,24 @@ pub fn standard_dev(data: &SensorData) -> SensorFloat {
 
 pub fn standardise(val: &SensorFloat, mean: &SensorFloat, stddev: &SensorFloat) -> SensorFloat {
     (val - mean) / stddev
+}
+
+/// A generalised mean calculator.
+pub fn calculate_means(data: &Vec<SensorData>) -> SensorData {
+    let mut means: SensorData = vec![];
+    for d in data {
+	let mean = mean(&d);
+	means.push(mean);
+    }
+    means
+}
+
+/// A general version of the calculate_stdev function.
+pub fn calculate_stdevs(data: &Vec<SensorData>) -> SensorData {
+    let mut stdevs: SensorData = vec![];
+    for d in data {
+	let stdev_d = standard_dev(&d);
+	stdevs.push(stdev_d);
+    }
+    stdevs
 }

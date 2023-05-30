@@ -137,4 +137,10 @@ mod tests {
 	assert!(result==2.0);
     }
 
+    #[test]
+    fn standardise() {
+	let result = mocap::standardise(&190.0,&150.0,&25.0);
+	assert!(result==1.6);
+    }
+
 }

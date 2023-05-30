@@ -185,6 +185,8 @@ fn main() -> Result<()> {
     calculated.calculate_max_velocities();
     calculated.calculate_min_accelerations();
     calculated.calculate_max_accelerations();
+    calculated.calculate_mean_distances();
+    calculated.calculate_stdev_distances();
     /*
     println!("Min d {:?}", calculated.min_distances);
     println!("Max d {:?}", calculated.max_distances);
@@ -193,9 +195,8 @@ fn main() -> Result<()> {
     println!("Min a {:?}", calculated.min_accelerations);
     println!("Max a {:?}", calculated.max_accelerations);
     */
-
-    println!("mean d {:?}", mocap::mean(&calculated.distances.as_ref().unwrap().get(0).unwrap()));
-    println!("st.dev d {:?}", mocap::standard_dev(&calculated.distances.as_ref().unwrap().get(0).unwrap()));
+    println!("Mean d {:?}", calculated.mean_distances);
+    println!("Stdev d {:?}", calculated.stdev_distances);
     
     /*
     let it = mocap_file.marker_names[0..3.min(mocap_file.marker_names.len())].iter();
@@ -262,17 +263,24 @@ fn main() -> Result<()> {
     // Pivoted!
     let mut distances = calculated.distances.as_ref().unwrap(); // distances, per sensor!!!
     let mut velocities = calculated.velocities.as_ref().unwrap();
+    println!("{:?}", velocities);
+    let foo = mocap::calculate_stdevs(&velocities);
+    println!("{:?}", foo);
     let mut accelerations = calculated.accelerations.as_ref().unwrap();
     for marker_name in &mocap_file.marker_names {
-	println!("{}_X\t{}_Y\t{}_Z\t{}_d\t{}_dN\t{}_v\t{}_vN\t{}_a\t{}_aN",
+	println!("{}_X\t{}_Y\t{}_Z\t{}_d\t{}_dN\t{}_dS\t{}_v\t{}_vN\t{}_a\t{}_aN",
 		 marker_name, marker_name, marker_name,
-		 marker_name, marker_name,
+		 marker_name, marker_name, marker_name,
 		 marker_name, marker_name,
 		 marker_name, marker_name, 
 	);
     }
     let f_it = frames.iter();
     for (frame_no, frame) in f_it.enumerate() {
+	// Skip the first one (normalising the 0's doesn't make sense?
+	if frame_no == 0 { 
+	    //continue;
+	}
 	let it = mocap_file.marker_names.iter();
 	//let distances = it_d.next().unwrap(); // contains "sensor" number of distances
 	//let velocities = it_v.next().unwrap();
@@ -296,8 +304,15 @@ fn main() -> Result<()> {
 	    let max_d = calculated.max_distances
 		.as_ref().unwrap()
 		.get(sensor_id).unwrap();
+	    let mean_d = calculated.mean_distances
+		.as_ref().unwrap()
+		.get(sensor_id).unwrap();
+	    let stdev_d = calculated.stdev_distances
+		.as_ref().unwrap()
+		.get(sensor_id).unwrap();
 	    let nor_d = mocap::normalise_minmax(&the_d, &min_d, &max_d);
-
+	    let std_d = mocap::standardise(&the_d, &mean_d, &stdev_d); // First one should really be 0.0?
+	    
 	    let the_v = calculated.velocities
 		.as_ref().unwrap()
 		.get(sensor_id).unwrap()
@@ -322,9 +337,9 @@ fn main() -> Result<()> {
 		.get(sensor_id).unwrap();
 	    let nor_a = mocap::normalise_minmax(&the_a, &min_a, &max_a);
 	    
-	    print!("{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}\t",
+	    print!("{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}\t",
 		   the_triplet.get(0).unwrap(), the_triplet.get(1).unwrap(), the_triplet.get(2).unwrap(), 
-		   the_d, nor_d,
+		   the_d, nor_d, std_d,
 		   the_v, nor_v,
 		   the_a, nor_a
 	    );
