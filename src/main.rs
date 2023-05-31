@@ -38,13 +38,21 @@ struct Args {
     #[clap(long, short, action, help = "Include X, Y and Z coordinates in output.")]
     coords: bool,
 
+    // Output normalised
+    #[clap(long, action, help = "Include normlaised data in output.")]
+    normalised: bool,
+
+    // Output standardised
+    #[clap(long, action, help = "Include standardised data in output.")]
+    standardised: bool,
+
     // Skip fields
     #[clap(long, short, action, default_value_t = 0, help = "Skip first n columns in sensor data.")]
     skip: usize,
 
     // Header output
-    #[clap(long, action, help = "Output header row.")]
-    header: bool,
+    #[clap(long, action, help = "Do not output header row.")]
+    noheader: bool,
 
     // Force overwrite of output
     #[clap(long, action, help = "Overwrite output if it exists.")]
@@ -81,7 +89,14 @@ fn main() -> Result<()> {
     
     let args = Args::parse();
     info!("{:?}", args);
-        
+
+    let t0:Triplet = vec![0.0, 0.0, 0.0]; //vec![5.0,6.7,1.5];
+    let t1:Triplet = vec![1.0, 1.0, 1.0]; //vec![4.0,1.2,1.6];
+    println!("{:?}", mocap::calculate_azimuth_inclination(&t0, &t1));
+    let t0:Triplet = vec![5.0,6.7,1.5];
+    let t1:Triplet = vec![4.0,1.2,1.6];
+    println!("{:?}", mocap::calculate_azimuth_inclination(&t0, &t1));
+    
     // =====================================================================
     // Read file line by line and calculate d3D
     //
@@ -156,6 +171,8 @@ fn main() -> Result<()> {
     //println!("{:?}", accelerations);
     
     // Move them into the structure.
+    // Should add the Frames here too, and Impl some of the functions
+    // for the structure... Ideally all in the MoCapFile structure.b
     let mut calculated = Calculated {
 	distances: Some(distances),
 	velocities: Some(velocities), 
@@ -186,27 +203,30 @@ fn main() -> Result<()> {
     let mut accelerations = calculated.accelerations.as_ref().unwrap();
     let mut mean_accelerations = mocap::calculate_means(&accelerations);
     let mut stdev_accelerations = mocap::calculate_stdevs(&accelerations);
-    
-    for (i, marker_name) in mocap_file.marker_names.iter().enumerate() {
-	if i > 0 {
-	    print!("\t"); // Separator, but not at start/end.
+
+    if args.noheader == false {
+	for (i, marker_name) in mocap_file.marker_names.iter().enumerate() {
+	    if i > 0 {
+		print!("\t"); // Separator, but not at start/end.
+	    }
+	    // We need a "output fields for sensor" function, taking args to output relevant header.
+	    if args.coords == true {
+		print!("{}_X\t{}_Y\t{}_Z\t{}_d\t{}_dN\t{}_dS\t{}_v\t{}_vN\t{}_a\t{}_aN",
+		       marker_name, marker_name, marker_name,
+		       marker_name, marker_name, marker_name,
+		       marker_name, marker_name,
+		       marker_name, marker_name, 
+		);
+	    } else {
+		print!("{}_d\t{}_dN\t{}_dS\t{}_v\t{}_vN\t{}_vS\t{}_a\t{}_aN\t{}_aS",
+		       marker_name, marker_name, marker_name,
+		       marker_name, marker_name, marker_name,
+		       marker_name, marker_name, marker_name,
+		);
+	    }
 	}
-	if args.coords == true {
-	    print!("{}_X\t{}_Y\t{}_Z\t{}_d\t{}_dN\t{}_dS\t{}_v\t{}_vN\t{}_a\t{}_aN",
-		   marker_name, marker_name, marker_name,
-		   marker_name, marker_name, marker_name,
-		   marker_name, marker_name,
-		   marker_name, marker_name, 
-	    );
-	} else {
-	    print!("{}_d\t{}_dN\t{}_dS\t{}_v\t{}_vN\t{}_vS\t{}_a\t{}_aN\t{}_aS",
-		   marker_name, marker_name, marker_name,
-		   marker_name, marker_name, marker_name,
-		   marker_name, marker_name, marker_name,
-	    );
-	}
+	println!();
     }
-    println!();
     
     let f_it = frames.iter();
     for (frame_no, frame) in f_it.enumerate() {
@@ -214,7 +234,7 @@ fn main() -> Result<()> {
 	if frame_no == 0 { 
 	    //continue;
 	}
-	let it = mocap_file.marker_names.iter();
+	let it = mocap_file.marker_names.iter(); // Match to include?
 	for (sensor_id, marker_name) in it.enumerate() { // The sensor_id-th column of triplets (a sensor)
 	    let the_triplet = &frame[sensor_id];
 
@@ -364,7 +384,7 @@ fn parse_header(mocap_file: &mut MoCapFile) -> Result<()> {
 }
 
 /// Parse the data (must be run after having parsed the header).
-fn parse_data(mocap_file: &mut MoCapFile, args: &Args) -> Result<()> {
+fn parse_data_deprecated(mocap_file: &mut MoCapFile, args: &Args) -> Result<()> {
     let filename = mocap_file.filename.clone();
     let file = File::open(&filename).expect("could not open file");
     let mut fileiter = std::io::BufReader::new(file).lines();
@@ -386,7 +406,7 @@ fn parse_data(mocap_file: &mut MoCapFile, args: &Args) -> Result<()> {
     let mut frame_no: usize = 0; // Counts the lines with sensor data.
     let mut prev_bits: Option<Vec<SensorFloat>> = None; // Previous line used in calculations.
     let mut prev_slice: &[SensorFloat] = &[0.0, 0.0, 0.0]; // Previous X, Y and Z coordinates.
-    let mut wrote_header = !args.header; // If we specify --header, wrote_header becomes false.
+    let mut wrote_header = !args.noheader; // If we specify --header, wrote_header becomes false.
     let mut output_bits = Vec::<SensorFloat>::new(); // Sensor values as SensorFloat.
     
     let time_start = Instant::now();

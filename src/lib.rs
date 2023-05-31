@@ -40,6 +40,24 @@ pub fn dist_3d_t(coords0: &Triplet, coords1: &Triplet) -> SensorFloat {
     squared_sum.sqrt()
 }
 
+// https://en.wikipedia.org/wiki/Spherical_coordinate_system
+pub fn calculate_azimuth_inclination(coords0: &Triplet, coords1: &Triplet) -> (SensorFloat, SensorFloat) {
+    // Step 1: Calculate the vector between the two points
+    let dx = coords1[0] - coords0[0];
+    let dy = coords1[1] - coords0[1];
+    let dz = coords1[2] - coords0[2];
+
+    // Step 2: Normalize the vector
+    let r = dist_3d_t(&coords0, &coords1);
+
+
+    let inc = (dz / r).acos();
+    //let azimuth = dy.signum() * (dx / (dx*dx + dy*dy).sqrt());
+    let azimuth = dy.atan2(dx);
+    
+    (azimuth.to_degrees(), inc.to_degrees())
+}
+
 /// Struct to contain the metadata. In the MoCap file, the metadata
 /// looks as follows.
 /// ```text

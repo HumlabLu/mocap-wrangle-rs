@@ -141,5 +141,12 @@ mod tests {
 	let result = mocap::standardise(&190.0,&150.0,&25.0);
 	assert!(result==1.6);
     }
-
+    
+    #[test]
+    fn calculate_azimuth_inclination() {
+	let t0 = vec![5.0,6.7,1.5];
+	let t1 = vec![4.0,1.2,1.6];
+	let result = mocap::calculate_azimuth_inclination(&t0, &t1);
+	assert!(result==(-100.30485, 88.975174));
+    }
 }
