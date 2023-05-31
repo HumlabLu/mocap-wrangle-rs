@@ -126,13 +126,15 @@ fn main() -> Result<()> {
 	error!("File contains no header!");
 	std::process::exit(3);
     }
-    
+
+    /*
     let time_start = Instant::now();
     parse_data(&mut mocap_file, &args);
     let time_duration = time_start.elapsed().as_millis() + 1; // Add one to avoid division by zero.
     let lps = mocap_file.num_frames as u128 * 1000 / time_duration;
     info!("Ready, frames: {} (in {} ms)", mocap_file.num_frames, time_duration);
     info!("{} -> {}, {} l/s", mocap_file.filename, mocap_file.out_filename, lps);
+    */
     
     let time_start = Instant::now();
     let frames: Frames = read_frames(&mut mocap_file, &args);    
@@ -140,7 +142,7 @@ fn main() -> Result<()> {
     let lps = mocap_file.num_frames as u128 * 1000 / time_duration;
 
     info!("Ready, frames: {} (in {} ms, {} l/s)", mocap_file.num_frames, time_duration, lps);
-
+    
     info!("Calculating distances.");
     let distances: Distances = calculate_distances(&mocap_file, &frames);
     //println!("{:?}", distances);
