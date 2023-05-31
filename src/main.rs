@@ -89,13 +89,6 @@ fn main() -> Result<()> {
     
     let args = Args::parse();
     info!("{:?}", args);
-
-    let t0:Triplet = vec![0.0, 0.0, 0.0]; //vec![5.0,6.7,1.5];
-    let t1:Triplet = vec![1.0, 1.0, 1.0]; //vec![4.0,1.2,1.6];
-    println!("{:?}", mocap::calculate_azimuth_inclination(&t0, &t1));
-    let t0:Triplet = vec![5.0,6.7,1.5];
-    let t1:Triplet = vec![4.0,1.2,1.6];
-    println!("{:?}", mocap::calculate_azimuth_inclination(&t0, &t1));
     
     // =====================================================================
     // Read file line by line and calculate d3D
@@ -650,6 +643,46 @@ fn calculate_accelerations(mocap_file: &MoCapFile, velocities: &Velocities) -> A
     }
 
     accelerations
+}
+
+/// Return the azimuths and the inclinations between the points.
+fn calculate_angles(mocap_file: &MoCapFile, frames: &Frames) -> (Distances, Distances) {
+    let mut angle = (0.0, 0.0);
+    let mut prev_triplet: Option<&Triplet> = None;
+    let mut azis: Distances = vec![Vec::<SensorFloat>::new(); mocap_file.marker_names.len()]; // HashMap?
+    let mut incs: Distances = vec![Vec::<SensorFloat>::new(); mocap_file.marker_names.len()]; // HashMap?
+
+    // We can even reserve the size of the distance vectors...
+    for v in &mut azis {
+	v.reserve_exact(mocap_file.num_frames);
+    }
+    for v in &mut incs {
+	v.reserve_exact(mocap_file.num_frames);
+    }
+	
+    let it = mocap_file.marker_names.iter();
+    for (i, marker_name) in it.enumerate() {
+	//info!("Calculating distances for {}", marker_name);
+	
+	angle = (0.0, 0.0);
+	prev_triplet = None;
+	
+	for frame in frames {
+	    let curr_triplet: &Triplet = &frame[i];
+
+	    if prev_triplet.is_some() { // Do we have a saved "previous line/triplet"?
+		let x = prev_triplet.clone().unwrap();
+		angle = mocap::calculate_azimuth_inclination(&curr_triplet, &x);
+	    }
+	    azis[i].push(angle.0);
+	    incs[i].push(angle.1);
+	    
+	    //println!("{:?} {}", curr_triplet, dist); //, dist_3d_t(&curr_triplet, &prev_triplet));
+	    prev_triplet = Some(curr_triplet);
+	}
+    }
+
+    (azis, incs)
 }
 
 /// Create a new output filename, tries to append "_d3D" to
