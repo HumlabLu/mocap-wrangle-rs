@@ -162,7 +162,11 @@ fn main() -> Result<()> {
     info!("Calculating acceleratioons.");
     let accelerations: Accelerations = calculate_accelerations(&mocap_file, &velocities);
     //println!("{:?}", accelerations);
-    
+
+    info!("Calculating angles.");
+    let angles: (Distances, Distances) = calculate_angles(&mocap_file, &frames);
+    println!("{:?}", angles);
+
     // Move them into the structure.
     // Should add the Frames here too, and Impl some of the functions
     // for the structure... Ideally all in the MoCapFile structure.b
@@ -612,6 +616,8 @@ fn calculate_distances(mocap_file: &MoCapFile, frames: &Frames) -> Distances {
 /// Calculates the velocities on the supplied Distance data.
 /// Returns a vector with a vector containing velocities for each sensor. Indexed
 /// by position in the marker_names vector.
+/// Note that the velocity per frame is the same as the distance calculated above,
+/// so unless we convert to m/s, they are the same.
 fn calculate_velocities(mocap_file: &MoCapFile, distances: &Distances) -> Velocities {
     let mut velocities: Velocities = vec![SensorData::new(); mocap_file.marker_names.len()]; 
 	
@@ -619,8 +625,9 @@ fn calculate_velocities(mocap_file: &MoCapFile, distances: &Distances) -> Veloci
     for (i, marker_name) in it.enumerate() {
 	//info!("Calculating velocities for {}", marker_name);
 
-	velocities[i].push(0.0); // Need to anchor wity 0.
-	let mut result = distances[i].windows(2).map(|d| d[1] - d[0]).collect::<Vec<SensorFloat>>();
+	//velocities[i].push(0.0); // Need to anchor wity 0.
+	//let mut result = distances[i].windows(2).map(|d| d[1] - d[0]).collect::<Vec<SensorFloat>>();
+	let mut result = distances[i].clone();
 	velocities[i].append(&mut result);
     }
 
