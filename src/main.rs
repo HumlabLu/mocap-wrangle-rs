@@ -235,9 +235,7 @@ fn main() -> Result<()> {
 	for (sensor_id, marker_name) in it.enumerate() { // The sensor_id-th column of triplets (a sensor)
 	    let the_triplet = &frame[sensor_id];
 
-	    let the_d = calculated.distances
-		.as_ref()
-		.unwrap()
+	    let the_d = distances
 		.get(sensor_id) // Get the data for the i-th sensor.
 		.unwrap()
 		.get(frame_no) // Get the value for the f-th frame.
@@ -255,8 +253,7 @@ fn main() -> Result<()> {
 	    let nor_d = mocap::normalise_minmax(&the_d, &min_d, &max_d);
 	    let std_d = mocap::standardise(&the_d, &mean_d, &stdev_d); // First one should really be 0.0?
 	    
-	    let the_v = calculated.velocities
-		.as_ref().unwrap()
+	    let the_v = velocities
 		.get(sensor_id).unwrap()
 		.get(frame_no).unwrap(); 
 	    let min_v = calculated.min_velocities
@@ -270,8 +267,7 @@ fn main() -> Result<()> {
 	    let nor_v = mocap::normalise_minmax(&the_v, &min_v, &max_v);
 	    let std_v = mocap::standardise(&the_v, &mean_v, &stdev_v); // First one should really be 0.0?
 	    
-	    let the_a = calculated.accelerations
-		.as_ref().unwrap()
+	    let the_a = accelerations
 		.get(sensor_id).unwrap()
 		.get(frame_no).unwrap(); 
 	    let min_a = calculated.min_accelerations
@@ -623,10 +619,6 @@ fn calculate_velocities(mocap_file: &MoCapFile, distances: &Distances) -> Veloci
 	
     let it = mocap_file.marker_names.iter();
     for (i, marker_name) in it.enumerate() {
-	//info!("Calculating velocities for {}", marker_name);
-
-	//velocities[i].push(0.0); // Need to anchor wity 0.
-	//let mut result = distances[i].windows(2).map(|d| d[1] - d[0]).collect::<Vec<SensorFloat>>();
 	let mut result = distances[i].clone();
 	velocities[i].append(&mut result);
     }
