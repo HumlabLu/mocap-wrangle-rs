@@ -126,15 +126,6 @@ fn main() -> Result<()> {
 	error!("File contains no header!");
 	std::process::exit(3);
     }
-
-    /*
-    let time_start = Instant::now();
-    parse_data(&mut mocap_file, &args);
-    let time_duration = time_start.elapsed().as_millis() + 1; // Add one to avoid division by zero.
-    let lps = mocap_file.num_frames as u128 * 1000 / time_duration;
-    info!("Ready, frames: {} (in {} ms)", mocap_file.num_frames, time_duration);
-    info!("{} -> {}, {} l/s", mocap_file.filename, mocap_file.out_filename, lps);
-    */
     
     let time_start = Instant::now();
     let frames: Frames = read_frames(&mut mocap_file, &args);    
@@ -156,8 +147,9 @@ fn main() -> Result<()> {
     //println!("{:?}", accelerations);
 
     info!("Calculating angles.");
-    let angles: (Distances, Distances) = calculate_angles(&mocap_file, &frames);
-    println!("{:?}", angles);
+    let (azimuths, inclinations): (Distances, Distances) = calculate_angles(&mocap_file, &frames);
+    println!("{:?}", azimuths);
+    println!("{:?}", inclinations);
 
     // Move them into the structure.
     // Should add the Frames here too, and Impl some of the functions
