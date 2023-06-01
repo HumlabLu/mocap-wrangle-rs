@@ -148,8 +148,8 @@ fn main() -> Result<()> {
 
     info!("Calculating angles.");
     let (azimuths, inclinations): (Distances, Distances) = calculate_angles(&mocap_file, &frames);
-    println!("{:?}", azimuths);
-    println!("{:?}", inclinations);
+    //println!("{:?}", azimuths);
+    //println!("{:?}", inclinations);
 
     // Move them into the structure.
     // Should add the Frames here too, and Impl some of the functions
@@ -192,15 +192,15 @@ fn main() -> Result<()> {
 	    }
 	    // We need a "output fields for sensor" function, taking args to output relevant header.
 	    if args.coords == true {
-		print!("{}_X\t{}_Y\t{}_Z\t{}_d\t{}_dN\t{}_dS\t{}_v\t{}_vN\t{}_a\t{}_aN",
-		       marker_name, marker_name, marker_name,
+		print!("{}_X\t{}_Y\t{}_Z\t{}_az\t{}_in\t{}_d\t{}_dN\t{}_dS\t{}_v\t{}_vN\t{}_a\t{}_aN",
+		       marker_name, marker_name, marker_name, marker_name, marker_name,
 		       marker_name, marker_name, marker_name,
 		       marker_name, marker_name,
 		       marker_name, marker_name, 
 		);
 	    } else {
-		print!("{}_d\t{}_dN\t{}_dS\t{}_v\t{}_vN\t{}_vS\t{}_a\t{}_aN\t{}_aS",
-		       marker_name, marker_name, marker_name,
+		print!("{}_az\t{}_in\t{}_d\t{}_dN\t{}_dS\t{}_v\t{}_vN\t{}_vS\t{}_a\t{}_aN\t{}_aS",
+		       marker_name, marker_name, marker_name, marker_name, marker_name,
 		       marker_name, marker_name, marker_name,
 		       marker_name, marker_name, marker_name,
 		);
@@ -236,7 +236,7 @@ fn main() -> Result<()> {
 	    let stdev_d = stdev_distances.get(sensor_id).unwrap();
 	    let nor_d = mocap::normalise_minmax(&the_d, &min_d, &max_d);
 	    let std_d = mocap::standardise(&the_d, &mean_d, &stdev_d); // First one should really be 0.0?
-	    
+
 	    let the_v = velocities
 		.get(sensor_id).unwrap()
 		.get(frame_no).unwrap(); 
@@ -264,20 +264,27 @@ fn main() -> Result<()> {
 	    let stdev_a = stdev_accelerations.get(sensor_id).unwrap();
 	    let nor_a = mocap::normalise_minmax(&the_a, &min_a, &max_a);
 	    let std_a = mocap::standardise(&the_a, &mean_a, &stdev_a); // First one should really be 0.0?
+
+	    let azim = azimuths
+		.get(sensor_id).unwrap()
+		.get(frame_no).unwrap();
+	    let incl = inclinations
+		.get(sensor_id).unwrap()
+		.get(frame_no).unwrap();
 	    
 	    if sensor_id > 0 {
 		print!("\t");
 	    }
 	    if args.coords == true {
-		print!("{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}",
+		print!("{:.2}\t{:.2}\t{:.2}\t{:.1}\t{:.1}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}",
 		       the_triplet.get(0).unwrap(), the_triplet.get(1).unwrap(), the_triplet.get(2).unwrap(), 
-		       the_d, nor_d, std_d,
+		       azim, incl, the_d, nor_d, std_d,
 		       the_v, nor_v,
 		       the_a, nor_a
 		);
 	    } else {
-		print!("{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}\t{:.3}",
-		       the_d, nor_d, std_d,
+		print!("{:.1}\t{:.1}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}",
+		       azim, incl, the_d, nor_d, std_d,
 		       the_v, nor_v, std_v,
 		       the_a, nor_a, std_a
 		);
