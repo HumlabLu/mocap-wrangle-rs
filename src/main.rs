@@ -38,14 +38,6 @@ struct Args {
     #[clap(long, short, action, help = "Include X, Y and Z coordinates in output.")]
     coords: bool,
 
-    // Output normalised
-    #[clap(long, action, help = "Include normlaised data in output.")]
-    normalised: bool,
-
-    // Output standardised
-    #[clap(long, action, help = "Include standardised data in output.")]
-    standardised: bool,
-
     // Skip fields
     #[clap(long, short, action, default_value_t = 0, help = "Skip first n columns in sensor data.")]
     skip: usize,
