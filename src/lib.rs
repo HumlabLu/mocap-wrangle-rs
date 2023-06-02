@@ -48,11 +48,8 @@ pub fn calculate_azimuth_inclination(coords0: &Triplet, coords1: &Triplet) -> (S
     let dz = coords1[2] - coords0[2];
 
     // Step 2: Normalize the vector
-    let r = dist_3d_t(&coords0, &coords1);
-
-
+    let r = dist_3d_t(&coords0, &coords1); // sqrt of sum coordinates^2
     let inc = (dz / r).acos();
-    //let azimuth = dy.signum() * (dx / (dx*dx + dy*dy).sqrt());
     let azimuth = dy.atan2(dx);
     
     (azimuth.to_degrees(), inc.to_degrees())

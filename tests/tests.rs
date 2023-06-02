@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use mocap::{dist_3d, MoCapFile};
+    use mocap::{dist_3d, dist_3d_t, MoCapFile};
         
     #[test]
     fn test_zero_dist() {
@@ -11,6 +11,22 @@ mod tests {
     #[test]
     fn test_normal_dist() {
 	let dist = dist_3d(&[1.0,0.0,0.0], &[0.0,0.0,0.0]);
+	assert!(dist==1.0);
+    }
+    
+    #[test]
+    fn test_dist_t() {
+	let t0 = vec![0.0,0.0,0.0];
+	let t1 = vec![0.0,0.0,0.0];
+	let dist = dist_3d_t(&t0, &t1);
+	assert!(dist==0.0);
+    }
+
+    #[test]
+    fn test_normal_dist_t() {
+	let t0 = vec![0.0,0.0,0.0];
+	let t1 = vec![1.0,0.0,0.0];
+	let dist = dist_3d_t(&t0, &t1);
 	assert!(dist==1.0);
     }
 

@@ -513,7 +513,7 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> Frames {
     
     let time_start = Instant::now();
     
-    for line in fileiter {
+    for line in fileiter.step_by(1) {
         if let Ok(l) = line {
 	    if l.len() < 1 {
 		continue;
