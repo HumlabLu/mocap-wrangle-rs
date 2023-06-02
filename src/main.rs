@@ -42,6 +42,10 @@ struct Args {
     #[clap(long, short, action, default_value_t = 0, help = "Skip first n columns in sensor data.")]
     skip: usize,
 
+    // Step for readinf frames
+    #[clap(long, action, default_value_t = 1, help = "Read frames in steps.")]
+    framestep: usize,
+
     // Header output
     #[clap(long, action, help = "Do not output header row.")]
     noheader: bool,
@@ -513,7 +517,7 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> Frames {
     
     let time_start = Instant::now();
     
-    for line in fileiter.step_by(1) {
+    for line in fileiter.step_by(args.framestep) {
         if let Ok(l) = line {
 	    if l.len() < 1 {
 		continue;
