@@ -41,8 +41,11 @@ pub fn dist_3d_t(coords0: &Triplet, coords1: &Triplet) -> SensorFloat {
 }
 
 // https://en.wikipedia.org/wiki/Spherical_coordinate_system
-pub fn calculate_azimuth_inclination(coords0: &Triplet, coords1: &Triplet) -> (SensorFloat, SensorFloat) {
-    // Step 1: Calculate the vector between the two points
+// Not sure how the MoCap coordinate system is oriented. Z is up/down,
+// Y forward/backwards, X right/left?
+pub fn calculate_azimuth_inclination(coords0: &Triplet, coords1: &Triplet) -> (SensorFloat, SensorFloat, SensorFloat) {
+    // We calculate angles from point 0 to point 1, so we assume
+    // point 0 is the origin.
     let dx = coords1[0] - coords0[0];
     let dy = coords1[1] - coords0[1];
     let dz = coords1[2] - coords0[2];
@@ -52,7 +55,7 @@ pub fn calculate_azimuth_inclination(coords0: &Triplet, coords1: &Triplet) -> (S
     let inc = (dz / r).acos();
     let azimuth = dy.atan2(dx);
     
-    (azimuth.to_degrees(), inc.to_degrees())
+    (r, azimuth.to_degrees(), inc.to_degrees())
 }
 
 /// Struct to contain the metadata. In the MoCap file, the metadata

@@ -516,7 +516,8 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> Frames {
     let mut frames = Frames::with_capacity(mocap_file.no_of_frames as usize); 
     
     let time_start = Instant::now();
-    
+
+    // Using a framestep > 1 can be used to "smooth" the data (kind of).
     for line in fileiter.step_by(args.framestep) {
         if let Ok(l) = line {
 	    if l.len() < 1 {
@@ -640,11 +641,12 @@ fn calculate_accelerations(mocap_file: &MoCapFile, velocities: &Velocities) -> A
 }
 
 /// Return the azimuths and the inclinations between the points.
+// Note that we discard the radii.
 fn calculate_angles(mocap_file: &MoCapFile, frames: &Frames) -> (Distances, Distances) {
-    let mut angle = (0.0, 0.0);
+    let mut angle = (0.0, 0.0, 0.0);
     let mut prev_triplet: Option<&Triplet> = None;
-    let mut azis: Distances = vec![Vec::<SensorFloat>::new(); mocap_file.marker_names.len()]; // HashMap?
-    let mut incs: Distances = vec![Vec::<SensorFloat>::new(); mocap_file.marker_names.len()]; // HashMap?
+    let mut azis: Distances = vec![Vec::<SensorFloat>::new(); mocap_file.marker_names.len()];
+    let mut incs: Distances = vec![Vec::<SensorFloat>::new(); mocap_file.marker_names.len()];
 
     // We can even reserve the size of the distance vectors...
     for v in &mut azis {
@@ -658,7 +660,7 @@ fn calculate_angles(mocap_file: &MoCapFile, frames: &Frames) -> (Distances, Dist
     for (i, marker_name) in it.enumerate() {
 	//info!("Calculating distances for {}", marker_name);
 	
-	angle = (0.0, 0.0);
+	angle = (0.0, 0.0, 0.0);
 	prev_triplet = None;
 	
 	for frame in frames {
@@ -668,8 +670,8 @@ fn calculate_angles(mocap_file: &MoCapFile, frames: &Frames) -> (Distances, Dist
 		let x = prev_triplet.clone().unwrap();
 		angle = mocap::calculate_azimuth_inclination(&curr_triplet, &x);
 	    }
-	    azis[i].push(angle.0);
-	    incs[i].push(angle.1);
+	    azis[i].push(angle.1);
+	    incs[i].push(angle.2);
 	    
 	    //println!("{:?} {}", curr_triplet, dist); //, dist_3d_t(&curr_triplet, &prev_triplet));
 	    prev_triplet = Some(curr_triplet);
