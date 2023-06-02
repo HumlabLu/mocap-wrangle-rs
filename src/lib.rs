@@ -57,7 +57,8 @@ pub fn calculate_azimuth_inclination(coords0: &Triplet, coords1: &Triplet) -> (S
     let inc = (z / r).acos();
     let azimuth = y.atan2(x);
     
-    (r, azimuth.to_degrees(), inc.to_degrees())
+    //(r, azimuth.to_degrees(), inc.to_degrees())
+    (r, azimuth, inc)
 }
 
 /// Struct to contain the metadata. In the MoCap file, the metadata
