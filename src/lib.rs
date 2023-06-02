@@ -43,17 +43,19 @@ pub fn dist_3d_t(coords0: &Triplet, coords1: &Triplet) -> SensorFloat {
 // https://en.wikipedia.org/wiki/Spherical_coordinate_system
 // Not sure how the MoCap coordinate system is oriented. Z is up/down,
 // Y forward/backwards, X right/left?
+// Note that for the inclination, 0 degs is straight up, and 180 is straight down.
+// An inclination of 90 is on the same Z-coordinate.
+// 90.0-incl gives a +90/-90 range.
 pub fn calculate_azimuth_inclination(coords0: &Triplet, coords1: &Triplet) -> (SensorFloat, SensorFloat, SensorFloat) {
     // We calculate angles from point 0 to point 1, so we assume
     // point 0 is the origin.
-    let dx = coords1[0] - coords0[0];
-    let dy = coords1[1] - coords0[1];
-    let dz = coords1[2] - coords0[2];
+    let x = coords1[0] - coords0[0];
+    let y = coords1[1] - coords0[1];
+    let z = coords1[2] - coords0[2];
 
-    // Step 2: Normalize the vector
     let r = dist_3d_t(&coords0, &coords1); // sqrt of sum coordinates^2
-    let inc = (dz / r).acos();
-    let azimuth = dy.atan2(dx);
+    let inc = (z / r).acos();
+    let azimuth = y.atan2(x);
     
     (r, azimuth.to_degrees(), inc.to_degrees())
 }
