@@ -270,11 +270,7 @@ fn main() -> Result<()> {
             // The sensor_id-th column of triplets (a sensor)
             let the_triplet = &frame[sensor_id];
 
-            let the_d = distances
-                .get(sensor_id) // Get the data for the i-th sensor.
-                .unwrap()
-                .get(frame_no) // Get the value for the f-th frame.
-                .unwrap();
+	    let the_d = calculated.get_distance(sensor_id, frame_no);
             let min_d = calculated
                 .min_distances
                 .as_ref()
@@ -292,7 +288,7 @@ fn main() -> Result<()> {
             let nor_d = mocap::normalise_minmax(&the_d, &min_d, &max_d);
             let std_d = mocap::standardise(&the_d, &mean_d, &stdev_d); // First one should really be 0.0?
 
-            let the_v = velocities.get(sensor_id).unwrap().get(frame_no).unwrap();
+            let the_v = calculated.get_velocity(sensor_id, frame_no);
             let min_v = calculated
                 .min_velocities
                 .as_ref()
@@ -310,7 +306,7 @@ fn main() -> Result<()> {
             let nor_v = mocap::normalise_minmax(&the_v, &min_v, &max_v);
             let std_v = mocap::standardise(&the_v, &mean_v, &stdev_v); // First one should really be 0.0?
 
-            let the_a = accelerations.get(sensor_id).unwrap().get(frame_no).unwrap();
+            let the_a = calculated.get_acceleration(sensor_id, frame_no);
             let min_a = calculated
                 .min_accelerations
                 .as_ref()

@@ -452,9 +452,34 @@ impl Calculated {
     }
 }
 
+/*
+    pub min_distances: Option<SensorData>,
+    pub max_distances: Option<SensorData>,
+    pub min_velocities: Option<SensorData>,
+    pub max_velocities: Option<SensorData>,
+    pub min_accelerations: Option<SensorData>,
+    pub max_accelerations: Option<SensorData>,
+    pub mean_distances: Option<SensorData>,
+    pub stdev_distances: Option<SensorData>,
+
+*/
 impl Calculated {
     pub fn get_distance(&self, sensor_id: usize, frame_no: usize) -> &SensorFloat {
 	self.distances.as_ref().unwrap()
+            .get(sensor_id) // Get the data for the i-th sensor.
+            .unwrap()
+            .get(frame_no) // Get the value for the f-th frame.
+            .unwrap()
+    }
+    pub fn get_velocity(&self, sensor_id: usize, frame_no: usize) -> &SensorFloat {
+	self.velocities.as_ref().unwrap()
+            .get(sensor_id) // Get the data for the i-th sensor.
+            .unwrap()
+            .get(frame_no) // Get the value for the f-th frame.
+            .unwrap()
+    }
+    pub fn get_acceleration(&self, sensor_id: usize, frame_no: usize) -> &SensorFloat {
+	self.accelerations.as_ref().unwrap()
             .get(sensor_id) // Get the data for the i-th sensor.
             .unwrap()
             .get(frame_no) // Get the value for the f-th frame.
