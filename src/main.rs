@@ -233,20 +233,18 @@ fn main() -> Result<()> {
     calculated.calculate_max_accelerations();
     calculated.calculate_mean_distances();
     calculated.calculate_stdev_distances();
+    calculated.calculate_mean_velocities();
+    calculated.calculate_stdev_velocities();
+    calculated.calculate_mean_accelerations();
+    calculated.calculate_stdev_accelerations();
 
     /// Output to std out.
     info!("Outputting data.");
     let time_start = Instant::now();
 
     let mut distances = calculated.distances.as_ref().unwrap(); // distances, per sensor!!!
-    let mut mean_distances = mocap::calculate_means(&distances);
-    let mut stdev_distances = mocap::calculate_stdevs(&distances);
     let mut velocities = calculated.velocities.as_ref().unwrap();
-    let mut mean_velocities = mocap::calculate_means(&velocities);
-    let mut stdev_velocities = mocap::calculate_stdevs(&velocities);
     let mut accelerations = calculated.accelerations.as_ref().unwrap();
-    let mut mean_accelerations = mocap::calculate_means(&accelerations);
-    let mut stdev_accelerations = mocap::calculate_stdevs(&accelerations);
 
     if args.noheader == false {
         for (i, marker_name) in mocap_file.marker_names.iter().enumerate() {
@@ -274,8 +272,8 @@ fn main() -> Result<()> {
             let min_d = calculated.get_min_distance(sensor_id);
             let max_d = calculated.get_max_distance(sensor_id);
 	    
-            let mean_d = mean_distances.get(sensor_id).unwrap();
-            let stdev_d = stdev_distances.get(sensor_id).unwrap();
+	    let mean_d = calculated.get_mean_distance(sensor_id);
+            let stdev_d = calculated.get_stdev_distance(sensor_id);
             let nor_d = mocap::normalise_minmax(&the_d, &min_d, &max_d);
             let std_d = mocap::standardise(&the_d, &mean_d, &stdev_d); // First one should really be 0.0?
 
@@ -283,8 +281,8 @@ fn main() -> Result<()> {
             let min_v = calculated.get_min_velocity(sensor_id);
             let max_v = calculated.get_max_velocity(sensor_id);
 
-            let mean_v = mean_velocities.get(sensor_id).unwrap();
-            let stdev_v = stdev_velocities.get(sensor_id).unwrap();
+            let mean_v = calculated.get_mean_velocity(sensor_id);
+            let stdev_v = calculated.get_stdev_velocity(sensor_id);
             let nor_v = mocap::normalise_minmax(&the_v, &min_v, &max_v);
             let std_v = mocap::standardise(&the_v, &mean_v, &stdev_v); // First one should really be 0.0?
 
@@ -292,8 +290,8 @@ fn main() -> Result<()> {
             let min_a = calculated.get_min_acceleration(sensor_id);
             let max_a = calculated.get_max_acceleration(sensor_id);
 
-            let mean_a = mean_accelerations.get(sensor_id).unwrap();
-            let stdev_a = stdev_accelerations.get(sensor_id).unwrap();
+            let mean_a = calculated.get_mean_acceleration(sensor_id);
+            let stdev_a = calculated.get_stdev_acceleration(sensor_id);
             let nor_a = mocap::normalise_minmax(&the_a, &min_a, &max_a);
             let std_a = mocap::standardise(&the_a, &mean_a, &stdev_a); // First one should really be 0.0?
 

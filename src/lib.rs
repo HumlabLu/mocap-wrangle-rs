@@ -325,6 +325,10 @@ pub struct Calculated {
     pub max_accelerations: Option<SensorData>,
     pub mean_distances: Option<SensorData>,
     pub stdev_distances: Option<SensorData>,
+    pub mean_velocities: Option<SensorData>,
+    pub stdev_velocities: Option<SensorData>,
+    pub mean_accelerations: Option<SensorData>,
+    pub stdev_accelerations: Option<SensorData>,
 }
 
 impl Default for Calculated {
@@ -341,6 +345,10 @@ impl Default for Calculated {
             max_accelerations: None,
             mean_distances: None,
             stdev_distances: None,
+            mean_velocities: None,
+            stdev_velocities: None,
+            mean_accelerations: None,
+            stdev_accelerations: None,
         }
     }
 }
@@ -450,17 +458,63 @@ impl Calculated {
             self.stdev_distances = Some(stdev_distances);
         }
     }
+
+    pub fn calculate_mean_velocities(&mut self) {
+        if self.mean_velocities.is_none() {
+            let mut mean_velocities: SensorData = vec![];
+            // .as_mut() returns a mutable reference.
+            let velocities = self.velocities.as_mut().unwrap(); // Vector with the velocities
+            for d in velocities {
+                let mean_d = mean(&d);
+                mean_velocities.push(mean_d);
+            }
+            self.mean_velocities = Some(mean_velocities);
+        }
+    }
+
+    pub fn calculate_stdev_velocities(&mut self) {
+        if self.stdev_velocities.is_none() {
+            let mut stdev_velocities: SensorData = vec![];
+            // .as_mut() returns a mutable reference.
+            let velocities = self.velocities.as_mut().unwrap(); // Vector with the velocities
+            for d in velocities {
+                let stdev_d = standard_dev(&d);
+                stdev_velocities.push(stdev_d);
+            }
+            self.stdev_velocities = Some(stdev_velocities);
+        }
+    }
+
+    pub fn calculate_mean_accelerations(&mut self) {
+        if self.mean_accelerations.is_none() {
+            let mut mean_accelerations: SensorData = vec![];
+            // .as_mut() returns a mutable reference.
+            let accelerations = self.accelerations.as_mut().unwrap(); // Vector with the accelerations
+            for d in accelerations {
+                let mean_d = mean(&d);
+                mean_accelerations.push(mean_d);
+            }
+            self.mean_accelerations = Some(mean_accelerations);
+        }
+    }
+
+    pub fn calculate_stdev_accelerations(&mut self) {
+        if self.stdev_accelerations.is_none() {
+            let mut stdev_accelerations: SensorData = vec![];
+            // .as_mut() returns a mutable reference.
+            let accelerations = self.accelerations.as_mut().unwrap(); // Vector with the accelerations
+            for d in accelerations {
+                let stdev_d = standard_dev(&d);
+                stdev_accelerations.push(stdev_d);
+            }
+            self.stdev_accelerations = Some(stdev_accelerations);
+        }
+    }
+
 }
 
-/*
-    pub min_velocities: Option<SensorData>,
-    pub max_velocities: Option<SensorData>,
-    pub min_accelerations: Option<SensorData>,
-    pub max_accelerations: Option<SensorData>,
-    pub mean_distances: Option<SensorData>,
-    pub stdev_distances: Option<SensorData>,
-
-*/
+/// Return some of the calculated values for sensor_id and frame_no.
+// Should add if Some(x) maybe.
 impl Calculated {
     pub fn get_distance(&self, sensor_id: usize, frame_no: usize) -> &SensorFloat {
 	self.distances.as_ref().unwrap()
@@ -478,6 +532,20 @@ impl Calculated {
     }
     pub fn get_max_distance(&self, sensor_id: usize) -> &SensorFloat {
             self.max_distances
+            .as_ref()
+            .unwrap()
+            .get(sensor_id) // The minimum value of the i-th sensor data.
+            .unwrap()
+    }
+    pub fn get_mean_distance(&self, sensor_id: usize) -> &SensorFloat {
+            self.mean_distances
+            .as_ref()
+            .unwrap()
+            .get(sensor_id) // The minimum value of the i-th sensor data.
+            .unwrap()
+    }
+    pub fn get_stdev_distance(&self, sensor_id: usize) -> &SensorFloat {
+            self.stdev_distances
             .as_ref()
             .unwrap()
             .get(sensor_id) // The minimum value of the i-th sensor data.
@@ -505,6 +573,20 @@ impl Calculated {
             .get(sensor_id) // The minimum value of the i-th sensor data.
             .unwrap()
     }
+    pub fn get_mean_velocity(&self, sensor_id: usize) -> &SensorFloat {
+            self.mean_velocities
+            .as_ref()
+            .unwrap()
+            .get(sensor_id) 
+            .unwrap()
+    }
+    pub fn get_stdev_velocity(&self, sensor_id: usize) -> &SensorFloat {
+            self.stdev_velocities
+            .as_ref()
+            .unwrap()
+            .get(sensor_id) // The minimum value of the i-th sensor data.
+            .unwrap()
+    }
 
     pub fn get_acceleration(&self, sensor_id: usize, frame_no: usize) -> &SensorFloat {
 	self.accelerations.as_ref().unwrap()
@@ -527,6 +609,21 @@ impl Calculated {
             .get(sensor_id) // The minimum value of the i-th sensor data.
             .unwrap()
     }
+    pub fn get_mean_acceleration(&self, sensor_id: usize) -> &SensorFloat {
+            self.mean_accelerations
+            .as_ref()
+            .unwrap()
+            .get(sensor_id) 
+            .unwrap()
+    }
+    pub fn get_stdev_acceleration(&self, sensor_id: usize) -> &SensorFloat {
+            self.stdev_accelerations
+            .as_ref()
+            .unwrap()
+            .get(sensor_id) // The minimum value of the i-th sensor data.
+            .unwrap()
+    }
+
 
 }
 
@@ -560,7 +657,7 @@ pub fn standardise(val: &SensorFloat, mean: &SensorFloat, stddev: &SensorFloat) 
     (val - mean) / stddev
 }
 
-/// A generalised mean calculator.
+/// A generalised means calculator.
 pub fn calculate_means(data: &Vec<SensorData>) -> SensorData {
     let mut means: SensorData = vec![];
     for d in data {
