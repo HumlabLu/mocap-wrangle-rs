@@ -453,8 +453,6 @@ impl Calculated {
 }
 
 /*
-    pub min_distances: Option<SensorData>,
-    pub max_distances: Option<SensorData>,
     pub min_velocities: Option<SensorData>,
     pub max_velocities: Option<SensorData>,
     pub min_accelerations: Option<SensorData>,
@@ -471,6 +469,21 @@ impl Calculated {
             .get(frame_no) // Get the value for the f-th frame.
             .unwrap()
     }
+    pub fn get_min_distance(&self, sensor_id: usize) -> &SensorFloat {
+            self.min_distances
+            .as_ref()
+            .unwrap()
+            .get(sensor_id) // The minimum value of the i-th sensor data.
+            .unwrap()
+    }
+    pub fn get_max_distance(&self, sensor_id: usize) -> &SensorFloat {
+            self.max_distances
+            .as_ref()
+            .unwrap()
+            .get(sensor_id) // The minimum value of the i-th sensor data.
+            .unwrap()
+    }
+
     pub fn get_velocity(&self, sensor_id: usize, frame_no: usize) -> &SensorFloat {
 	self.velocities.as_ref().unwrap()
             .get(sensor_id) // Get the data for the i-th sensor.
@@ -478,6 +491,21 @@ impl Calculated {
             .get(frame_no) // Get the value for the f-th frame.
             .unwrap()
     }
+    pub fn get_min_velocity(&self, sensor_id: usize) -> &SensorFloat {
+            self.min_velocities
+            .as_ref()
+            .unwrap()
+            .get(sensor_id) // The minimum value of the i-th sensor data.
+            .unwrap()
+    }
+    pub fn get_max_velocity(&self, sensor_id: usize) -> &SensorFloat {
+            self.max_velocities
+            .as_ref()
+            .unwrap()
+            .get(sensor_id) // The minimum value of the i-th sensor data.
+            .unwrap()
+    }
+
     pub fn get_acceleration(&self, sensor_id: usize, frame_no: usize) -> &SensorFloat {
 	self.accelerations.as_ref().unwrap()
             .get(sensor_id) // Get the data for the i-th sensor.
@@ -485,6 +513,21 @@ impl Calculated {
             .get(frame_no) // Get the value for the f-th frame.
             .unwrap()
     }
+    pub fn get_min_acceleration(&self, sensor_id: usize) -> &SensorFloat {
+            self.min_accelerations
+            .as_ref()
+            .unwrap()
+            .get(sensor_id) // The minimum value of the i-th sensor data.
+            .unwrap()
+    }
+    pub fn get_max_acceleration(&self, sensor_id: usize) -> &SensorFloat {
+            self.max_accelerations
+            .as_ref()
+            .unwrap()
+            .get(sensor_id) // The minimum value of the i-th sensor data.
+            .unwrap()
+    }
+
 }
 
 pub fn normalise_minmax(val: &SensorFloat, min: &SensorFloat, max: &SensorFloat) -> SensorFloat {
