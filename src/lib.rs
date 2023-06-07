@@ -100,6 +100,8 @@ pub struct MoCapFile {
     pub time_stamp: String,
     pub data_included: String,
     pub marker_names: Vec<String>,
+    pub frames: Option<Frames>,
+    pub calculated: Option<Calculated>
 }
 
 impl Default for MoCapFile {
@@ -120,6 +122,8 @@ impl Default for MoCapFile {
             time_stamp: String::new(),
             data_included: String::new(),
             marker_names: vec![],
+	    frames: None,
+	    calculated: None
         }
     }
 }
@@ -140,6 +144,8 @@ impl MoCapFile {
             false
         }
     }
+
+    // We could store the frames and calculate struc/functions here?
 }
 
 /// Outputs the header info in "mocap" style.
@@ -623,7 +629,6 @@ impl Calculated {
             .get(sensor_id) // The minimum value of the i-th sensor data.
             .unwrap()
     }
-
 
 }
 

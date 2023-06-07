@@ -333,6 +333,7 @@ fn main() -> Result<()> {
 }
 
 /// Parse the header, fill in the fields in the struct.
+// Implement this in MoCapFile instead
 fn parse_header(mocap_file: &mut MoCapFile) -> Result<()> {
     let filename = mocap_file.filename.clone();
     let file = File::open(&filename).expect("could not open file");
@@ -657,6 +658,7 @@ fn emit_header(marker_name: &String, xyz: bool) {
 /// Calculates the distances on the in-memory data frame. Returns a
 /// vector with a vector containing distances for each sensor. Indexed
 /// by position in the marker_names vector.
+// Move to calculated?
 fn calculate_distances(mocap_file: &MoCapFile, frames: &Frames) -> Distances {
     let mut dist = 0.0;
     let mut prev_triplet: Option<&Triplet> = None;
