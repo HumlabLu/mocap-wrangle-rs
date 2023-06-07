@@ -452,6 +452,16 @@ impl Calculated {
     }
 }
 
+impl Calculated {
+    pub fn get_distance(&self, sensor_id: usize, frame_no: usize) -> &SensorFloat {
+	self.distances.as_ref().unwrap()
+            .get(sensor_id) // Get the data for the i-th sensor.
+            .unwrap()
+            .get(frame_no) // Get the value for the f-th frame.
+            .unwrap()
+    }
+}
+
 pub fn normalise_minmax(val: &SensorFloat, min: &SensorFloat, max: &SensorFloat) -> SensorFloat {
     (val - min) / (max - min)
 }

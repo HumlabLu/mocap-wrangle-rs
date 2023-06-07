@@ -254,38 +254,7 @@ fn main() -> Result<()> {
                 print!("\t"); // Separator, but not at start/end.
             }
             // We need a "output fields for sensor" function, taking args to output relevant header.
-            if args.coords == true {
-                print!(
-                    "{}_X\t{}_Y\t{}_Z\t{}_az\t{}_in\t{}_d\t{}_dN\t{}_dS\t{}_v\t{}_vN\t{}_a\t{}_aN",
-                    marker_name,
-                    marker_name,
-                    marker_name,
-                    marker_name,
-                    marker_name,
-                    marker_name,
-                    marker_name,
-                    marker_name,
-                    marker_name,
-                    marker_name,
-                    marker_name,
-                    marker_name,
-                );
-            } else {
-                print!(
-                    "{}_az\t{}_in\t{}_d\t{}_dN\t{}_dS\t{}_v\t{}_vN\t{}_vS\t{}_a\t{}_aN\t{}_aS",
-                    marker_name,
-                    marker_name,
-                    marker_name,
-                    marker_name,
-                    marker_name,
-                    marker_name,
-                    marker_name,
-                    marker_name,
-                    marker_name,
-                    marker_name,
-                    marker_name,
-                );
-            }
+	    emit_header(&marker_name, args.coords);
         }
         println!();
     }
@@ -680,6 +649,42 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> Frames {
     );
 
     frames
+}
+
+/// Prints az, in, d, dN, dS, v, vN, a, aN
+fn emit_header(marker_name: &String, xyz: bool) {
+    if xyz == true {
+        print!(
+            "{}_X\t{}_Y\t{}_Z\t{}_az\t{}_in\t{}_d\t{}_dN\t{}_dS\t{}_v\t{}_vN\t{}_a\t{}_aN",
+            marker_name,
+            marker_name,
+            marker_name,
+            marker_name,
+            marker_name,
+            marker_name,
+            marker_name,
+            marker_name,
+            marker_name,
+            marker_name,
+            marker_name,
+            marker_name
+        );
+    } else {
+        print!(
+	    "{}_az\t{}_in\t{}_d\t{}_dN\t{}_dS\t{}_v\t{}_vN\t{}_vS\t{}_a\t{}_aN\t{}_aS",
+            marker_name,
+            marker_name,
+            marker_name,
+            marker_name,
+            marker_name,
+            marker_name,
+            marker_name,
+            marker_name,
+            marker_name,
+            marker_name,
+            marker_name
+        );
+    }
 }
 
 /// Calculates the distances on the in-memory data frame. Returns a
