@@ -453,7 +453,7 @@ impl Calculated {
 }
 
 impl Calculated {
-    pub fn get_distance(&self, sensor_id: usize, frame_no: usize) -> mut &SensorFloat {
+    pub fn get_distance(&self, sensor_id: usize, frame_no: usize) -> &SensorFloat {
 	self.distances.as_ref().unwrap()
             .get(sensor_id) // Get the data for the i-th sensor.
             .unwrap()
