@@ -271,54 +271,27 @@ fn main() -> Result<()> {
             let the_triplet = &frame[sensor_id];
 
 	    let the_d = calculated.get_distance(sensor_id, frame_no);
-            let min_d = calculated
-                .min_distances
-                .as_ref()
-                .unwrap()
-                .get(sensor_id) // The minimum value of the i-th sensor data.
-                .unwrap();
-            let max_d = calculated
-                .max_distances
-                .as_ref()
-                .unwrap()
-                .get(sensor_id)
-                .unwrap();
+            let min_d = calculated.get_min_distance(sensor_id);
+            let max_d = calculated.get_max_distance(sensor_id);
+	    
             let mean_d = mean_distances.get(sensor_id).unwrap();
             let stdev_d = stdev_distances.get(sensor_id).unwrap();
             let nor_d = mocap::normalise_minmax(&the_d, &min_d, &max_d);
             let std_d = mocap::standardise(&the_d, &mean_d, &stdev_d); // First one should really be 0.0?
 
             let the_v = calculated.get_velocity(sensor_id, frame_no);
-            let min_v = calculated
-                .min_velocities
-                .as_ref()
-                .unwrap()
-                .get(sensor_id)
-                .unwrap();
-            let max_v = calculated
-                .max_velocities
-                .as_ref()
-                .unwrap()
-                .get(sensor_id)
-                .unwrap();
+            let min_v = calculated.get_min_velocity(sensor_id);
+            let max_v = calculated.get_max_velocity(sensor_id);
+
             let mean_v = mean_velocities.get(sensor_id).unwrap();
             let stdev_v = stdev_velocities.get(sensor_id).unwrap();
             let nor_v = mocap::normalise_minmax(&the_v, &min_v, &max_v);
             let std_v = mocap::standardise(&the_v, &mean_v, &stdev_v); // First one should really be 0.0?
 
             let the_a = calculated.get_acceleration(sensor_id, frame_no);
-            let min_a = calculated
-                .min_accelerations
-                .as_ref()
-                .unwrap()
-                .get(sensor_id)
-                .unwrap();
-            let max_a = calculated
-                .max_accelerations
-                .as_ref()
-                .unwrap()
-                .get(sensor_id)
-                .unwrap();
+            let min_a = calculated.get_min_acceleration(sensor_id);
+            let max_a = calculated.get_max_acceleration(sensor_id);
+
             let mean_a = mean_accelerations.get(sensor_id).unwrap();
             let stdev_a = stdev_accelerations.get(sensor_id).unwrap();
             let nor_a = mocap::normalise_minmax(&the_a, &min_a, &max_a);
