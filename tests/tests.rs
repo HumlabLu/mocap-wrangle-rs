@@ -60,6 +60,10 @@ mod tests {
 	    time_stamp: String::new(),
 	    data_included: String::new(),
 	    marker_names: vec!["X".to_string()],
+	    frames: None,
+	    distances: None,
+	    velocities: None,
+	    accelerations: None
 	};
 	assert!(myfile.is_valid()==true);
     }
@@ -82,6 +86,10 @@ mod tests {
 	    time_stamp: String::new(),
 	    data_included: String::new(),
 	    marker_names: vec![],
+	    frames: None,
+	    distances: None,
+	    velocities: None,
+	    accelerations: None
 	};
 	assert!(myfile.is_valid()==false);
     }
@@ -163,6 +171,6 @@ mod tests {
 	let t0 = vec![5.0,6.7,1.5];
 	let t1 = vec![4.0,1.2,1.6];
 	let result = mocap::calculate_azimuth_inclination(&t0, &t1);
-	assert!(result==(5.5910645, -100.30485, 88.975174));
+	assert!(result==(5.5910645, -1.7506498, 1.5529097));
     }
 }
