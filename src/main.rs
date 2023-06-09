@@ -189,6 +189,7 @@ fn main() -> Result<()> {
 
     let time_start = Instant::now();
     let frames: Frames = read_frames(&mut mocap_file, &args);
+    //mocap_file.add_frames(frames);
     let time_duration = time_start.elapsed().as_millis() + 1; // Add one to avoid division by zero.
     let lps = mocap_file.num_frames as u128 * 1000 / time_duration;
 

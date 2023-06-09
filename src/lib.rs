@@ -146,6 +146,43 @@ impl MoCapFile {
     }
 
     // We could store the frames and calculate struc/functions here?
+    pub fn add_frames(&mut self, frames: Frames) {
+	self.frames = Some(frames.to_owned());
+	// call calculate dist/vel/acc here ?
+    }
+
+    pub fn calculate_distances(&mut self) {
+	let mut dist;// = 0.0;
+	let mut prev_triplet: Option<&Triplet>; // = None;
+	let mut distances: Distances = vec![Vec::<SensorFloat>::new(); self.num_markers()]; // HashMap?
+	
+	// We can even reserve the size of the distance vectors...
+	for v in &mut distances {
+            v.reserve_exact(self.num_frames);
+	}
+	
+	let it = self.marker_names.iter();
+	for (i, _marker_name) in it.enumerate() {
+            dist = 0.0;
+            prev_triplet = None;
+
+	    let frames: &Frames = self.frames.as_mut().unwrap();
+            for frame in frames {
+		let curr_triplet: &Triplet = &frame[i];
+		
+		if prev_triplet.is_some() {
+                    // Do we have a saved "previous line/triplet"?
+                    let x = prev_triplet.clone().unwrap();
+                    dist = dist_3d_t(&curr_triplet, &x);
+		}
+		distances[i].push(dist);
+		
+		//println!("{:?} {}", curr_triplet, dist); //, dist_3d_t(&curr_triplet, &prev_triplet));
+		prev_triplet = Some(curr_triplet);
+            }
+	}
+    }
+    
 }
 
 /// Outputs the header info in "mocap" style.
