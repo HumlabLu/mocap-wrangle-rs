@@ -199,7 +199,9 @@ fn main() -> Result<()> {
     );
 
     info!("Calculating distances.");
+    mocap_file.calculate_distances();
     let distances: Distances = calculate_distances(&mocap_file, &frames);
+    //let distances: &Distances = mocap_file.calculated.unwrap().distances.unwrap().as_ref();
     //println!("{:?}", distances);
 
     info!("Calculating velocities.");
@@ -219,7 +221,7 @@ fn main() -> Result<()> {
     // Should add the Frames here too, and Impl some of the functions
     // for the structure... Ideally all in the MoCapFile structure.b
     let mut calculated = Calculated {
-        distances: Some(distances),
+        //distances: Some(distances),
         velocities: Some(velocities),
         accelerations: Some(accelerations),
         ..Default::default()

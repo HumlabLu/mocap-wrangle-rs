@@ -101,7 +101,8 @@ pub struct MoCapFile {
     pub data_included: String,
     pub marker_names: Vec<String>,
     pub frames: Option<Frames>,
-    pub calculated: Option<Calculated>
+    pub distances: Option<Distances>,
+    pub velocities: Option<Velocities>,
 }
 
 impl Default for MoCapFile {
@@ -123,7 +124,8 @@ impl Default for MoCapFile {
             data_included: String::new(),
             marker_names: vec![],
 	    frames: None,
-	    calculated: None
+	    distances: None,
+	    velocities: None,
         }
     }
 }
@@ -181,8 +183,15 @@ impl MoCapFile {
 		prev_triplet = Some(curr_triplet);
             }
 	}
+	self.distances = Some(distances);
     }
-    
+
+    /// Calculates the velocities on the supplied Distance data.
+    /// Note that the velocity per frame is the same as the distance calculated above,
+    /// so unless we convert to m/s, they are the same.
+    pub fn calculate_velocities(&mut self) {
+	self.velocities = self.distances.clone();
+    }
 }
 
 /// Outputs the header info in "mocap" style.
@@ -397,6 +406,12 @@ impl Default for Calculated {
 }
 
 impl Calculated {
+    pub fn set_distances(&mut self, distances: Distances) {
+	self.distances = Some(distances.to_owned());
+    }
+}
+			 
+impl Calculated {
     pub fn is_valid(&self) -> bool {
         self.distances.is_some() && self.velocities.is_some() && self.accelerations.is_some()
     }
@@ -553,7 +568,6 @@ impl Calculated {
             self.stdev_accelerations = Some(stdev_accelerations);
         }
     }
-
 }
 
 /// Return some of the calculated values for sensor_id and frame_no.
@@ -666,7 +680,6 @@ impl Calculated {
             .get(sensor_id) // The minimum value of the i-th sensor data.
             .unwrap()
     }
-
 }
 
 pub fn normalise_minmax(val: &SensorFloat, min: &SensorFloat, max: &SensorFloat) -> SensorFloat {
