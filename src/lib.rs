@@ -149,6 +149,10 @@ impl MoCapFile {
         }
     }
 
+    // Should be precalculated and stored.
+    pub fn get_timeinc(&self) -> usize {
+	(1000 / self.frequency).try_into().unwrap()
+    }
     // We could store the frames and calculate struc/functions here?
     pub fn add_frames(&mut self, frames: Frames) {
 	self.frames = Some(frames.to_owned());
@@ -195,6 +199,7 @@ impl MoCapFile {
 	self.velocities = self.distances.clone();
     }
 
+    /// Calculate the acceleration (derivative of velocities).
     pub fn calculate_accelerations(&mut self) {
 	let mut accelerations: Accelerations = vec![SensorData::new(); self.num_markers()];
 	

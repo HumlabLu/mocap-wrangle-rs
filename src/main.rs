@@ -69,6 +69,10 @@ struct Args {
     #[clap(long, action, help = "Do not output header row.")]
     noheader: bool,
 
+    // Frameno/Timestamp output
+    #[clap(long, action, help = "Add frame number and timestamp.")]
+    timestamp: bool,
+
     // Force overwrite of output
     #[clap(long, action, help = "Overwrite output if it exists.")]
     force: bool,
@@ -246,26 +250,36 @@ fn main() -> Result<()> {
     let time_start = Instant::now();
 
     let mut distances = calculated.distances.as_ref().unwrap(); // distances, per sensor!!!
-    let mut velocities = calculated.velocities.as_ref().unwrap();
+    let mut velocities = calculated.velocities.as_ref().unwrap(); // Take from MoCapFile
     let mut accelerations = calculated.accelerations.as_ref().unwrap();
 
     if args.noheader == false {
+	if args.timestamp {
+	    print!("Frame\tTimestamp\t");
+	}
         for (i, marker_name) in mocap_file.marker_names.iter().enumerate() {
-            if i > 0 {
+	    if i > 0 {
                 print!("\t"); // Separator, but not at start/end.
-            }
-            // We need a "output fields for sensor" function, taking args to output relevant header.
+	    }
+	    // We need a "output fields for sensor" function, taking args to output relevant header.
 	    emit_header(&marker_name, args.coords);
         }
         println!();
     }
 
     let f_it = frames.iter();
+    let mut timestamp:usize = 0; // We divide by 1000 later to get ms
     for (frame_no, frame) in f_it.enumerate() {
         // Skip the first one (normalising the 0's doesn't make sense?
         if frame_no == 0 {
             //continue;
         }
+	
+	if args.timestamp == true {
+	    print!("{:.3}\t{:.3}\t", frame_no, timestamp as f64 / 1000.0);
+	    timestamp = timestamp + mocap_file.get_timeinc();
+	}
+	
         let it = mocap_file.marker_names.iter(); // Match to include?
         for (sensor_id, marker_name) in it.enumerate() {
             // The sensor_id-th column of triplets (a sensor)
@@ -301,7 +315,7 @@ fn main() -> Result<()> {
             let azim = azimuths.get(sensor_id).unwrap().get(frame_no).unwrap();
             let incl = inclinations.get(sensor_id).unwrap().get(frame_no).unwrap();
 
-            if sensor_id > 0 {
+            if !args.timestamp && sensor_id > 0 {
                 print!("\t");
             }
             if args.coords == true {
@@ -329,7 +343,7 @@ fn main() -> Result<()> {
     );
 
     if args.verbose {
-        println!("{:?}", mocap_file);
+        info!("{:?}", mocap_file);
     }
 
     Ok(())
