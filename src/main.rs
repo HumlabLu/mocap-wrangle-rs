@@ -724,7 +724,7 @@ fn calculate_accelerations(mocap_file: &MoCapFile, velocities: &Velocities) -> A
     for (i, marker_name) in it.enumerate() {
         //info!("Calculating accelerations for {}", marker_name);
 
-        accelerations[i].push(0.0); // Need to anchor wity 0.
+        accelerations[i].push(0.0); // Need to anchor with 0.
         let mut result = velocities[i]
             .windows(2)
             .map(|d| d[1] - d[0])

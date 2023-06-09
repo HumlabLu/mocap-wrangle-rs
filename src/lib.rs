@@ -103,6 +103,7 @@ pub struct MoCapFile {
     pub frames: Option<Frames>,
     pub distances: Option<Distances>,
     pub velocities: Option<Velocities>,
+    pub accelerations: Option<Accelerations>
 }
 
 impl Default for MoCapFile {
@@ -126,6 +127,7 @@ impl Default for MoCapFile {
 	    frames: None,
 	    distances: None,
 	    velocities: None,
+	    accelerations: None
         }
     }
 }
@@ -186,11 +188,29 @@ impl MoCapFile {
 	self.distances = Some(distances);
     }
 
-    /// Calculates the velocities on the supplied Distance data.
+    /// Calculates the velocities on the distance data.
     /// Note that the velocity per frame is the same as the distance calculated above,
     /// so unless we convert to m/s, they are the same.
     pub fn calculate_velocities(&mut self) {
 	self.velocities = self.distances.clone();
+    }
+
+    pub fn calculate_accelerations(&mut self) {
+	let mut accelerations: Accelerations = vec![SensorData::new(); self.num_markers()];
+	
+	let it = self.marker_names.iter();
+	for (i, _marker_name) in it.enumerate() {
+            //info!("Calculating accelerations for {}", marker_name);
+
+	    let velocities: &Velocities = &self.velocities.as_ref().unwrap().as_ref();
+            accelerations[i].push(0.0); // Need to anchor with 0.
+            let mut result = velocities[i]
+		.windows(2)
+		.map(|d| d[1] - d[0])
+		.collect::<Vec<SensorFloat>>();
+            accelerations[i].append(&mut result);
+	}
+	self.accelerations = Some(accelerations);
     }
 }
 
