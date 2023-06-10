@@ -315,7 +315,7 @@ fn main() -> Result<()> {
             let azim = azimuths.get(sensor_id).unwrap().get(frame_no).unwrap();
             let incl = inclinations.get(sensor_id).unwrap().get(frame_no).unwrap();
 
-            if !args.timestamp && sensor_id > 0 {
+            if sensor_id > 0 {
                 print!("\t");
             }
             if args.coords == true {
