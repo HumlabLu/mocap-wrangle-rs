@@ -241,17 +241,17 @@ fn main() -> Result<()> {
     calculated.calculate_min_distances();
     mocap_file.calculate_min_distances();
     
-    calculated.calculate_max_distances();
-    calculated.calculate_min_velocities();
-    calculated.calculate_max_velocities();
-    calculated.calculate_min_accelerations();
-    calculated.calculate_max_accelerations();
-    calculated.calculate_mean_distances();
-    calculated.calculate_stdev_distances();
-    calculated.calculate_mean_velocities();
-    calculated.calculate_stdev_velocities();
-    calculated.calculate_mean_accelerations();
-    calculated.calculate_stdev_accelerations();
+    mocap_file.calculate_max_distances();
+    mocap_file.calculate_min_velocities();
+    mocap_file.calculate_max_velocities();
+    mocap_file.calculate_min_accelerations();
+    mocap_file.calculate_max_accelerations();
+    mocap_file.calculate_mean_distances();
+    mocap_file.calculate_stdev_distances();
+    mocap_file.calculate_mean_velocities();
+    mocap_file.calculate_stdev_velocities();
+    mocap_file.calculate_mean_accelerations();
+    mocap_file.calculate_stdev_accelerations();
 
     /// Output to std out.
     info!("Outputting data.");
@@ -296,30 +296,30 @@ fn main() -> Result<()> {
             // The sensor_id-th column of triplets (a sensor)
             let the_triplet = &frame[sensor_id];
 
-	    let the_d = calculated.get_distance(sensor_id, frame_no);
-            let min_d = calculated.get_min_distance(sensor_id);
-            let max_d = calculated.get_max_distance(sensor_id);
+	    let the_d = mocap_file.get_distance(sensor_id, frame_no);
+            let min_d = mocap_file.get_min_distance(sensor_id);
+            let max_d = mocap_file.get_max_distance(sensor_id);
 	    
-	    let mean_d = calculated.get_mean_distance(sensor_id);
-            let stdev_d = calculated.get_stdev_distance(sensor_id);
+	    let mean_d = mocap_file.get_mean_distance(sensor_id);
+            let stdev_d = mocap_file.get_stdev_distance(sensor_id);
             let nor_d = mocap::normalise_minmax(&the_d, &min_d, &max_d);
             let std_d = mocap::standardise(&the_d, &mean_d, &stdev_d); // First one should really be 0.0?
 
-            let the_v = calculated.get_velocity(sensor_id, frame_no);
-            let min_v = calculated.get_min_velocity(sensor_id);
-            let max_v = calculated.get_max_velocity(sensor_id);
+            let the_v = mocap_file.get_velocity(sensor_id, frame_no);
+            let min_v = mocap_file.get_min_velocity(sensor_id);
+            let max_v = mocap_file.get_max_velocity(sensor_id);
 
-            let mean_v = calculated.get_mean_velocity(sensor_id);
-            let stdev_v = calculated.get_stdev_velocity(sensor_id);
+            let mean_v = mocap_file.get_mean_velocity(sensor_id);
+            let stdev_v = mocap_file.get_stdev_velocity(sensor_id);
             let nor_v = mocap::normalise_minmax(&the_v, &min_v, &max_v);
             let std_v = mocap::standardise(&the_v, &mean_v, &stdev_v); // First one should really be 0.0?
 
-            let the_a = calculated.get_acceleration(sensor_id, frame_no);
-            let min_a = calculated.get_min_acceleration(sensor_id);
-            let max_a = calculated.get_max_acceleration(sensor_id);
+            let the_a = mocap_file.get_acceleration(sensor_id, frame_no);
+            let min_a = mocap_file.get_min_acceleration(sensor_id);
+            let max_a = mocap_file.get_max_acceleration(sensor_id);
 
-            let mean_a = calculated.get_mean_acceleration(sensor_id);
-            let stdev_a = calculated.get_stdev_acceleration(sensor_id);
+            let mean_a = mocap_file.get_mean_acceleration(sensor_id);
+            let stdev_a = mocap_file.get_stdev_acceleration(sensor_id);
             let nor_a = mocap::normalise_minmax(&the_a, &min_a, &max_a);
             let std_a = mocap::standardise(&the_a, &mean_a, &stdev_a); // First one should really be 0.0?
 
