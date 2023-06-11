@@ -103,7 +103,21 @@ pub struct MoCapFile {
     pub frames: Option<Frames>,
     pub distances: Option<Distances>,
     pub velocities: Option<Velocities>,
-    pub accelerations: Option<Accelerations>
+    pub accelerations: Option<Accelerations>,
+    
+    pub min_distances: Option<SensorData>,
+    pub max_distances: Option<SensorData>,
+    pub min_velocities: Option<SensorData>,
+    pub max_velocities: Option<SensorData>,
+    pub min_accelerations: Option<SensorData>,
+    pub max_accelerations: Option<SensorData>,
+    pub mean_distances: Option<SensorData>,
+    pub stdev_distances: Option<SensorData>,
+    pub mean_velocities: Option<SensorData>,
+    pub stdev_velocities: Option<SensorData>,
+    pub mean_accelerations: Option<SensorData>,
+    pub stdev_accelerations: Option<SensorData>,
+
 }
 
 impl Default for MoCapFile {
@@ -127,7 +141,21 @@ impl Default for MoCapFile {
 	    frames: None,
 	    distances: None,
 	    velocities: None,
-	    accelerations: None
+	    accelerations: None,
+
+	    min_distances: None,
+            max_distances: None,
+            min_velocities: None,
+            max_velocities: None,
+            min_accelerations: None,
+            max_accelerations: None,
+            mean_distances: None,
+            stdev_distances: None,
+            mean_velocities: None,
+            stdev_velocities: None,
+            mean_accelerations: None,
+            stdev_accelerations: None,
+
         }
     }
 }
@@ -219,6 +247,22 @@ impl MoCapFile {
 	}
 	self.accelerations = Some(accelerations);
     }
+
+    // ---
+
+    pub fn calculate_min_distances(&mut self) {
+        if self.min_distances.is_none() {
+            let mut min_distances: SensorData = vec![];
+            // .as_mut() returns a mutable reference.
+            let distances = self.distances.as_mut().unwrap();
+            for d in distances {
+                let min_d: SensorFloat = d.iter().fold(f32::INFINITY, |a, &b| a.min(b));
+                min_distances.push(min_d);
+            }
+            self.min_distances = Some(min_distances);
+        }
+    }
+    
 }
 
 /// Outputs the header info in "mocap" style.

@@ -239,6 +239,8 @@ fn main() -> Result<()> {
 
     info!("Calculating min/max.");
     calculated.calculate_min_distances();
+    mocap_file.calculate_min_distances();
+    
     calculated.calculate_max_distances();
     calculated.calculate_min_velocities();
     calculated.calculate_max_velocities();
