@@ -403,6 +403,116 @@ impl MoCapFile {
         }
     }
 
+    // Getters
+
+    pub fn get_distance(&self, sensor_id: usize, frame_no: usize) -> &SensorFloat {
+	self.distances.as_ref().unwrap()
+            .get(sensor_id) // Get the data for the i-th sensor.
+            .unwrap()
+            .get(frame_no) // Get the value for the f-th frame.
+            .unwrap()
+    }
+    pub fn get_min_distance(&self, sensor_id: usize) -> &SensorFloat {
+            self.min_distances
+            .as_ref()
+            .unwrap()
+            .get(sensor_id) // The minimum value of the i-th sensor data.
+            .unwrap()
+    }
+    pub fn get_max_distance(&self, sensor_id: usize) -> &SensorFloat {
+            self.max_distances
+            .as_ref()
+            .unwrap()
+            .get(sensor_id) // The minimum value of the i-th sensor data.
+            .unwrap()
+    }
+    pub fn get_mean_distance(&self, sensor_id: usize) -> &SensorFloat {
+            self.mean_distances
+            .as_ref()
+            .unwrap()
+            .get(sensor_id) // The minimum value of the i-th sensor data.
+            .unwrap()
+    }
+    pub fn get_stdev_distance(&self, sensor_id: usize) -> &SensorFloat {
+            self.stdev_distances
+            .as_ref()
+            .unwrap()
+            .get(sensor_id) // The minimum value of the i-th sensor data.
+            .unwrap()
+    }
+
+    pub fn get_velocity(&self, sensor_id: usize, frame_no: usize) -> &SensorFloat {
+	self.velocities.as_ref().unwrap()
+            .get(sensor_id) // Get the data for the i-th sensor.
+            .unwrap()
+            .get(frame_no) // Get the value for the f-th frame.
+            .unwrap()
+    }
+    pub fn get_min_velocity(&self, sensor_id: usize) -> &SensorFloat {
+            self.min_velocities
+            .as_ref()
+            .unwrap()
+            .get(sensor_id) // The minimum value of the i-th sensor data.
+            .unwrap()
+    }
+    pub fn get_max_velocity(&self, sensor_id: usize) -> &SensorFloat {
+            self.max_velocities
+            .as_ref()
+            .unwrap()
+            .get(sensor_id) // The minimum value of the i-th sensor data.
+            .unwrap()
+    }
+    pub fn get_mean_velocity(&self, sensor_id: usize) -> &SensorFloat {
+            self.mean_velocities
+            .as_ref()
+            .unwrap()
+            .get(sensor_id) 
+            .unwrap()
+    }
+    pub fn get_stdev_velocity(&self, sensor_id: usize) -> &SensorFloat {
+            self.stdev_velocities
+            .as_ref()
+            .unwrap()
+            .get(sensor_id) // The minimum value of the i-th sensor data.
+            .unwrap()
+    }
+
+    pub fn get_acceleration(&self, sensor_id: usize, frame_no: usize) -> &SensorFloat {
+	self.accelerations.as_ref().unwrap()
+            .get(sensor_id) // Get the data for the i-th sensor.
+            .unwrap()
+            .get(frame_no) // Get the value for the f-th frame.
+            .unwrap()
+    }
+    pub fn get_min_acceleration(&self, sensor_id: usize) -> &SensorFloat {
+            self.min_accelerations
+            .as_ref()
+            .unwrap()
+            .get(sensor_id) // The minimum value of the i-th sensor data.
+            .unwrap()
+    }
+    pub fn get_max_acceleration(&self, sensor_id: usize) -> &SensorFloat {
+            self.max_accelerations
+            .as_ref()
+            .unwrap()
+            .get(sensor_id) // The minimum value of the i-th sensor data.
+            .unwrap()
+    }
+    pub fn get_mean_acceleration(&self, sensor_id: usize) -> &SensorFloat {
+            self.mean_accelerations
+            .as_ref()
+            .unwrap()
+            .get(sensor_id) 
+            .unwrap()
+    }
+    pub fn get_stdev_acceleration(&self, sensor_id: usize) -> &SensorFloat {
+            self.stdev_accelerations
+            .as_ref()
+            .unwrap()
+            .get(sensor_id) // The minimum value of the i-th sensor data.
+            .unwrap()
+    }
+
 }
 
 /// Outputs the header info in "mocap" style.
