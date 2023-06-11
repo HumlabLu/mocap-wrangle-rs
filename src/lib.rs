@@ -150,9 +150,11 @@ impl MoCapFile {
     }
 
     // Should be precalculated and stored.
+    /// Returns the frame gap in ms, e.g 200Hz -> 5ms.
     pub fn get_timeinc(&self) -> usize {
 	(1000 / self.frequency).try_into().unwrap()
     }
+    
     // We could store the frames and calculate struc/functions here?
     pub fn add_frames(&mut self, frames: Frames) {
 	self.frames = Some(frames.to_owned());

@@ -203,7 +203,10 @@ fn main() -> Result<()> {
     );
 
     info!("Calculating distances.");
-    //mocap_file.calculate_distances();
+
+    mocap_file.add_frames(frames.clone()); // PJB remove clone() when rest fixed!
+    mocap_file.calculate_distances();
+    
     let distances: Distances = calculate_distances(&mocap_file, &frames);
     //let distances: &Distances = mocap_file.calculated.unwrap().distances.unwrap().as_ref();
     //println!("{:?}", distances);
@@ -211,11 +214,14 @@ fn main() -> Result<()> {
     info!("Calculating velocities.");
     let velocities: Velocities = calculate_velocities(&mocap_file, &distances);
     //println!("{:?}", velocities);
-
+    mocap_file.calculate_velocities();
+    
     info!("Calculating accelerations.");
     let accelerations: Accelerations = calculate_accelerations(&mocap_file, &velocities);
     //println!("{:?}", accelerations);
 
+    mocap_file.calculate_accelerations();
+    
     info!("Calculating angles.");
     let (azimuths, inclinations): (Distances, Distances) = calculate_angles(&mocap_file, &frames);
     //println!("{:?}", azimuths);
@@ -249,10 +255,13 @@ fn main() -> Result<()> {
     info!("Outputting data.");
     let time_start = Instant::now();
 
-    let mut distances = calculated.distances.as_ref().unwrap(); // distances, per sensor!!!
-    let mut velocities = calculated.velocities.as_ref().unwrap(); // Take from MoCapFile
-    let mut accelerations = calculated.accelerations.as_ref().unwrap();
-
+    //let mut distances = calculated.distances.as_ref().unwrap(); // distances, per sensor!!!
+    let mut distances: &Distances = mocap_file.distances.as_ref().unwrap();
+    //let mut velocities = calculated.velocities.as_ref().unwrap(); // Take from MoCapFile
+    let mut velocities: &Velocities = mocap_file.velocities.as_ref().unwrap();
+    //let mut accelerations = calculated.accelerations.as_ref().unwrap();
+    let mut accelerations: &Accelerations = mocap_file.accelerations.as_ref().unwrap();
+    
     if args.noheader == false {
 	if args.timestamp {
 	    print!("Frame\tTimestamp\t");
