@@ -339,7 +339,7 @@ fn main() -> Result<()> {
     );
 
     if args.verbose {
-        info!("{:?}", mocap_file);
+        info!("{}", mocap_file);
     }
 
     Ok(())

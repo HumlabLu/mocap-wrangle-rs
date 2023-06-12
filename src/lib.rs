@@ -104,7 +104,6 @@ pub struct MoCapFile {
     pub distances: Option<Distances>,
     pub velocities: Option<Velocities>,
     pub accelerations: Option<Accelerations>,
-    
     pub min_distances: Option<SensorData>,
     pub max_distances: Option<SensorData>,
     pub min_velocities: Option<SensorData>,
@@ -142,7 +141,6 @@ impl Default for MoCapFile {
 	    distances: None,
 	    velocities: None,
 	    accelerations: None,
-
 	    min_distances: None,
             max_distances: None,
             min_velocities: None,
