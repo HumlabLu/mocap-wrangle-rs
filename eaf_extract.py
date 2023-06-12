@@ -130,11 +130,14 @@ classes = ["NONE"]
 # If we did not specify any tiers, we take them all.
 if not args.tiernames:
     args.tiernames = tier_names
-    
+
+#df_targets = df_data.iloc[:, [0, 1]].copy()
+
 for tier in args.tiernames:
     print( tier )
     ####classes = ["NONE"] # Initialising classes here repeats class indices for each tier.
     df_data.insert( len(df_data.columns), tier, 0 ) # tier as "EAF"
+    ##df_targets.insert( len(df_targets.columns), tier, 0 ) # tier as "EAF"
     annotation_data = eaf.get_annotation_data_for_tier( tier )
     #print( annotation_data )
     for a,b,x in annotation_data:
@@ -157,13 +160,14 @@ for tier in args.tiernames:
         # Instead of EAF, use tier name?
         #df_data.loc[ (df_data['Timestamp']>=t0m) & (df_data['Timestamp']<t1m), 'EAF' ] = cli
         df_data.loc[ (df_data['Timestamp']>=t0m) & (df_data['Timestamp']<t1m), tier ] = cli
+        ##df_targets.loc[ (df_data['Timestamp']>=t0m) & (df_data['Timestamp']<t1m), tier ] = cli
 
 print( classes )
 print( df_data.head() )
 print( df_data.tail() )
 
-pd.set_option('display.max_rows', 500)
-print( df_data.loc[ (df_data['Timestamp']>=24.600) & (df_data['Timestamp']<24.620)] )
+#pd.set_option('display.max_rows', 500)
+#print( df_data.loc[ (df_data['Timestamp']>=24.600) & (df_data['Timestamp']<24.620)] )
 
 print( "Saving output in", args.output )
 df_data.to_csv(
@@ -171,6 +175,22 @@ df_data.to_csv(
     index=False,
     sep="\t"
 )
+sys.exit(0)
+
+print( "-" )
+print( df_targets )
+print( "-" )
+
+# Expand doesn't work
+with open(args.output, "w") as f:
+    for i in range(0, len(df_data)):
+        data_row = df_data.iloc[i, 2:] # 2: to skip frame and TS
+        target_row = df_targets.iloc[i]
+        for t in range(0, len(args.tiernames)):
+            print( data_row.values )
+            for v in data_row.values:
+                f.write("{}\t".format( v ))
+                f.write("{}\n".format(target_row.iloc[t+2]))
 
 sys.exit(1)
 
