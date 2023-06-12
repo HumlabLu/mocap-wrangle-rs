@@ -90,7 +90,8 @@ mod tests {
 	    frames: None,
 	    distances: None,
 	    velocities: None,
-	    accelerations: None
+	    accelerations: None,
+	    ..Default::default()
 	};
 	assert!(myfile.is_valid()==false);
     }
