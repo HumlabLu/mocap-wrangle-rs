@@ -10,7 +10,7 @@ use std::io::{BufRead, BufWriter, Cursor, Seek, SeekFrom, Write};
 use std::path::Path;
 use std::time::{Duration, Instant};
 
-use mocap::{dist_3d, dist_3d_t, Calculated, MoCapFile};
+use mocap::{dist_3d, dist_3d_t, MoCapFile};
 use mocap::{
     Accelerations, Distances, Frame, Frames, SensorData, SensorFloat, SensorInt, Triplet,
     Velocities,
@@ -227,20 +227,8 @@ fn main() -> Result<()> {
     //println!("{:?}", azimuths);
     //println!("{:?}", inclinations);
 
-    // Move them into the structure.
-    // Should add the Frames here too, and Impl some of the functions
-    // for the structure... Ideally all in the MoCapFile structure.b
-    let mut calculated = Calculated {
-        distances: Some(distances),
-        velocities: Some(velocities),
-        accelerations: Some(accelerations),
-        ..Default::default()
-    };
-
     info!("Calculating min/max.");
-    calculated.calculate_min_distances();
     mocap_file.calculate_min_distances();
-    
     mocap_file.calculate_max_distances();
     mocap_file.calculate_min_velocities();
     mocap_file.calculate_max_velocities();
@@ -257,11 +245,8 @@ fn main() -> Result<()> {
     info!("Outputting data.");
     let time_start = Instant::now();
 
-    //let mut distances = calculated.distances.as_ref().unwrap(); // distances, per sensor!!!
     let mut distances: &Distances = mocap_file.distances.as_ref().unwrap();
-    //let mut velocities = calculated.velocities.as_ref().unwrap(); // Take from MoCapFile
     let mut velocities: &Velocities = mocap_file.velocities.as_ref().unwrap();
-    //let mut accelerations = calculated.accelerations.as_ref().unwrap();
     let mut accelerations: &Accelerations = mocap_file.accelerations.as_ref().unwrap();
     
     if args.noheader == false {
@@ -686,7 +671,6 @@ fn emit_header(marker_name: &String, xyz: bool) {
 /// Calculates the distances on the in-memory data frame. Returns a
 /// vector with a vector containing distances for each sensor. Indexed
 /// by position in the marker_names vector.
-// Move to calculated?
 fn calculate_distances(mocap_file: &MoCapFile, frames: &Frames) -> Distances {
     let mut dist = 0.0;
     let mut prev_triplet: Option<&Triplet> = None;
