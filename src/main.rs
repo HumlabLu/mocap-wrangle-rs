@@ -77,7 +77,8 @@ struct Args {
     #[clap(long, action, default_value_t = 0, help = "Starting time (ms).")]
     starttime: usize,
 
-    // Frameno start
+    // Frameno start (starttime could be calculated from this, but we keep it
+    // separate for now).
     #[clap(long, action, default_value_t = 0, help = "Starting frame number.")]
     startframe: usize,
 
@@ -573,7 +574,9 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> Frames {
     let mut line_no: usize = 0; // Counts line in the file.
     let mut frame_no: usize = 0; // Counts the lines with sensor data.
     let mut frames = Frames::with_capacity(mocap_file.no_of_frames as usize);
-
+    let mut frame_numbers = Vec::<usize>::with_capacity(mocap_file.no_of_frames as usize);
+    let mut timestamps = Vec::<usize>::with_capacity(mocap_file.no_of_frames as usize);
+    
     let time_start = Instant::now();
 
     // Using a framestep > 1 can be used to "smooth" the data (kind of).
@@ -603,14 +606,25 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> Frames {
                 let expected_num_bits = (mocap_file.no_of_markers * 3) as usize;
                 if num_bits > expected_num_bits {
                     // Two extra fields could mean a frame number and frame time!
+		    // We should save them.
                     let num_extra = num_bits - expected_num_bits;
-                    info!(
-                        "Got {} extra fields in line {}, skipping (or use -s{})!",
-                        num_extra, line_no, num_extra
-                    );
+		    if num_extra == 2 {
+			let frame_number = *&bits[0];
+			let frame_number = frame_number as usize;
+			let timestamp = &bits[1] * 1000.0; // We convert to milliseconds.
+			let timestamp = timestamp as usize;
+			//info!("{}/{}", frame_number, timestamp);
+			frame_numbers.push(frame_number);
+			timestamps.push(timestamp);
+		    } else {
+			info!(
+                            "Got {} extra fields in line {}, skipping line (or use -s{})!",
+                            num_extra, line_no, num_extra
+			);
+		    }
                 } else if num_bits < expected_num_bits {
                     info!(
-                        "Got {} ({}) missing fields in line {}, skip!",
+                        "Got {} ({}) missing fields in line {}, skipping!",
                         expected_num_bits - num_bits,
                         expected_num_bits,
                         line_no
