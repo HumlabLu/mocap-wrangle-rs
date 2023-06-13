@@ -77,6 +77,10 @@ struct Args {
     #[clap(long, action, default_value_t = 0, help = "Starting time (ms).")]
     starttime: usize,
 
+    // Frameno start
+    #[clap(long, action, default_value_t = 0, help = "Starting frame number.")]
+    startframe: usize,
+
     // Force overwrite of output
     #[clap(long, action, help = "Overwrite output if it exists.")]
     force: bool,
@@ -276,7 +280,7 @@ fn main() -> Result<()> {
         }
 	
 	if args.timestamp == true {
-	    print!("{:.3}\t{:.3}\t", frame_no, timestamp as f64 / 1000.0);
+	    print!("{:.3}\t{:.3}\t", frame_no + args.startframe, timestamp as f64 / 1000.0);
 	    timestamp = timestamp + mocap_file.get_timeinc();
 	}
 	
