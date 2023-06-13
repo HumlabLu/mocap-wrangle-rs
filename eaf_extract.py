@@ -36,7 +36,7 @@ import re
 parser = argparse.ArgumentParser()
 parser.add_argument( "-d", "--datafilename", default="gestures_ML_05_data.tsv",
                      help="Data file to use." )
-parser.add_argument( "-e", "--eaffilename", default="gestures_ML_05.eaf",
+parser.add_argument( "-e", "--eaffilename", default=None,
                      help="EAF file to use." )
 parser.add_argument( "-t", "--tiernames", default=[], action="append",
                      help="Tiernames to include in processing." )
@@ -50,10 +50,6 @@ args = parser.parse_args()
 # Check files.
 # ============================================================================
 
-if not args.eaffilename:
-    print( "No EAF filename specified, quitting." )
-    sys.exit(1)
-
 if os.path.exists( args.output ):
     print( f"Output file {args.output} already exists, overwriting." )
     #sys.exit(3)
@@ -62,10 +58,10 @@ if os.path.exists( args.output ):
 # Read the EAF file.
 # ============================================================================
 
-if not os.path.exists( args.eaffilename ):
-    print( f"EAF file {args.eaffilename} does not exist, quitting." )
-    sys.exit(2)
-eaf = pympi.Elan.Eaf(file_path=args.eaffilename, author='eaf_extract.py')
+eaf = None
+if args.eaffilename:
+    if os.path.exists( args.eaffilename ):
+        eaf = pympi.Elan.Eaf(file_path=args.eaffilename, author='eaf_extract.py')
 
 # ============================================================================
 # Get data.
@@ -120,8 +116,10 @@ print( time_delta, 1.0/time_delta )
 # get_full_time_interval()
 # get_tier_names()
 
-tier_names = eaf.get_tier_names()
-print( tier_names )
+tier_names = []
+if eaf:
+    tier_names = eaf.get_tier_names()
+    print( tier_names )
 
 # Initialising classes here gives a unique class index to
 # every annotation across all tiers.
@@ -138,7 +136,9 @@ for tier in args.tiernames:
     ####classes = ["NONE"] # Initialising classes here repeats class indices for each tier.
     df_data.insert( len(df_data.columns), tier, 0 ) # tier as "EAF"
     ##df_targets.insert( len(df_targets.columns), tier, 0 ) # tier as "EAF"
-    annotation_data = eaf.get_annotation_data_for_tier( tier )
+    annotation_data = []
+    if eaf:
+        annotation_data = eaf.get_annotation_data_for_tier( tier )
     #print( annotation_data )
     for a,b,x in annotation_data:
         cl_name = tier + "-" + x
@@ -175,13 +175,14 @@ df_data.to_csv(
     index=False,
     sep="\t"
 )
+
 sys.exit(0)
 
 print( "-" )
 print( df_targets )
 print( "-" )
 
-# Expand doesn't work
+# Expand doesn't really work...
 with open(args.output, "w") as f:
     for i in range(0, len(df_data)):
         data_row = df_data.iloc[i, 2:] # 2: to skip frame and TS
