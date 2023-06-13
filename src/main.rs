@@ -73,6 +73,10 @@ struct Args {
     #[clap(long, action, help = "Add frame number and timestamp.")]
     timestamp: bool,
 
+    // Timestamp start
+    #[clap(long, action, default_value_t = 0, help = "Starting time (ms).")]
+    starttime: usize,
+
     // Force overwrite of output
     #[clap(long, action, help = "Overwrite output if it exists.")]
     force: bool,
@@ -264,7 +268,7 @@ fn main() -> Result<()> {
     }
 
     let f_it = frames.iter();
-    let mut timestamp:usize = 0; // We divide by 1000 later to get ms
+    let mut timestamp:usize = args.starttime; // We divide by 1000 later to get ms
     for (frame_no, frame) in f_it.enumerate() {
         // Skip the first one (normalising the 0's doesn't make sense?
         if frame_no == 0 {
