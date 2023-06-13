@@ -201,7 +201,7 @@ fn main() -> Result<()> {
     }
 
     let time_start = Instant::now();
-    let frames: Frames = read_frames(&mut mocap_file, &args);
+    let (frames, frame_numbers, timestamps) = read_frames(&mut mocap_file, &args);
     //mocap_file.add_frames(frames);
     let time_duration = time_start.elapsed().as_millis() + 1; // Add one to avoid division by zero.
     let lps = mocap_file.num_frames as u128 * 1000 / time_duration;
@@ -216,19 +216,18 @@ fn main() -> Result<()> {
     mocap_file.add_frames(frames.clone()); // PJB remove clone() when rest fixed!
     mocap_file.calculate_distances();
     
-    let distances: Distances = calculate_distances(&mocap_file, &frames);
+    //let distances: Distances = calculate_distances(&mocap_file, &frames);
     //let distances: &Distances = mocap_file.calculated.unwrap().distances.unwrap().as_ref();
     //println!("{:?}", distances);
 
     info!("Calculating velocities.");
-    let velocities: Velocities = calculate_velocities(&mocap_file, &distances);
+    //let velocities: Velocities = calculate_velocities(&mocap_file, &distances);
     //println!("{:?}", velocities);
     mocap_file.calculate_velocities();
     
     info!("Calculating accelerations.");
-    let accelerations: Accelerations = calculate_accelerations(&mocap_file, &velocities);
+    //let accelerations: Accelerations = calculate_accelerations(&mocap_file, &velocities);
     //println!("{:?}", accelerations);
-
     mocap_file.calculate_accelerations();
     
     info!("Calculating angles.");
@@ -559,7 +558,7 @@ fn parse_data_deprecated(mocap_file: &mut MoCapFile, args: &Args) -> Result<()> 
 
 /// Read the data into memory. Can only be run after parse_header(...).
 /// Returns a Frames structure containing a vector with vectors with triplets.
-fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> Frames {
+fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> (Frames, Vec<usize>, Vec<usize>) {
     let filename = mocap_file.filename.clone();
     info!("Reading file {} into memory", filename);
     let file = File::open(&filename).expect("could not open file");
@@ -651,7 +650,7 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> Frames {
         frames.capacity()
     );
 
-    frames
+    (frames, frame_numbers, timestamps)
 }
 
 /// Prints az, in, d, dN, dS, v, vN, a, aN
