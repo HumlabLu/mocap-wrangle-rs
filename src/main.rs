@@ -221,9 +221,9 @@ fn main() -> Result<()> {
 
     info!("Calculating distances.");
 
-    mocap_file.add_frames(frames.clone()); // PJB remove clone() when rest fixed!
-    mocap_file.add_frame_numbers(frame_numbers.clone()); // PJB remove clone() when rest fixed!
-    mocap_file.add_timestamps(timestamps.clone()); // PJB remove clone() when rest fixed!
+    mocap_file.add_frames(frames);
+    mocap_file.add_frame_numbers(frame_numbers);
+    mocap_file.add_timestamps(timestamps);
     
     mocap_file.calculate_distances();
     
@@ -272,7 +272,9 @@ fn main() -> Result<()> {
         println!();
     }
 
-    let f_it = frames.iter();
+    let f_it = mocap_file.get_frames();
+    //let f_it = frames.iter();
+    let f_it = f_it.iter();
     let mut timestamp:usize = args.starttime; // We divide by 1000 later to get ms
     for (frame_no, frame) in f_it.enumerate() {
 	let the_frame_no: &usize = mocap_file.get_frame_number(frame_no);
