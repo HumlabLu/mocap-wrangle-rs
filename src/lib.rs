@@ -106,6 +106,8 @@ pub struct MoCapFile {
     pub distances: Option<Distances>,
     pub velocities: Option<Velocities>,
     pub accelerations: Option<Accelerations>,
+    pub azimuths: Option<Distances>,
+    pub inclinations: Option<Distances>,
     pub min_distances: Option<SensorData>,
     pub max_distances: Option<SensorData>,
     pub min_velocities: Option<SensorData>,
@@ -144,6 +146,8 @@ impl Default for MoCapFile {
 	    timestamps: None,
 	    distances: None,
 	    velocities: None,
+	    azimuths: None,
+	    inclinations: None,
 	    accelerations: None,
 	    min_distances: None,
             max_distances: None,
@@ -248,6 +252,48 @@ impl MoCapFile {
             accelerations[i].append(&mut result);
 	}
 	self.accelerations = Some(accelerations);
+    }
+
+    pub fn calculate_angles(&mut self) {
+	let mut angle;
+	let mut prev_triplet: Option<&Triplet>;
+	let mut azis: Distances = vec![Vec::<SensorFloat>::new(); self.num_markers()];
+	let mut incs: Distances = vec![Vec::<SensorFloat>::new(); self.num_markers()];
+	
+	// We can even reserve the size of the distance vectors...
+	for v in &mut azis {
+            v.reserve_exact(self.num_frames);
+	}
+	for v in &mut incs {
+            v.reserve_exact(self.num_frames);
+	}
+
+	let frames: &Frames = self.frames.as_mut().unwrap();
+	let it = self.marker_names.iter();
+	for (i, _marker_name) in it.enumerate() {
+            //info!("Calculating distances for {}", marker_name);
+	    
+            angle = (0.0, 0.0, 0.0);
+            prev_triplet = None;
+
+            for frame in frames {
+		let curr_triplet: &Triplet = &frame[i];
+		
+		if prev_triplet.is_some() {
+                    // Do we have a saved "previous line/triplet"?
+                    let x = prev_triplet.clone().unwrap();
+                    angle = calculate_azimuth_inclination(&curr_triplet, &x);
+		}
+		azis[i].push(angle.1);
+		incs[i].push(angle.2);
+		
+		//println!("{:?} {}", curr_triplet, dist); //, dist_3d_t(&curr_triplet, &prev_triplet));
+		prev_triplet = Some(curr_triplet);
+            }
+	}
+	
+	self.azimuths = Some(azis);
+	self.inclinations = Some(incs);
     }
 
     // ---
@@ -513,6 +559,22 @@ impl MoCapFile {
             .unwrap()
             .get(sensor_id) // The minimum value of the i-th sensor data.
             .unwrap()
+    }
+
+    pub fn get_azimuth(&self, sensor_id: usize, frame_no: usize) -> &SensorFloat {
+	self.azimuths.as_ref().unwrap()
+	    .get(sensor_id)
+	    .unwrap()
+	    .get(frame_no)
+	    .unwrap()
+    }
+
+    pub fn get_inclination(&self, sensor_id: usize, frame_no: usize) -> &SensorFloat {
+	self.inclinations.as_ref().unwrap()
+	    .get(sensor_id)
+	    .unwrap()
+	    .get(frame_no)
+	    .unwrap()
     }
 
 }

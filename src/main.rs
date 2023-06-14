@@ -231,7 +231,8 @@ fn main() -> Result<()> {
     mocap_file.calculate_accelerations();
     
     info!("Calculating angles.");
-    let (azimuths, inclinations): (Distances, Distances) = calculate_angles(&mocap_file, &frames);
+    //let (azimuths, inclinations): (Distances, Distances) = calculate_angles(&mocap_file, &frames);
+    mocap_file.calculate_angles();
     //println!("{:?}", azimuths);
     //println!("{:?}", inclinations);
 
@@ -316,8 +317,8 @@ fn main() -> Result<()> {
             let nor_a = mocap::normalise_minmax(&the_a, &min_a, &max_a);
             let std_a = mocap::standardise(&the_a, &mean_a, &stdev_a); // First one should really be 0.0?
 
-            let azim = azimuths.get(sensor_id).unwrap().get(frame_no).unwrap();
-            let incl = inclinations.get(sensor_id).unwrap().get(frame_no).unwrap();
+            let azim = mocap_file.get_azimuth(sensor_id, frame_no);
+            let incl = mocap_file.get_inclination(sensor_id, frame_no);
 
             if sensor_id > 0 {
                 print!("\t");
