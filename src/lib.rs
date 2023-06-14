@@ -101,8 +101,8 @@ pub struct MoCapFile {
     pub data_included: String,
     pub marker_names: Vec<String>,
     pub frames: Option<Frames>,
-    pub frame_numbers: Option<Vec<usize>>,
-    pub timestamps: Option<Vec<usize>>,
+    pub frame_numbers: Option<Vec<usize>>, // usize
+    pub timestamps: Option<Vec<usize>>, // usize (in ms)
     pub distances: Option<Distances>,
     pub velocities: Option<Velocities>,
     pub accelerations: Option<Accelerations>,
@@ -193,6 +193,14 @@ impl MoCapFile {
     pub fn add_frames(&mut self, frames: Frames) {
 	self.frames = Some(frames.to_owned());
 	// call calculate dist/vel/acc here ?
+    }
+    
+    pub fn add_frame_numbers(&mut self, frame_numbers: Vec<usize>) {
+	self.frame_numbers = Some(frame_numbers.to_owned());
+    }
+    
+    pub fn add_timestamps(&mut self, timestamps: Vec<usize>) {
+	self.timestamps = Some(timestamps.to_owned());
     }
 
     pub fn calculate_distances(&mut self) {
@@ -453,6 +461,22 @@ impl MoCapFile {
 
     // Getters
 
+    pub fn get_frame_number(&self, frame_no: usize) -> &usize {
+	self.frame_numbers
+	    .as_ref()
+	    .unwrap()
+	    .get(frame_no) // Get the value for the f-th frame.
+            .unwrap()
+    }
+    
+    pub fn get_timestamp(&self, frame_no: usize) -> &usize {
+	self.timestamps
+	    .as_ref()
+	    .unwrap()
+	    .get(frame_no) // Get the value for the f-th frame.
+            .unwrap()
+    }
+    
     pub fn get_distance(&self, sensor_id: usize, frame_no: usize) -> &SensorFloat {
 	self.distances.as_ref().unwrap()
             .get(sensor_id) // Get the data for the i-th sensor.

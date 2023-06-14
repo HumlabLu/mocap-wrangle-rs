@@ -214,27 +214,19 @@ fn main() -> Result<()> {
     info!("Calculating distances.");
 
     mocap_file.add_frames(frames.clone()); // PJB remove clone() when rest fixed!
+    mocap_file.add_frame_numbers(frame_numbers.clone()); // PJB remove clone() when rest fixed!
+    mocap_file.add_timestamps(timestamps.clone()); // PJB remove clone() when rest fixed!
+    
     mocap_file.calculate_distances();
     
-    //let distances: Distances = calculate_distances(&mocap_file, &frames);
-    //let distances: &Distances = mocap_file.calculated.unwrap().distances.unwrap().as_ref();
-    //println!("{:?}", distances);
-
     info!("Calculating velocities.");
-    //let velocities: Velocities = calculate_velocities(&mocap_file, &distances);
-    //println!("{:?}", velocities);
     mocap_file.calculate_velocities();
     
     info!("Calculating accelerations.");
-    //let accelerations: Accelerations = calculate_accelerations(&mocap_file, &velocities);
-    //println!("{:?}", accelerations);
     mocap_file.calculate_accelerations();
     
     info!("Calculating angles.");
-    //let (azimuths, inclinations): (Distances, Distances) = calculate_angles(&mocap_file, &frames);
     mocap_file.calculate_angles();
-    //println!("{:?}", azimuths);
-    //println!("{:?}", inclinations);
 
     info!("Calculating min/max.");
     mocap_file.calculate_min_distances();
@@ -281,8 +273,11 @@ fn main() -> Result<()> {
         }
 	
 	if args.timestamp == true {
-	    print!("{:.3}\t{:.3}\t", frame_no + args.startframe, timestamp as f64 / 1000.0);
-	    timestamp = timestamp + mocap_file.get_timeinc();
+	    // Get the t-th frame_number/timestamp.
+	    let the_frame_no = mocap_file.get_frame_number(frame_no);
+	    let the_timestamp = mocap_file.get_timestamp(frame_no);
+	    //print!("{:.3}\t{:.3}\t", frame_no + args.startframe, timestamp as f64 / 1000.0);
+	    print!("{:.3}\t{:.3}\t", the_frame_no, *the_timestamp as f64 / 1000.0);
 	}
 	
         let it = mocap_file.marker_names.iter(); // Match to include?
@@ -439,6 +434,7 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> (Frames, Vec<usize>, 
     let mut frames = Frames::with_capacity(mocap_file.no_of_frames as usize);
     let mut frame_numbers = Vec::<usize>::with_capacity(mocap_file.no_of_frames as usize);
     let mut timestamps = Vec::<usize>::with_capacity(mocap_file.no_of_frames as usize);
+    let mut timestamp: usize = 0;
     
     let time_start = Instant::now();
 
@@ -477,7 +473,11 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> (Frames, Vec<usize>, 
                         triplets.push(triplet);
                     }
                     frames.push(triplets);
+		    // Generate fake frame_number/timestamp
+		    frame_numbers.push(frame_no);
+		    timestamps.push(timestamp);
                     frame_no += 1;
+		    timestamp = timestamp + mocap_file.get_timeinc();
                 } else if num_extra == 2 {
 		    let frame_number = *&bits[0];
 		    let frame_number = frame_number as usize;
@@ -519,7 +519,7 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> (Frames, Vec<usize>, 
         frames.capacity()
     );
     if frame_numbers.len() > 0 {
-	info!("With frame_numbers and timestamps.");
+	info!("Contains frame_numbers and timestamps.");
     }
 
     (frames, frame_numbers, timestamps)
