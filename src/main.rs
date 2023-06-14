@@ -219,12 +219,11 @@ fn main() -> Result<()> {
         mocap_file.num_frames, time_duration, lps
     );
 
-    info!("Calculating distances.");
-
     mocap_file.add_frames(frames);
     mocap_file.add_frame_numbers(frame_numbers);
     mocap_file.add_timestamps(timestamps);
-    
+
+    info!("Calculating distances.");
     mocap_file.calculate_distances();
     
     info!("Calculating velocities.");
@@ -272,9 +271,7 @@ fn main() -> Result<()> {
         println!();
     }
 
-    let f_it = mocap_file.get_frames();
-    //let f_it = frames.iter();
-    let f_it = f_it.iter();
+    let f_it = mocap_file.get_frames().iter();
     let mut timestamp:usize = args.starttime; // We divide by 1000 later to get ms
     for (frame_no, frame) in f_it.enumerate() {
 	let the_frame_no: &usize = mocap_file.get_frame_number(frame_no);

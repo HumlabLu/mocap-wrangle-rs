@@ -524,6 +524,16 @@ impl MoCapFile {
             .get(frame_no) // Get the value for the f-th frame.
             .unwrap()
     }
+
+    // Convert to m/s from frequency. The stored value is in "frame" units.
+    pub fn get_velocity_ms(&self, sensor_id: usize, frame_no: usize) -> SensorFloat {
+	let v = self.velocities.as_ref().unwrap()
+            .get(sensor_id) // Get the data for the i-th sensor.
+            .unwrap()
+            .get(frame_no) // Get the value for the f-th frame.
+            .unwrap();
+	*v * self.frequency as f32
+    }
     pub fn get_min_velocity(&self, sensor_id: usize) -> &SensorFloat {
             self.min_velocities
             .as_ref()
@@ -560,6 +570,16 @@ impl MoCapFile {
             .get(frame_no) // Get the value for the f-th frame.
             .unwrap()
     }
+    
+    pub fn get_acceleration_ms(&self, sensor_id: usize, frame_no: usize) -> SensorFloat {
+	let a = self.accelerations.as_ref().unwrap()
+            .get(sensor_id) // Get the data for the i-th sensor.
+            .unwrap()
+            .get(frame_no) // Get the value for the f-th frame.
+            .unwrap();
+	*a * self.frequency as f32
+    }
+
     pub fn get_min_acceleration(&self, sensor_id: usize) -> &SensorFloat {
             self.min_accelerations
             .as_ref()
