@@ -474,8 +474,8 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> (Frames, Vec<usize>, 
                     }
                     frames.push(triplets);
 		    // Generate fake frame_number/timestamp
-		    frame_numbers.push(frame_no);
-		    timestamps.push(timestamp);
+		    frame_numbers.push(frame_no + args.startframe);
+		    timestamps.push(timestamp + args.starttime);
                     frame_no += 1;
 		    timestamp = timestamp + mocap_file.get_timeinc();
                 } else if num_extra == 2 {
