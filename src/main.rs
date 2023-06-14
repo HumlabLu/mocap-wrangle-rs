@@ -73,7 +73,7 @@ struct Args {
     #[clap(long, action, help = "Add frame number and timestamp.")]
     timestamp: bool,
 
-    // Timestamp start
+    // Timestamp start (also similar for output?
     #[clap(long, action, default_value_t = 0, help = "Starting time (ms).")]
     starttime: usize,
 
@@ -81,6 +81,14 @@ struct Args {
     // separate for now).
     #[clap(long, action, default_value_t = 0, help = "Starting frame number.")]
     startframe: usize,
+
+    // Output starting time? 
+    #[clap(long, action, default_value_t = 0, help = "Start outputting at this timestamp (ms).")]
+    outputstarttimestamp: usize,
+    
+    // Output starting frame_number? this is count, not the number in the file?
+    #[clap(long, action, default_value_t = 0, help = "Start outputting at this frame number.")]
+    outputstartframe: usize,
 
     // Force overwrite of output
     #[clap(long, action, help = "Overwrite output if it exists.")]
@@ -267,16 +275,16 @@ fn main() -> Result<()> {
     let f_it = frames.iter();
     let mut timestamp:usize = args.starttime; // We divide by 1000 later to get ms
     for (frame_no, frame) in f_it.enumerate() {
-        // Skip the first one (normalising the 0's doesn't make sense?
-        if frame_no == 0 {
-            //continue;
+	let the_frame_no: &usize = mocap_file.get_frame_number(frame_no);
+        if *the_frame_no < args.outputstartframe {
+            continue;
+        }
+	let the_timestamp: &usize = mocap_file.get_timestamp(frame_no);
+	if *the_timestamp < args.outputstarttimestamp {
+            continue;
         }
 	
 	if args.timestamp == true {
-	    // Get the t-th frame_number/timestamp.
-	    let the_frame_no = mocap_file.get_frame_number(frame_no);
-	    let the_timestamp = mocap_file.get_timestamp(frame_no);
-	    //print!("{:.3}\t{:.3}\t", frame_no + args.startframe, timestamp as f64 / 1000.0);
 	    print!("{:.3}\t{:.3}\t", the_frame_no, *the_timestamp as f64 / 1000.0);
 	}
 	
