@@ -243,6 +243,22 @@ impl MoCapFile {
 	self.velocities = self.distances.clone();
     }
 
+    pub fn calculate_velocities_ms(&mut self) {
+	let mut velocities: Velocities = vec![SensorData::new(); self.num_markers()];
+	let f = self.frequency as f32;
+	let it = self.marker_names.iter();
+	for (i, _marker_name) in it.enumerate() {
+	    let distances: &Distances = &self.distances.as_ref().unwrap().as_ref();
+            //velocities[i].push(0.0); // Need to anchor with 0.
+            let mut result = distances[i]
+		.windows(1)
+		.map(|d| d[0] * f)
+		.collect::<Vec<SensorFloat>>();
+            velocities[i].append(&mut result);
+	}
+	self.velocities = Some(velocities);
+    }
+
     /// Calculate the acceleration (derivative of velocities).
     pub fn calculate_accelerations(&mut self) {
 	let mut accelerations: Accelerations = vec![SensorData::new(); self.num_markers()];
