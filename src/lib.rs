@@ -120,6 +120,7 @@ pub struct MoCapFile {
     pub stdev_velocities: Option<SensorData>,
     pub mean_accelerations: Option<SensorData>,
     pub stdev_accelerations: Option<SensorData>,
+    pub resolution: SensorInt,
 
 }
 
@@ -161,7 +162,7 @@ impl Default for MoCapFile {
             stdev_velocities: None,
             mean_accelerations: None,
             stdev_accelerations: None,
-
+	    resolution: 100, // we have centimeters in data, factor 100 to meters.
         }
     }
 }
@@ -243,16 +244,18 @@ impl MoCapFile {
 	self.velocities = self.distances.clone();
     }
 
+    // Distance per second. Use resolution value to get meters.
     pub fn calculate_velocities_ms(&mut self) {
 	let mut velocities: Velocities = vec![SensorData::new(); self.num_markers()];
 	let f = self.frequency as f32;
+	let r = self.resolution as f32;
 	let it = self.marker_names.iter();
 	for (i, _marker_name) in it.enumerate() {
 	    let distances: &Distances = &self.distances.as_ref().unwrap().as_ref();
             //velocities[i].push(0.0); // Need to anchor with 0.
             let mut result = distances[i]
 		.windows(1)
-		.map(|d| d[0] * f)
+		.map(|d| d[0] * f / r)
 		.collect::<Vec<SensorFloat>>();
             velocities[i].append(&mut result);
 	}
@@ -272,6 +275,26 @@ impl MoCapFile {
             let mut result = velocities[i]
 		.windows(2)
 		.map(|d| d[1] - d[0])
+		.collect::<Vec<SensorFloat>>();
+            accelerations[i].append(&mut result);
+	}
+	self.accelerations = Some(accelerations);
+    }
+    
+    /// Calculate the acceleration in m/s. The above is in meter/second/frame.
+    pub fn calculate_accelerations_ms(&mut self) {
+	let mut accelerations: Accelerations = vec![SensorData::new(); self.num_markers()];
+	let f = self.frequency as f32;
+
+	let it = self.marker_names.iter();
+	for (i, _marker_name) in it.enumerate() {
+            //info!("Calculating accelerations for {}", marker_name);
+
+	    let velocities: &Velocities = &self.velocities.as_ref().unwrap().as_ref();
+            accelerations[i].push(0.0); // Need to anchor with 0.
+            let mut result = velocities[i]
+		.windows(2)
+		.map(|d| (d[1] - d[0]) * f)
 		.collect::<Vec<SensorFloat>>();
             accelerations[i].append(&mut result);
 	}

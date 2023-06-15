@@ -93,6 +93,10 @@ struct Args {
     // Force overwrite of output
     #[clap(long, action, help = "Overwrite output if it exists.")]
     force: bool,
+
+    // Caclulate in m/s
+    #[clap(long, short, action, help = "Convert vel/acc to m/s.")]
+    metric: bool,
 }
 
 // =====================================================================
@@ -225,12 +229,24 @@ fn main() -> Result<()> {
 
     info!("Calculating distances.");
     mocap_file.calculate_distances();
-    
-    info!("Calculating velocities.");
-    mocap_file.calculate_velocities();
-    
-    info!("Calculating accelerations.");
-    mocap_file.calculate_accelerations();
+
+    if args.metric == true {
+	info!("Calculating velocities in m/s.");
+	mocap_file.calculate_velocities_ms();
+    } else {
+	info!("Calculating velocities.");
+	mocap_file.calculate_velocities();
+    }
+
+    // Acceleration becomes in m/s automatically if velocity
+    // is in m/s.
+    if args.metric == true {
+	info!("Calculating accelerations in m/s.");
+	mocap_file.calculate_accelerations_ms();
+    } else {
+	info!("Calculating accelerations.");
+	mocap_file.calculate_accelerations();
+    }
     
     info!("Calculating angles.");
     mocap_file.calculate_angles();
@@ -326,7 +342,7 @@ fn main() -> Result<()> {
                 print!("\t");
             }
             if args.coords == true {
-                print!("{:.2}\t{:.2}\t{:.2}\t{:.1}\t{:.1}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}",
+                print!("{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}",
 		       the_triplet.get(0).unwrap(), the_triplet.get(1).unwrap(), the_triplet.get(2).unwrap(),
 		       azim, incl, the_d, nor_d, std_d,
 		       the_v, nor_v,
@@ -334,7 +350,7 @@ fn main() -> Result<()> {
 		);
             } else {
                 print!(
-                    "{:.1}\t{:.1}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}",
+                    "{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}",
                     azim, incl, the_d, nor_d, std_d, the_v, nor_v, std_v, the_a, nor_a, std_a
                 );
             }
