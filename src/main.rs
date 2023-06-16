@@ -354,6 +354,7 @@ fn main() -> Result<()> {
                     azim, incl, the_d, nor_d, std_d, the_v, nor_v, std_v, the_a, nor_a, std_a
                 );
             }
+	    
         }
         println!();
     }

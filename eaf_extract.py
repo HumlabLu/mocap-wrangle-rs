@@ -44,6 +44,12 @@ parser.add_argument( "-o", "--output", default="eaf_targets.tsv",
                      help="Output filename." )
 parser.add_argument( "-F", "--filter", action="append",
                      help="Regexp to filter output sensor names.", default=[] )
+parser.add_argument( "-S", "--standardised",  help="Output _S values", action="store_true" ) # standardised
+parser.add_argument( "-N", "--normalised", help="Output _N values", action="store_true" ) # normalised
+parser.add_argument( "-D", "--distances", help="Output distance values", action="store_true" )
+parser.add_argument( "-V", "--velocities", help="Output velocity values", action="store_true" )
+parser.add_argument( "-A", "--accelerations", help="Output acceleration values", action="store_true" )
+parser.add_argument( "-Z", "--directions", help="Output direction values", action="store_true" ) 
 args = parser.parse_args()
 
 # ============================================================================
@@ -84,13 +90,48 @@ df_data = pd.read_csv(
 filtered_columns = []
 args.filter.append( "Timestamp" )
 args.filter.append( "Frame" )
-for sensor in df_data.columns:
+for sensor in df_data.columns: # This is an "or" filter.
     for filter_re in args.filter:
         if re.search( filter_re, sensor ):
             filtered_columns.append( sensor )
 if len(filtered_columns) == 1: # If none (only TS and F), take all!
     filtered_columns = df_data.columns
-df_data = df_data[filtered_columns]# Not necessary...
+# Check for -S, -N etc
+new_cols = []
+new_cols.append( "Frame" )
+new_cols.append( "Timestamp" )
+for col in filtered_columns:
+    suffix = col[-2:]
+    if args.directions:
+        if suffix == "az":
+            new_cols.append( col )
+        elif suffix == "in":
+            new_cols.append( col )
+    # If we specify -D and not -N, we get the raw distance,
+    # If we specify -D and -N, we only get the normalised distance.
+    # The -S adds the standardised distance to one of the above.
+    if args.distances:
+        if not args.normalised and suffix == "_d":
+            new_cols.append( col )
+        if suffix == "dN" and args.normalised:
+            new_cols.append( col )
+        elif suffix == "dS" and args.standardised:
+                new_cols.append( col )
+    if args.velocities:
+        if not args.normalised and suffix == "_v":
+            new_cols.append( col )
+        if suffix == "vN" and args.normalised:
+            new_cols.append( col )
+        elif suffix == "vS" and args.standardised:
+            new_cols.append( col )
+    if args.accelerations:
+        if not args.normalised and suffix == "_a":
+            new_cols.append( col )
+        if suffix == "aN" and args.normalised:
+            new_cols.append( col )
+        elif suffix == "aS" and args.standardised:
+            new_cols.append( col )
+df_data = df_data[new_cols]
 
 # ============================================================================
 # Print.
