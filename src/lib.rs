@@ -102,7 +102,7 @@ pub struct MoCapFile {
     pub marker_names: Vec<String>,
     pub frames: Option<Frames>,
     pub frame_numbers: Option<Vec<usize>>, // usize
-    pub timestamps: Option<Vec<usize>>, // usize (in ms)
+    pub timestamps: Option<Vec<usize>>,    // usize (in ms)
     pub distances: Option<Distances>,
     pub velocities: Option<Velocities>,
     pub accelerations: Option<Accelerations>,
@@ -121,7 +121,6 @@ pub struct MoCapFile {
     pub mean_accelerations: Option<SensorData>,
     pub stdev_accelerations: Option<SensorData>,
     pub resolution: SensorInt,
-
 }
 
 impl Default for MoCapFile {
@@ -142,15 +141,15 @@ impl Default for MoCapFile {
             time_stamp: String::new(),
             data_included: String::new(),
             marker_names: vec![],
-	    frames: None,
-	    frame_numbers: None,
-	    timestamps: None,
-	    distances: None,
-	    velocities: None,
-	    azimuths: None,
-	    inclinations: None,
-	    accelerations: None,
-	    min_distances: None,
+            frames: None,
+            frame_numbers: None,
+            timestamps: None,
+            distances: None,
+            velocities: None,
+            azimuths: None,
+            inclinations: None,
+            accelerations: None,
+            min_distances: None,
             max_distances: None,
             min_velocities: None,
             max_velocities: None,
@@ -162,7 +161,7 @@ impl Default for MoCapFile {
             stdev_velocities: None,
             mean_accelerations: None,
             stdev_accelerations: None,
-	    resolution: 100, // we have centimeters in data, factor 100 to meters.
+            resolution: 100, // we have centimeters in data, factor 100 to meters.
         }
     }
 }
@@ -187,160 +186,160 @@ impl MoCapFile {
     // Should be precalculated and stored.
     /// Returns the frame gap in ms, e.g 200Hz -> 5ms.
     pub fn get_timeinc(&self) -> usize {
-	(1000 / self.frequency).try_into().unwrap()
+        (1000 / self.frequency).try_into().unwrap()
     }
-    
+
     // We could store the frames and calculate struc/functions here?
     pub fn add_frames(&mut self, frames: Frames) {
-	self.frames = Some(frames.to_owned());
-	// call calculate dist/vel/acc here ?
+        self.frames = Some(frames.to_owned());
+        // call calculate dist/vel/acc here ?
     }
-    
+
     pub fn add_frame_numbers(&mut self, frame_numbers: Vec<usize>) {
-	self.frame_numbers = Some(frame_numbers.to_owned());
+        self.frame_numbers = Some(frame_numbers.to_owned());
     }
-    
+
     pub fn add_timestamps(&mut self, timestamps: Vec<usize>) {
-	self.timestamps = Some(timestamps.to_owned());
+        self.timestamps = Some(timestamps.to_owned());
     }
 
     pub fn calculate_distances(&mut self) {
-	let mut dist;// = 0.0;
-	let mut prev_triplet: Option<&Triplet>; // = None;
-	let mut distances: Distances = vec![Vec::<SensorFloat>::new(); self.num_markers()]; // HashMap?
-	
-	// We can even reserve the size of the distance vectors...
-	for v in &mut distances {
+        let mut dist; // = 0.0;
+        let mut prev_triplet: Option<&Triplet>; // = None;
+        let mut distances: Distances = vec![Vec::<SensorFloat>::new(); self.num_markers()]; // HashMap?
+
+        // We can even reserve the size of the distance vectors...
+        for v in &mut distances {
             v.reserve_exact(self.num_frames);
-	}
-	
-	let it = self.marker_names.iter();
-	for (i, _marker_name) in it.enumerate() {
+        }
+
+        let it = self.marker_names.iter();
+        for (i, _marker_name) in it.enumerate() {
             dist = 0.0;
             prev_triplet = None;
 
-	    let frames: &Frames = self.frames.as_mut().unwrap();
+            let frames: &Frames = self.frames.as_mut().unwrap();
             for frame in frames {
-		let curr_triplet: &Triplet = &frame[i];
-		
-		if prev_triplet.is_some() {
+                let curr_triplet: &Triplet = &frame[i];
+
+                if prev_triplet.is_some() {
                     // Do we have a saved "previous line/triplet"?
                     let x = prev_triplet.clone().unwrap();
                     dist = dist_3d_t(&curr_triplet, &x);
-		}
-		distances[i].push(dist);
-		
-		//println!("{:?} {}", curr_triplet, dist); //, dist_3d_t(&curr_triplet, &prev_triplet));
-		prev_triplet = Some(curr_triplet);
+                }
+                distances[i].push(dist);
+
+                //println!("{:?} {}", curr_triplet, dist); //, dist_3d_t(&curr_triplet, &prev_triplet));
+                prev_triplet = Some(curr_triplet);
             }
-	}
-	self.distances = Some(distances);
+        }
+        self.distances = Some(distances);
     }
 
     /// Calculates the velocities on the distance data.
     /// Note that the velocity per frame is the same as the distance calculated above,
     /// so unless we convert to m/s, they are the same.
     pub fn calculate_velocities(&mut self) {
-	self.velocities = self.distances.clone();
+        self.velocities = self.distances.clone();
     }
 
     // Distance per second. Use resolution value to get meters.
     pub fn calculate_velocities_ms(&mut self) {
-	let mut velocities: Velocities = vec![SensorData::new(); self.num_markers()];
-	let f = self.frequency as f32;
-	let r = self.resolution as f32;
-	let it = self.marker_names.iter();
-	for (i, _marker_name) in it.enumerate() {
-	    let distances: &Distances = &self.distances.as_ref().unwrap().as_ref();
+        let mut velocities: Velocities = vec![SensorData::new(); self.num_markers()];
+        let f = self.frequency as f32;
+        let r = self.resolution as f32;
+        let it = self.marker_names.iter();
+        for (i, _marker_name) in it.enumerate() {
+            let distances: &Distances = &self.distances.as_ref().unwrap().as_ref();
             //velocities[i].push(0.0); // Need to anchor with 0.
             let mut result = distances[i]
-		.windows(1)
-		.map(|d| d[0] * f / r)
-		.collect::<Vec<SensorFloat>>();
+                .windows(1)
+                .map(|d| d[0] * f / r)
+                .collect::<Vec<SensorFloat>>();
             velocities[i].append(&mut result);
-	}
-	self.velocities = Some(velocities);
+        }
+        self.velocities = Some(velocities);
     }
 
     /// Calculate the acceleration (derivative of velocities).
     pub fn calculate_accelerations(&mut self) {
-	let mut accelerations: Accelerations = vec![SensorData::new(); self.num_markers()];
-	
-	let it = self.marker_names.iter();
-	for (i, _marker_name) in it.enumerate() {
+        let mut accelerations: Accelerations = vec![SensorData::new(); self.num_markers()];
+
+        let it = self.marker_names.iter();
+        for (i, _marker_name) in it.enumerate() {
             //info!("Calculating accelerations for {}", marker_name);
 
-	    let velocities: &Velocities = &self.velocities.as_ref().unwrap().as_ref();
+            let velocities: &Velocities = &self.velocities.as_ref().unwrap().as_ref();
             accelerations[i].push(0.0); // Need to anchor with 0.
             let mut result = velocities[i]
-		.windows(2)
-		.map(|d| d[1] - d[0])
-		.collect::<Vec<SensorFloat>>();
+                .windows(2)
+                .map(|d| d[1] - d[0])
+                .collect::<Vec<SensorFloat>>();
             accelerations[i].append(&mut result);
-	}
-	self.accelerations = Some(accelerations);
+        }
+        self.accelerations = Some(accelerations);
     }
-    
+
     /// Calculate the acceleration in m/s. The above is in meter/second/frame.
     pub fn calculate_accelerations_ms(&mut self) {
-	let mut accelerations: Accelerations = vec![SensorData::new(); self.num_markers()];
-	let f = self.frequency as f32;
+        let mut accelerations: Accelerations = vec![SensorData::new(); self.num_markers()];
+        let f = self.frequency as f32;
 
-	let it = self.marker_names.iter();
-	for (i, _marker_name) in it.enumerate() {
+        let it = self.marker_names.iter();
+        for (i, _marker_name) in it.enumerate() {
             //info!("Calculating accelerations for {}", marker_name);
 
-	    let velocities: &Velocities = &self.velocities.as_ref().unwrap().as_ref();
+            let velocities: &Velocities = &self.velocities.as_ref().unwrap().as_ref();
             accelerations[i].push(0.0); // Need to anchor with 0.
             let mut result = velocities[i]
-		.windows(2)
-		.map(|d| (d[1] - d[0]) * f)
-		.collect::<Vec<SensorFloat>>();
+                .windows(2)
+                .map(|d| (d[1] - d[0]) * f)
+                .collect::<Vec<SensorFloat>>();
             accelerations[i].append(&mut result);
-	}
-	self.accelerations = Some(accelerations);
+        }
+        self.accelerations = Some(accelerations);
     }
 
     pub fn calculate_angles(&mut self) {
-	let mut angle;
-	let mut prev_triplet: Option<&Triplet>;
-	let mut azis: Distances = vec![Vec::<SensorFloat>::new(); self.num_markers()];
-	let mut incs: Distances = vec![Vec::<SensorFloat>::new(); self.num_markers()];
-	
-	// We can even reserve the size of the distance vectors...
-	for v in &mut azis {
-            v.reserve_exact(self.num_frames);
-	}
-	for v in &mut incs {
-            v.reserve_exact(self.num_frames);
-	}
+        let mut angle;
+        let mut prev_triplet: Option<&Triplet>;
+        let mut azis: Distances = vec![Vec::<SensorFloat>::new(); self.num_markers()];
+        let mut incs: Distances = vec![Vec::<SensorFloat>::new(); self.num_markers()];
 
-	let frames: &Frames = self.frames.as_mut().unwrap();
-	let it = self.marker_names.iter();
-	for (i, _marker_name) in it.enumerate() {
+        // We can even reserve the size of the distance vectors...
+        for v in &mut azis {
+            v.reserve_exact(self.num_frames);
+        }
+        for v in &mut incs {
+            v.reserve_exact(self.num_frames);
+        }
+
+        let frames: &Frames = self.frames.as_mut().unwrap();
+        let it = self.marker_names.iter();
+        for (i, _marker_name) in it.enumerate() {
             //info!("Calculating distances for {}", marker_name);
-	    
+
             angle = (0.0, 0.0, 0.0);
             prev_triplet = None;
 
             for frame in frames {
-		let curr_triplet: &Triplet = &frame[i];
-		
-		if prev_triplet.is_some() {
+                let curr_triplet: &Triplet = &frame[i];
+
+                if prev_triplet.is_some() {
                     // Do we have a saved "previous line/triplet"?
                     let x = prev_triplet.clone().unwrap();
                     angle = calculate_azimuth_inclination(&curr_triplet, &x);
-		}
-		azis[i].push(angle.1);
-		incs[i].push(angle.2);
-		
-		//println!("{:?} {}", curr_triplet, dist); //, dist_3d_t(&curr_triplet, &prev_triplet));
-		prev_triplet = Some(curr_triplet);
+                }
+                azis[i].push(angle.1);
+                incs[i].push(angle.2);
+
+                //println!("{:?} {}", curr_triplet, dist); //, dist_3d_t(&curr_triplet, &prev_triplet));
+                prev_triplet = Some(curr_triplet);
             }
-	}
-	
-	self.azimuths = Some(azis);
-	self.inclinations = Some(incs);
+        }
+
+        self.azimuths = Some(azis);
+        self.inclinations = Some(incs);
     }
 
     // ---
@@ -358,7 +357,7 @@ impl MoCapFile {
         }
     }
 
-        pub fn calculate_max_distances(&mut self) {
+    pub fn calculate_max_distances(&mut self) {
         if self.max_distances.is_none() {
             let mut max_distances: SensorData = vec![];
             let distances = self.distances.as_mut().unwrap();
@@ -501,55 +500,57 @@ impl MoCapFile {
     // Getters
 
     pub fn get_frames(&self) -> &Frames {
-	self.frames.as_ref().unwrap()
+        self.frames.as_ref().unwrap()
     }
-    
+
     pub fn get_frame_number(&self, frame_no: usize) -> &usize {
-	self.frame_numbers
-	    .as_ref()
-	    .unwrap()
-	    .get(frame_no) // Get the value for the f-th frame.
+        self.frame_numbers
+            .as_ref()
+            .unwrap()
+            .get(frame_no) // Get the value for the f-th frame.
             .unwrap()
     }
-    
+
     pub fn get_timestamp(&self, frame_no: usize) -> &usize {
-	self.timestamps
-	    .as_ref()
-	    .unwrap()
-	    .get(frame_no) // Get the value for the f-th frame.
+        self.timestamps
+            .as_ref()
+            .unwrap()
+            .get(frame_no) // Get the value for the f-th frame.
             .unwrap()
     }
-    
+
     pub fn get_distance(&self, sensor_id: usize, frame_no: usize) -> &SensorFloat {
-	self.distances.as_ref().unwrap()
+        self.distances
+            .as_ref()
+            .unwrap()
             .get(sensor_id) // Get the data for the i-th sensor.
             .unwrap()
             .get(frame_no) // Get the value for the f-th frame.
             .unwrap()
     }
     pub fn get_min_distance(&self, sensor_id: usize) -> &SensorFloat {
-            self.min_distances
+        self.min_distances
             .as_ref()
             .unwrap()
             .get(sensor_id) // The minimum value of the i-th sensor data.
             .unwrap()
     }
     pub fn get_max_distance(&self, sensor_id: usize) -> &SensorFloat {
-            self.max_distances
+        self.max_distances
             .as_ref()
             .unwrap()
             .get(sensor_id) // The minimum value of the i-th sensor data.
             .unwrap()
     }
     pub fn get_mean_distance(&self, sensor_id: usize) -> &SensorFloat {
-            self.mean_distances
+        self.mean_distances
             .as_ref()
             .unwrap()
             .get(sensor_id) // The minimum value of the i-th sensor data.
             .unwrap()
     }
     pub fn get_stdev_distance(&self, sensor_id: usize) -> &SensorFloat {
-            self.stdev_distances
+        self.stdev_distances
             .as_ref()
             .unwrap()
             .get(sensor_id) // The minimum value of the i-th sensor data.
@@ -557,7 +558,9 @@ impl MoCapFile {
     }
 
     pub fn get_velocity(&self, sensor_id: usize, frame_no: usize) -> &SensorFloat {
-	self.velocities.as_ref().unwrap()
+        self.velocities
+            .as_ref()
+            .unwrap()
             .get(sensor_id) // Get the data for the i-th sensor.
             .unwrap()
             .get(frame_no) // Get the value for the f-th frame.
@@ -566,36 +569,39 @@ impl MoCapFile {
 
     // Convert to m/s from frequency. The stored value is in "frame" units.
     pub fn get_velocity_ms(&self, sensor_id: usize, frame_no: usize) -> SensorFloat {
-	let v = self.velocities.as_ref().unwrap()
+        let v = self
+            .velocities
+            .as_ref()
+            .unwrap()
             .get(sensor_id) // Get the data for the i-th sensor.
             .unwrap()
             .get(frame_no) // Get the value for the f-th frame.
             .unwrap();
-	*v * self.frequency as f32
+        *v * self.frequency as f32
     }
     pub fn get_min_velocity(&self, sensor_id: usize) -> &SensorFloat {
-            self.min_velocities
+        self.min_velocities
             .as_ref()
             .unwrap()
             .get(sensor_id) // The minimum value of the i-th sensor data.
             .unwrap()
     }
     pub fn get_max_velocity(&self, sensor_id: usize) -> &SensorFloat {
-            self.max_velocities
+        self.max_velocities
             .as_ref()
             .unwrap()
             .get(sensor_id) // The minimum value of the i-th sensor data.
             .unwrap()
     }
     pub fn get_mean_velocity(&self, sensor_id: usize) -> &SensorFloat {
-            self.mean_velocities
+        self.mean_velocities
             .as_ref()
             .unwrap()
-            .get(sensor_id) 
+            .get(sensor_id)
             .unwrap()
     }
     pub fn get_stdev_velocity(&self, sensor_id: usize) -> &SensorFloat {
-            self.stdev_velocities
+        self.stdev_velocities
             .as_ref()
             .unwrap()
             .get(sensor_id) // The minimum value of the i-th sensor data.
@@ -603,45 +609,50 @@ impl MoCapFile {
     }
 
     pub fn get_acceleration(&self, sensor_id: usize, frame_no: usize) -> &SensorFloat {
-	self.accelerations.as_ref().unwrap()
+        self.accelerations
+            .as_ref()
+            .unwrap()
             .get(sensor_id) // Get the data for the i-th sensor.
             .unwrap()
             .get(frame_no) // Get the value for the f-th frame.
             .unwrap()
     }
-    
+
     pub fn get_acceleration_ms(&self, sensor_id: usize, frame_no: usize) -> SensorFloat {
-	let a = self.accelerations.as_ref().unwrap()
+        let a = self
+            .accelerations
+            .as_ref()
+            .unwrap()
             .get(sensor_id) // Get the data for the i-th sensor.
             .unwrap()
             .get(frame_no) // Get the value for the f-th frame.
             .unwrap();
-	*a * self.frequency as f32
+        *a * self.frequency as f32
     }
 
     pub fn get_min_acceleration(&self, sensor_id: usize) -> &SensorFloat {
-            self.min_accelerations
+        self.min_accelerations
             .as_ref()
             .unwrap()
             .get(sensor_id) // The minimum value of the i-th sensor data.
             .unwrap()
     }
     pub fn get_max_acceleration(&self, sensor_id: usize) -> &SensorFloat {
-            self.max_accelerations
+        self.max_accelerations
             .as_ref()
             .unwrap()
             .get(sensor_id) // The minimum value of the i-th sensor data.
             .unwrap()
     }
     pub fn get_mean_acceleration(&self, sensor_id: usize) -> &SensorFloat {
-            self.mean_accelerations
+        self.mean_accelerations
             .as_ref()
             .unwrap()
-            .get(sensor_id) 
+            .get(sensor_id)
             .unwrap()
     }
     pub fn get_stdev_acceleration(&self, sensor_id: usize) -> &SensorFloat {
-            self.stdev_accelerations
+        self.stdev_accelerations
             .as_ref()
             .unwrap()
             .get(sensor_id) // The minimum value of the i-th sensor data.
@@ -649,21 +660,24 @@ impl MoCapFile {
     }
 
     pub fn get_azimuth(&self, sensor_id: usize, frame_no: usize) -> &SensorFloat {
-	self.azimuths.as_ref().unwrap()
-	    .get(sensor_id)
-	    .unwrap()
-	    .get(frame_no)
-	    .unwrap()
+        self.azimuths
+            .as_ref()
+            .unwrap()
+            .get(sensor_id)
+            .unwrap()
+            .get(frame_no)
+            .unwrap()
     }
 
     pub fn get_inclination(&self, sensor_id: usize, frame_no: usize) -> &SensorFloat {
-	self.inclinations.as_ref().unwrap()
-	    .get(sensor_id)
-	    .unwrap()
-	    .get(frame_no)
-	    .unwrap()
+        self.inclinations
+            .as_ref()
+            .unwrap()
+            .get(sensor_id)
+            .unwrap()
+            .get(frame_no)
+            .unwrap()
     }
-
 }
 
 /// Outputs the header info in "mocap" style.
