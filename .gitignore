@@ -1,1 +1,6 @@
 /target
+*.tsv
+*.csv
+*.png
+*.pht
+*~
