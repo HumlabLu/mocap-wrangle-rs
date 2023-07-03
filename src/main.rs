@@ -82,12 +82,22 @@ struct Args {
     #[clap(long, action, default_value_t = 0, help = "Starting frame number.")]
     startframe: usize,
 
-    // Output starting time? 
-    #[clap(long, action, default_value_t = 0, help = "Start outputting at this timestamp (ms).")]
+    // Output starting time?
+    #[clap(
+        long,
+        action,
+        default_value_t = 0,
+        help = "Start outputting at this timestamp (ms)."
+    )]
     outputstarttimestamp: usize,
-    
+
     // Output starting frame_number? this is count, not the number in the file?
-    #[clap(long, action, default_value_t = 0, help = "Start outputting at this frame number.")]
+    #[clap(
+        long,
+        action,
+        default_value_t = 0,
+        help = "Start outputting at this frame number."
+    )]
     outputstartframe: usize,
 
     // Force overwrite of output
@@ -231,23 +241,23 @@ fn main() -> Result<()> {
     mocap_file.calculate_distances();
 
     if args.metric == true {
-	info!("Calculating velocities in m/s.");
-	mocap_file.calculate_velocities_ms();
+        info!("Calculating velocities in m/s.");
+        mocap_file.calculate_velocities_ms();
     } else {
-	info!("Calculating velocities.");
-	mocap_file.calculate_velocities();
+        info!("Calculating velocities.");
+        mocap_file.calculate_velocities();
     }
 
     // Acceleration becomes in m/s automatically if velocity
     // is in m/s.
     if args.metric == true {
-	info!("Calculating accelerations in m/s.");
-	mocap_file.calculate_accelerations_ms();
+        info!("Calculating accelerations in m/s.");
+        mocap_file.calculate_accelerations_ms();
     } else {
-	info!("Calculating accelerations.");
-	mocap_file.calculate_accelerations();
+        info!("Calculating accelerations.");
+        mocap_file.calculate_accelerations();
     }
-    
+
     info!("Calculating angles.");
     mocap_file.calculate_angles();
 
@@ -272,47 +282,51 @@ fn main() -> Result<()> {
     let mut distances: &Distances = mocap_file.distances.as_ref().unwrap();
     let mut velocities: &Velocities = mocap_file.velocities.as_ref().unwrap();
     let mut accelerations: &Accelerations = mocap_file.accelerations.as_ref().unwrap();
-    
+
     if args.noheader == false {
-	if args.timestamp {
-	    print!("Frame\tTimestamp\t");
-	}
+        if args.timestamp {
+            print!("Frame\tTimestamp\t");
+        }
         for (i, marker_name) in mocap_file.marker_names.iter().enumerate() {
-	    if i > 0 {
+            if i > 0 {
                 print!("\t"); // Separator, but not at start/end.
-	    }
-	    // We need a "output fields for sensor" function, taking args to output relevant header.
-	    emit_header(&marker_name, args.coords);
+            }
+            // We need a "output fields for sensor" function, taking args to output relevant header.
+            emit_header(&marker_name, args.coords);
         }
         println!();
     }
 
     let f_it = mocap_file.get_frames().iter();
-    let mut timestamp:usize = args.starttime; // We divide by 1000 later to get ms
+    let mut timestamp: usize = args.starttime; // We divide by 1000 later to get ms
     for (frame_no, frame) in f_it.enumerate() {
-	let the_frame_no: &usize = mocap_file.get_frame_number(frame_no);
+        let the_frame_no: &usize = mocap_file.get_frame_number(frame_no);
         if *the_frame_no < args.outputstartframe {
             continue;
         }
-	let the_timestamp: &usize = mocap_file.get_timestamp(frame_no);
-	if *the_timestamp < args.outputstarttimestamp {
+        let the_timestamp: &usize = mocap_file.get_timestamp(frame_no);
+        if *the_timestamp < args.outputstarttimestamp {
             continue;
         }
-	
-	if args.timestamp == true {
-	    print!("{:.3}\t{:.3}\t", the_frame_no, *the_timestamp as f64 / 1000.0);
-	}
-	
+
+        if args.timestamp == true {
+            print!(
+                "{:.3}\t{:.3}\t",
+                the_frame_no,
+                *the_timestamp as f64 / 1000.0
+            );
+        }
+
         let it = mocap_file.marker_names.iter(); // Match to include?
         for (sensor_id, marker_name) in it.enumerate() {
             // The sensor_id-th column of triplets (a sensor)
             let the_triplet = &frame[sensor_id];
 
-	    let the_d = mocap_file.get_distance(sensor_id, frame_no);
+            let the_d = mocap_file.get_distance(sensor_id, frame_no);
             let min_d = mocap_file.get_min_distance(sensor_id);
             let max_d = mocap_file.get_max_distance(sensor_id);
-	    
-	    let mean_d = mocap_file.get_mean_distance(sensor_id);
+
+            let mean_d = mocap_file.get_mean_distance(sensor_id);
             let stdev_d = mocap_file.get_stdev_distance(sensor_id);
             let nor_d = mocap::normalise_minmax(&the_d, &min_d, &max_d);
             let std_d = mocap::standardise(&the_d, &mean_d, &stdev_d); // First one should really be 0.0?
@@ -354,7 +368,6 @@ fn main() -> Result<()> {
                     azim, incl, the_d, nor_d, std_d, the_v, nor_v, std_v, the_a, nor_a, std_a
                 );
             }
-	    
         }
         println!();
     }
@@ -459,7 +472,7 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> (Frames, Vec<usize>, 
     let mut frame_numbers = Vec::<usize>::with_capacity(mocap_file.no_of_frames as usize);
     let mut timestamps = Vec::<usize>::with_capacity(mocap_file.no_of_frames as usize);
     let mut timestamp: usize = 0;
-    
+
     let time_start = Instant::now();
 
     // Using a framestep > 1 can be used to "smooth" the data (kind of).
@@ -487,8 +500,8 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> (Frames, Vec<usize>, 
                 }
                 let num_bits = bits.len(); // Should be 3 * marker_names.len()
                 let expected_num_bits = (mocap_file.no_of_markers * 3) as usize;
-		let num_extra = num_bits - expected_num_bits;
-		if num_extra == 0 {
+                let num_extra = num_bits - expected_num_bits;
+                if num_extra == 0 {
                     let mut triplets = Frame::new();
                     for triplet in (0..num_bits).step_by(3) {
                         // Process per triple. (FIX duplicate code, see below!)
@@ -497,20 +510,20 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> (Frames, Vec<usize>, 
                         triplets.push(triplet);
                     }
                     frames.push(triplets);
-		    // Generate fake frame_number/timestamp
-		    frame_numbers.push(frame_no + args.startframe);
-		    timestamps.push(timestamp + args.starttime);
+                    // Generate fake frame_number/timestamp
+                    frame_numbers.push(frame_no + args.startframe);
+                    timestamps.push(timestamp + args.starttime);
                     frame_no += 1;
-		    timestamp = timestamp + mocap_file.get_timeinc();
+                    timestamp = timestamp + mocap_file.get_timeinc();
                 } else if num_extra == 2 {
-		    let frame_number = *&bits[0];
-		    let frame_number = frame_number as usize;
-		    let timestamp = &bits[1] * 1000.0; // We convert to milliseconds.
-		    let timestamp = timestamp as usize;
-		    //info!("{}/{}", frame_number, timestamp);
-		    frame_numbers.push(frame_number);
-		    timestamps.push(timestamp);
-		    let mut triplets = Frame::new();
+                    let frame_number = *&bits[0];
+                    let frame_number = frame_number as usize;
+                    let timestamp = &bits[1] * 1000.0; // We convert to milliseconds.
+                    let timestamp = timestamp as usize;
+                    //info!("{}/{}", frame_number, timestamp);
+                    frame_numbers.push(frame_number);
+                    timestamps.push(timestamp);
+                    let mut triplets = Frame::new();
                     for triplet in (2..num_bits).step_by(3) {
                         // Process per triple.
                         let slice = &bits[triplet..triplet + 3];
@@ -519,11 +532,11 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> (Frames, Vec<usize>, 
                     }
                     frames.push(triplets);
                     frame_no += 1;
-		} else if num_extra > 0 {
-		    info!(
+                } else if num_extra > 0 {
+                    info!(
                         "Got {} extra fields in line {}, skipping!",
                         num_extra, line_no
-		    );
+                    );
                 } else if num_bits < expected_num_bits {
                     info!(
                         "Got {} ({}) missing fields in line {}, skipping!",
@@ -543,7 +556,7 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> (Frames, Vec<usize>, 
         frames.capacity()
     );
     if frame_numbers.len() > 0 {
-	info!("Contains frame_numbers and timestamps.");
+        info!("Contains frame_numbers and timestamps.");
     }
 
     (frames, frame_numbers, timestamps)
@@ -569,7 +582,7 @@ fn emit_header(marker_name: &String, xyz: bool) {
         );
     } else {
         print!(
-	    "{}_az\t{}_in\t{}_d\t{}_dN\t{}_dS\t{}_v\t{}_vN\t{}_vS\t{}_a\t{}_aN\t{}_aS",
+            "{}_az\t{}_in\t{}_d\t{}_dN\t{}_dS\t{}_v\t{}_vN\t{}_vS\t{}_a\t{}_aN\t{}_aS",
             marker_name,
             marker_name,
             marker_name,
