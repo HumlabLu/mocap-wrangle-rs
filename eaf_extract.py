@@ -31,6 +31,19 @@ import re
 # cargo run -- -f gestures_ML_05.tsv --timestamp -s2 > gestures_ML_05_data.tsv
 # ============================================================================
 
+'''
+Workflow:
+    generate distances/velocities/etc
+    cargo run --release --  -f ~/Downloads/gestures_ML_05.tsv --force --timestamp  -s2  >gestures_ML_05_data.tsv
+
+    create datafile for NN training
+    python eaf_extract.py -d gestures_ML_05_data.tsv -e gestures_ML_05.eaf -F "LHandIn" 
+        -t LHand -o gestures_ML_05_data_targets_LHLH_ND.tsv -N -D
+
+    train
+    python torch_mocap_12.py -t gestures_ML_05_data_targets_LHLH_ND.tsv 
+'''
+
 # We need an output sensor list as well
 
 parser = argparse.ArgumentParser()
@@ -84,11 +97,11 @@ df_data = pd.read_csv(
 # ============================================================================
 # Keep the ones in the filter.
 # Assume we have Frame and Timestamp (these are needed, use the --timestamp
-# option when generating data).
+# option when generating data with mocap/main.rs).
 # ============================================================================
 
 filtered_columns = []
-args.filter.append( "Timestamp" )
+args.filter.append( "Timestamp" ) # These are automaticall filtered.
 args.filter.append( "Frame" )
 for sensor in df_data.columns: # This is an "or" filter.
     for filter_re in args.filter:
@@ -151,6 +164,7 @@ if "Timestamp" not in df_data.columns:
     sys.exit(4)
 time_delta = df_data.loc[df_data.index[1], 'Timestamp'] - df_data.loc[df_data.index[0], 'Timestamp']
 print( time_delta, 1.0/time_delta )
+# We could add the full text EAF annotation names as well...
 #df_data.insert( len(df_data.columns), "EAF", 0 )
 #print( df_data.head() )
 
@@ -186,13 +200,17 @@ for tier in args.tiernames:
         if cl_name not in classes:
             classes.append( cl_name )
             print( cl_name )
+    t_annotations = 0 # time with annotations
     for t0, t1, cl in annotation_data:
         t0m = t0 / 1000
         t1m = t1 / 1000
         cl_name = tier + "-" + cl
         cli = classes.index( cl_name )
-        
-        print( t0, t0m, t1, t1m, cl_name, cli )
+        t_delta = t1 - t0
+        t_annotations += t_delta
+
+        #                                      percentage of data with annotations 
+        print( t0, t0m, t1, t1m, cl_name, cli, "{:.1f}".format(t_annotations*100.0 / t1) )
         '''
         time ...............    class class index
         35450 35.45 37210 37.21  g1    1
@@ -207,8 +225,8 @@ print( classes )
 print( df_data.head() )
 print( df_data.tail() )
 
-#pd.set_option('display.max_rows', 500)
-#print( df_data.loc[ (df_data['Timestamp']>=24.600) & (df_data['Timestamp']<24.620)] )
+pd.set_option('display.max_rows', 500)
+print( df_data.loc[ (df_data['Timestamp']>=24.600) & (df_data['Timestamp']<24.620)] )
 
 print( "Saving output in", args.output )
 df_data.to_csv(
@@ -233,6 +251,8 @@ with open(args.output, "w") as f:
             for v in data_row.values:
                 f.write("{}\t".format( v ))
                 f.write("{}\n".format(target_row.iloc[t+2]))
+
+print( args )
 
 sys.exit(1)
 
