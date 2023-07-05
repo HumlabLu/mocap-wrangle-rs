@@ -261,7 +261,7 @@ impl MoCapFile {
         self.velocities = Some(velocities);
     }
 
-    /// Calculate the acceleration (derivative of velocities).
+    // Calculate the acceleration (derivative of velocities).
     pub fn calculate_accelerations(&mut self) {
         let mut accelerations: Accelerations = vec![SensorData::new(); self.num_markers()];
 
@@ -280,7 +280,7 @@ impl MoCapFile {
         self.accelerations = Some(accelerations);
     }
 
-    /// Calculate the acceleration in m/s. The above is in meter/second/frame.
+    // Calculate the acceleration in m/s. The above is in meter/second/frame.
     pub fn calculate_accelerations_ms(&mut self) {
         let mut accelerations: Accelerations = vec![SensorData::new(); self.num_markers()];
         let f = self.frequency as f32;
@@ -579,6 +579,8 @@ impl MoCapFile {
             .unwrap();
         *v * self.frequency as f32
     }
+
+    // Get all the min velocities for one sensor.
     pub fn get_min_velocity(&self, sensor_id: usize) -> &SensorFloat {
         self.min_velocities
             .as_ref()
@@ -608,6 +610,7 @@ impl MoCapFile {
             .unwrap()
     }
 
+    // Get one acceleration for a sensor and frame.
     pub fn get_acceleration(&self, sensor_id: usize, frame_no: usize) -> &SensorFloat {
         self.accelerations
             .as_ref()
@@ -782,7 +785,7 @@ pub fn extract_frequency(l: &str) -> Option<SensorInt> {
     }
 }
 
-// These are to be used again if we request the header in the output.
+// These are used if we request the header in the output.
 pub fn extract_marker_names(l: &str) -> Option<Vec<String>> {
     match RE_MARKER_NAMES.captures(l) {
         Some(caps) => {
