@@ -621,10 +621,8 @@ fn calculate_distances(mocap_file: &MoCapFile, frames: &Frames) -> Distances {
         for frame in frames {
             let curr_triplet: &Triplet = &frame[i];
 
-            if prev_triplet.is_some() {
-                // Do we have a saved "previous line/triplet"?
-                let x = prev_triplet.clone().unwrap();
-                dist = dist_3d_t(&curr_triplet, &x);
+            if let Some(pt) = prev_triplet {
+                dist = dist_3d_t(&curr_triplet, &pt);
             }
             distances[i].push(dist);
 
