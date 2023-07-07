@@ -679,6 +679,7 @@ fn calculate_accelerations(mocap_file: &MoCapFile, velocities: &Velocities) -> A
 fn calculate_angles(mocap_file: &MoCapFile, frames: &Frames) -> (Distances, Distances) {
     let mut angle = (0.0, 0.0, 0.0);
     let mut prev_triplet: Option<&Triplet> = None;
+    // Prepare the vector of vectors for the data.
     let mut azis: Distances = vec![Vec::<SensorFloat>::new(); mocap_file.marker_names.len()];
     let mut incs: Distances = vec![Vec::<SensorFloat>::new(); mocap_file.marker_names.len()];
 
@@ -700,10 +701,8 @@ fn calculate_angles(mocap_file: &MoCapFile, frames: &Frames) -> (Distances, Dist
         for frame in frames {
             let curr_triplet: &Triplet = &frame[i];
 
-            if prev_triplet.is_some() {
-                // Do we have a saved "previous line/triplet"?
-                let x = prev_triplet.clone().unwrap();
-                angle = mocap::calculate_azimuth_inclination(&curr_triplet, &x);
+            if let Some(pt) = prev_triplet {
+                angle = mocap::calculate_azimuth_inclination(&curr_triplet, &pt);
             }
             azis[i].push(angle.1);
             incs[i].push(angle.2);
