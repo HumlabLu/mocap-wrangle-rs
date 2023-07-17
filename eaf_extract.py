@@ -107,7 +107,7 @@ for sensor in df_data.columns: # This is an "or" filter.
     for filter_re in args.filter:
         if re.search( filter_re, sensor ):
             filtered_columns.append( sensor )
-if len(filtered_columns) == 1: # If none (only TS and F), take all!
+if len(filtered_columns) == 2: # If none (only TS and F), take all!
     filtered_columns = df_data.columns
 # Check for -S, -N etc
 new_cols = []
@@ -182,7 +182,7 @@ classes = ["NONE"]
 
 # If we did not specify any tiers, we take them all.
 if not args.tiernames:
-    args.tiernames = tier_names
+    args.tiernames = tier_names # These can still be null if no EAF file.
 
 #df_targets = df_data.iloc[:, [0, 1]].copy()
 
