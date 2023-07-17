@@ -448,7 +448,6 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> (Frames, Vec<usize>, 
                 }
                 let num_bits = bits.len(); // Should be 3 * marker_names.len()
                 let expected_num_bits = (mocap_file.no_of_markers * 3) as usize;
-                println!("{:?} {:?}", num_bits, expected_num_bits);
                 let num_extra = num_bits.checked_sub(expected_num_bits);
                 match num_extra {
                     Some(0) => {
