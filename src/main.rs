@@ -92,10 +92,6 @@ struct Args {
     )]
     outputstartframe: usize,
 
-    // Force overwrite of output
-    #[clap(long, action, help = "Overwrite output if it exists.")]
-    force: bool,
-
     // Caclulate in m/s
     #[clap(long, short, action, help = "Convert vel/acc to m/s.")]
     metric: bool,
