@@ -14,8 +14,19 @@ import re
 # Use PYVENV in ~/Development
 
 # ============================================================================
-# Extract targets form the tiers. The classes will be tiername-annotation.
-# No annotation will give class 0.
+# Combines the sensor data and annotations into a data file.
+#
+# The arguments `D`, `V`, `A` and `Z` choose distances, velocities, 
+# accelerations and directions respectively. These can be modified by 
+# adding `N` or `S` for normalised (scale -1..1) or standardised 
+# (subtract the mean, divide by the standard deviation) respectively. 
+# Note that the direction and azimuth values are not modified. Also note
+# that all the values are calculated by the Rust code. 
+#
+# Tiers (which become targets) from the EAF file can be chosen with 
+# the `-t` argument. The different annotations will be turned into 
+# (numeric) classes and become the target in the last column of the 
+# output (named after the tier).
 #
 # The data file needs to contain the Timestamp field to be able to match
 # the EAF data with the MoCap data. Use the --timestamp option if you
