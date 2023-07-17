@@ -92,7 +92,6 @@ struct Args {
     )]
     outputstartframe: usize,
 
-    // Caclulate in m/s
     #[clap(long, short, action, help = "Convert vel/acc to m/s.")]
     metric: bool,
 }
@@ -449,8 +448,60 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> (Frames, Vec<usize>, 
                 }
                 let num_bits = bits.len(); // Should be 3 * marker_names.len()
                 let expected_num_bits = (mocap_file.no_of_markers * 3) as usize;
-                let num_extra = num_bits - expected_num_bits;
-                if num_extra == 0 {
+                println!("{:?} {:?}", num_bits, expected_num_bits);
+                let num_extra = num_bits.checked_sub(expected_num_bits);
+                match num_extra {
+                    Some(0) => {
+                        let mut triplets = Frame::new();
+                        for triplet in (0..num_bits).step_by(3) {
+                            // Process per triple. (FIX duplicate code, see below!)
+                            let slice = &bits[triplet..triplet + 3];
+                            let triplet: Triplet = bits[triplet..triplet + 3].to_vec(); //vec![1.0, 2.0, 3.0];
+                            triplets.push(triplet);
+                        }
+                        frames.push(triplets);
+                        // Generate fake frame_number/timestamp
+                        frame_numbers.push(frame_no + args.startframe);
+                        timestamps.push(timestamp + args.starttime);
+                        frame_no += 1;
+                        timestamp = timestamp + mocap_file.get_timeinc();
+                    }
+                    Some(2) => {
+                        let frame_number = *&bits[0];
+                        let frame_number = frame_number as usize;
+                        let timestamp = &bits[1] * 1000.0; // We convert to milliseconds.
+                        let timestamp = timestamp as usize;
+                        //info!("{}/{}", frame_number, timestamp);
+                        frame_numbers.push(frame_number);
+                        timestamps.push(timestamp);
+                        let mut triplets = Frame::new();
+                        for triplet in (2..num_bits).step_by(3) {
+                            // Process per triple.
+                            let slice = &bits[triplet..triplet + 3];
+                            let triplet: Triplet = bits[triplet..triplet + 3].to_vec(); //vec![1.0, 2.0, 3.0];
+                            triplets.push(triplet);
+                        }
+                        frames.push(triplets);
+                        frame_no += 1;
+                    }
+                    _ => {
+                        info!(
+                            "Got {} extra fields in line {}, skipping!",
+                            expected_num_bits - num_bits,
+                            line_no
+                        );
+                    }
+                    None => {
+                        info!(
+                            "Got {} ({}) missing fields in line {}, skipping!",
+                            expected_num_bits - num_bits,
+                            expected_num_bits,
+                            line_no
+                        );
+                    }
+                }
+                /*
+                if num_extra == Some(0) {
                     let mut triplets = Frame::new();
                     for triplet in (0..num_bits).step_by(3) {
                         // Process per triple. (FIX duplicate code, see below!)
@@ -464,7 +515,7 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> (Frames, Vec<usize>, 
                     timestamps.push(timestamp + args.starttime);
                     frame_no += 1;
                     timestamp = timestamp + mocap_file.get_timeinc();
-                } else if num_extra == 2 {
+                } else if num_extra == Some(2) {
                     let frame_number = *&bits[0];
                     let frame_number = frame_number as usize;
                     let timestamp = &bits[1] * 1000.0; // We convert to milliseconds.
@@ -494,6 +545,7 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> (Frames, Vec<usize>, 
                         line_no
                     );
                 }
+                */
             } // If sensor data.
             line_no += 1;
         }
