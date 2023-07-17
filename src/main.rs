@@ -484,18 +484,18 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> (Frames, Vec<usize>, 
                         frames.push(triplets);
                         frame_no += 1;
                     }
-                    _ => {
-                        info!(
-                            "Got {} extra fields in line {}, skipping!",
-                            expected_num_bits - num_bits,
-                            line_no
-                        );
-                    }
                     None => {
                         info!(
                             "Got {} ({}) missing fields in line {}, skipping!",
                             expected_num_bits - num_bits,
                             expected_num_bits,
+                            line_no
+                        );
+                    }
+                    _ => {
+                        info!(
+                            "Got {} extra fields in line {}, skipping!",
+                            expected_num_bits - num_bits,
                             line_no
                         );
                     }
