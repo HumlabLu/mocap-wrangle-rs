@@ -18,14 +18,15 @@ import re
 # No annotation will give class 0.
 #
 # The data file needs to contain the Timestamp field to be able to match
-# the EAF data with the MoCap data.
+# the EAF data with the MoCap data. Use the --timestamp option if you
+# are using the Rust code to process the MoCap data.
 #
 # (PYVENV) pberck@ip21-178 mocap %
-# python eaf_extract.py -e gestures_ML_05.eaf -F LHandIn_in -t LHand
+#   python eaf_extract.py -e gestures_ML_05.eaf -F LHandIn_in -t LHand
 # or
-# python eaf_extract.py -e gestures_ML_05.eaf -F ".HandIn_*" -t LHand
+#   python eaf_extract.py -e gestures_ML_05.eaf -F ".HandIn_*" -t LHand
 # or
-# python eaf_extract.py -e gestures_ML_05.eaf -F ".HandIn_.$" -t LHand -t RHand
+#   python eaf_extract.py -e gestures_ML_05.eaf -F ".HandIn_.$" -t LHand -t RHand
 #
 # Useable data can be generated as follow.
 # cargo run -- -f gestures_ML_05.tsv --timestamp -s2 > gestures_ML_05_data.tsv
@@ -34,7 +35,7 @@ import re
 '''
 Workflow:
     generate distances/velocities/etc
-    cargo run --release --  -f ~/Downloads/gestures_ML_05.tsv --force --timestamp  -s2  >gestures_ML_05_data.tsv
+    cargo run --release -- -f ~/Downloads/gestures_ML_05.tsv --timestamp  -s2  >gestures_ML_05_data.tsv
 
     create datafile for NN training
     python eaf_extract.py -d gestures_ML_05_data.tsv -e gestures_ML_05.eaf -F "LHandIn" 
