@@ -46,7 +46,7 @@ import re
 '''
 Workflow:
     generate distances/velocities/etc
-    cargo run --release -- -f ~/Downloads/gestures_ML_05.tsv --timestamp  -s2  >gestures_ML_05_data.tsv
+    cargo run --release -- -f gestures_ML_05.tsv --timestamp -s2 >gestures_ML_05_data.tsv
 
     create datafile for NN training
     python eaf_extract.py -d gestures_ML_05_data.tsv -e gestures_ML_05.eaf -F "LHandIn" 
