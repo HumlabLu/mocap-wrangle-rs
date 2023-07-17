@@ -134,34 +134,6 @@ fn main() -> Result<()> {
     let args = Args::parse();
     info!("{:?}", args);
 
-    /*
-    let t0 = vec![0.0, 0.0, 0.0];
-    let t1 = vec![1.0, 0.0, 0.0];
-    let result = mocap::calculate_azimuth_inclination(&t0, &t1);
-    info!("{:?}", result);
-    let t0 = vec![0.0, 0.0, 0.0];
-    let t1 = vec![1.0, 0.0, 100.0];
-    let result = mocap::calculate_azimuth_inclination(&t0, &t1);
-    info!("{:?}", result);
-    let t0 = vec![0.0, 0.0, 0.0];
-    let t1 = vec![1.0, 0.0, -100.0];
-    let result = mocap::calculate_azimuth_inclination(&t0, &t1);
-    info!("{:?}", result);
-    */
-    /*
-    let t0 = vec![0.0, 0.0, 0.0];
-    let t1 = vec![-(3.0_f32.sqrt())/2.0, -0.5, 3.0_f32.sqrt()];
-    let result = mocap::calculate_azimuth_inclination(&t0, &t1);
-    info!("{:?}", result);
-
-    let t0 = vec![0.0, 0.0, 0.0];
-    let t1 = vec![-1.0, 1.0, 6.0_f32.sqrt()];
-    let result = mocap::calculate_azimuth_inclination(&t0, &t1);
-    info!("{:?}", result);
-    let pi = std::f32::consts::PI;
-    info!("{:?}", (2.0*2.0_f32.sqrt(), (3.0*pi/4.0).to_degrees(), (pi/6.0).to_degrees()));
-     */
-
     // =====================================================================
     // Read file line by line and calculate d3D
     //
@@ -182,18 +154,6 @@ fn main() -> Result<()> {
         error!("Error: Inputfile is too small!");
         std::process::exit(2);
     }
-
-    /*
-    let out_filename = if args.fileout.is_some() {
-        args.clone().fileout.unwrap() // unwrap() to get the value, which we know exists.
-    } else {
-        create_outputfilename(&filename)
-    };
-    if !&args.force && Path::new(&out_filename).exists() == true {
-        error!("Error: {} exists! Use --force to overwrite.", out_filename);
-        std::process::exit(1); // Or use Ulid to generate a filename? (https://github.com/huxi/rusty_ulid)
-    }
-    */
 
     // We have the filenames, create the structure.
     let mut mocap_file = MoCapFile {
