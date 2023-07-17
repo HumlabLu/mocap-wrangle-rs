@@ -86,7 +86,6 @@ pub fn calculate_azimuth_inclination(
 #[derive(Debug, Clone)]
 pub struct MoCapFile {
     pub filename: String,
-    pub out_filename: String,
     pub num_header_lines: usize,
     pub num_frames: usize,
     pub num_matches: usize,
@@ -127,7 +126,6 @@ impl Default for MoCapFile {
     fn default() -> MoCapFile {
         MoCapFile {
             filename: String::new(),
-            out_filename: String::new(),
             num_header_lines: 0,
             num_frames: 0,
             num_matches: 0,

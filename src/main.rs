@@ -31,13 +31,6 @@ struct Args {
     #[arg(short, long, default_value_t = String::from("street_adapt_1.tsv"))]
     file: String, // Path thingy?
 
-    #[arg(
-        short = 'o',
-        long,
-        help = "Output filename (auto-generated if unspecified)."
-    )]
-    fileout: Option<String>,
-
     // Extra output
     #[clap(long, short, action, help = "Produce superfluous output.")]
     verbose: bool,
@@ -190,6 +183,7 @@ fn main() -> Result<()> {
         std::process::exit(2);
     }
 
+    /*
     let out_filename = if args.fileout.is_some() {
         args.clone().fileout.unwrap() // unwrap() to get the value, which we know exists.
     } else {
@@ -199,11 +193,11 @@ fn main() -> Result<()> {
         error!("Error: {} exists! Use --force to overwrite.", out_filename);
         std::process::exit(1); // Or use Ulid to generate a filename? (https://github.com/huxi/rusty_ulid)
     }
+    */
 
     // We have the filenames, create the structure.
     let mut mocap_file = MoCapFile {
         filename: filename.clone(),
-        out_filename: out_filename,
         ..Default::default()
     };
 
