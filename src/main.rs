@@ -449,8 +449,14 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> (Frames, Vec<usize>, 
                 let num_bits = bits.len(); // Should be 3 * marker_names.len()
                 let expected_num_bits = (mocap_file.no_of_markers * 3) as usize;
                 let num_extra = num_bits.checked_sub(expected_num_bits);
+                // println!(
+                //     "{:?} {:?}",
+                //     num_extra,
+                //     num_bits.overflowing_sub(expected_num_bits)
+                // );
                 match num_extra {
                     Some(0) => {
+                        // We got what we expected.
                         let mut triplets = Frame::new();
                         for triplet in (0..num_bits).step_by(3) {
                             // Process per triple. (FIX duplicate code, see below!)
@@ -466,6 +472,7 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> (Frames, Vec<usize>, 
                         timestamp = timestamp + mocap_file.get_timeinc();
                     }
                     Some(2) => {
+                        // Two extra, we assume frame number and timestamp.
                         let frame_number = *&bits[0];
                         let frame_number = frame_number as usize;
                         let timestamp = &bits[1] * 1000.0; // We convert to milliseconds.
@@ -484,17 +491,17 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> (Frames, Vec<usize>, 
                         frame_no += 1;
                     }
                     None => {
+                        // Negative, we got fewer fields than expected.
                         info!(
-                            "Got {} ({}) missing fields in line {}, skipping!",
-                            expected_num_bits - num_bits,
-                            expected_num_bits,
-                            line_no
+                            "Got {} (want {}) missing fields in line {}, skipping!",
+                            num_bits, expected_num_bits, line_no
                         );
                     }
                     _ => {
+                        // More fields than expected.
                         info!(
                             "Got {} extra fields in line {}, skipping!",
-                            expected_num_bits - num_bits,
+                            num_bits - expected_num_bits,
                             line_no
                         );
                     }
