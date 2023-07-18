@@ -7,6 +7,7 @@ use std::env;
 use std::fs::{remove_file, File, OpenOptions};
 use std::io::{BufRead, BufWriter, Cursor, Seek, SeekFrom, Write};
 use std::path::Path;
+use std::process::exit;
 use std::time::{Duration, Instant};
 
 use mocap::{dist_3d, dist_3d_t, MoCapFile};
@@ -227,12 +228,19 @@ fn main() -> Result<()> {
     mocap_file.calculate_stdev_accelerations();
 
     /// Output to std out.
-    info!("Outputting data.");
+    let f_it = mocap_file.get_frames().iter();
+    if f_it.size_hint().0 == 0 {
+        info!("No data to output!");
+        std::process::exit(1);
+    } else {
+        info!("Outputting data.");
+    }
     let time_start = Instant::now();
 
-    let mut distances: &Distances = mocap_file.distances.as_ref().unwrap();
-    let mut velocities: &Velocities = mocap_file.velocities.as_ref().unwrap();
-    let mut accelerations: &Accelerations = mocap_file.accelerations.as_ref().unwrap();
+    let f_it = mocap_file.get_frames().iter();
+    if f_it.size_hint().0 == 0 {
+        info!("No data!");
+    }
 
     if args.noheader == false {
         if args.timestamp {
@@ -248,7 +256,6 @@ fn main() -> Result<()> {
         println!();
     }
 
-    let f_it = mocap_file.get_frames().iter();
     let mut timestamp: usize = args.starttime; // We divide by 1000 later to get ms
     for (frame_no, frame) in f_it.enumerate() {
         let the_frame_no: &usize = mocap_file.get_frame_number(frame_no);
