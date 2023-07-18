@@ -1,5 +1,5 @@
 [package]
-name = "mocap"
+name = "mocap-rs"
 version = "0.1.0"
 edition = "2021"
 author = "Peter Berck <peter.berck@humlab.lu.se>"
