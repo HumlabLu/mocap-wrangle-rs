@@ -185,6 +185,8 @@ fn main() -> Result<()> {
         mocap_file.num_frames, time_duration, lps
     );
 
+    // We could/should exit here if no frames.
+
     mocap_file.add_frames(frames);
     mocap_file.add_frame_numbers(frame_numbers);
     mocap_file.add_timestamps(timestamps);
@@ -228,19 +230,15 @@ fn main() -> Result<()> {
     mocap_file.calculate_stdev_accelerations();
 
     /// Output to std out.
-    let f_it = mocap_file.get_frames().iter();
-    if f_it.size_hint().0 == 0 {
+    if mocap_file.num_frames == 0 {
         info!("No data to output!");
         std::process::exit(1);
     } else {
         info!("Outputting data.");
     }
-    let time_start = Instant::now();
 
+    let time_start = Instant::now();
     let f_it = mocap_file.get_frames().iter();
-    if f_it.size_hint().0 == 0 {
-        info!("No data!");
-    }
 
     if args.noheader == false {
         if args.timestamp {
