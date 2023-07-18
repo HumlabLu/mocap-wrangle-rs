@@ -524,9 +524,6 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> (Frames, Vec<usize>, 
         frames.len(),
         frames.capacity()
     );
-    if frame_numbers.len() > 0 {
-        info!("Contains frame_numbers and timestamps.");
-    }
 
     (frames, frame_numbers, timestamps)
 }
