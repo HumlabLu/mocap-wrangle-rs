@@ -189,16 +189,16 @@ impl MoCapFile {
 
     // We could store the frames and calculate struc/functions here?
     pub fn add_frames(&mut self, frames: Frames) {
-        self.frames = Some(frames.to_owned());
+        self.frames = Some(frames);
         // call calculate dist/vel/acc here ?
     }
 
     pub fn add_frame_numbers(&mut self, frame_numbers: Vec<usize>) {
-        self.frame_numbers = Some(frame_numbers.to_owned());
+        self.frame_numbers = Some(frame_numbers);
     }
 
     pub fn add_timestamps(&mut self, timestamps: Vec<usize>) {
-        self.timestamps = Some(timestamps.to_owned());
+        self.timestamps = Some(timestamps);
     }
 
     pub fn calculate_distances(&mut self) {
