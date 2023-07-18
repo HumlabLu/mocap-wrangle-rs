@@ -139,6 +139,9 @@ fn main() -> Result<()> {
     // 1136 * 200 * 60 = 13,632,000 = 13 MB per minute
     // 30 minutes = 390 MB in memory (plus overhead).
     // About 1 GB per hour of video.
+    //
+    // 12000 lines @200Hz of gestures_ML_05 is 4181327 bytes on disk.
+    // 1 hour would be 720000 lines (plus header) = 250879620 bytes (240MB).
     // =====================================================================
 
     let filename = &args.file;
@@ -337,8 +340,7 @@ fn main() -> Result<()> {
 /// Parse the header, fill in the fields in the struct.
 // Implement this in MoCapFile instead
 fn parse_header(mocap_file: &mut MoCapFile) -> Result<()> {
-    let filename = mocap_file.filename.clone();
-    let file = File::open(&filename).expect("could not open file");
+    let file = File::open(&mocap_file.filename).expect("could not open file");
     let fileiter = std::io::BufReader::new(&file).lines();
     let mut line_no: usize = 0; // Counts lines in the file.
     let mut num_matches: usize = 0; // Counts regex matches.
@@ -403,9 +405,8 @@ fn parse_header(mocap_file: &mut MoCapFile) -> Result<()> {
 /// Read the data into memory. Can only be run after parse_header(...).
 /// Returns a Frames structure containing a vector with vectors with triplets.
 fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> (Frames, Vec<usize>, Vec<usize>) {
-    let filename = mocap_file.filename.clone();
-    info!("Reading file {} into memory", filename);
-    let file = File::open(&filename).expect("could not open file");
+    info!("Reading file {} into memory", &mocap_file.filename);
+    let file = File::open(&mocap_file.filename).expect("could not open file");
     let mut fileiter = std::io::BufReader::new(file).lines();
 
     // Skip the header.
