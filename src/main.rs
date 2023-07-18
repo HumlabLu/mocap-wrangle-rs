@@ -456,7 +456,7 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> (Frames, Vec<usize>, 
                 // );
                 match num_extra {
                     Some(0) => {
-                        // We got what we expected.
+                        // We got exactly what we expected.
                         let mut triplets = Frame::new();
                         for triplet in (0..num_bits).step_by(3) {
                             // Process per triple. (FIX duplicate code, see below!)
@@ -498,7 +498,7 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> (Frames, Vec<usize>, 
                         );
                     }
                     _ => {
-                        // More fields than expected.
+                        // More (other than two) fields than expected.
                         info!(
                             "Got {} extra fields in line {}, skipping!",
                             num_bits - expected_num_bits,
