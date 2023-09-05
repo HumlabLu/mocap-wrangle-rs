@@ -1,4 +1,4 @@
-# mocap-rs
+# mocap-wrangle-rs
 
 ## Description
 
@@ -10,8 +10,8 @@ Output is used to train NNs on gesture recognition.
 
 ## Disclaimer
 
-First stage.
-[x] Write code in Rust
-[ ] Make it more Rust
-[ ] Optimise
+First step.
+ - [x] Write code in Rust
+ - [ ] Make it more Rust-like
+ - [ ] Optimise
 

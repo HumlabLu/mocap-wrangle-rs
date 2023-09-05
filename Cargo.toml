@@ -1,17 +1,17 @@
 [package]
-name = "mocap-rs"
+name = "mocap-wrangle-rs"
 version = "0.1.0"
 edition = "2021"
 author = "Peter Berck <peter.berck@humlab.lu.se>"
 about = "Calculates 3D distances from X, Y and Z coordinates."
 description = "Calculates 3D distances from X, Y and Z coordinates."
-repository = "https://github.com/"
+repository = "https://github.com/HumLabLu"
 readme = "README.md"
 homepage = "http://humlab.lu.se"
 keywords = ["MoCap"]
 
 [[bin]]
-name = "mocap"
+name = "mocap-wrangle"
 path = "src/main.rs"
 
 [lib]
