@@ -256,6 +256,8 @@ fn main() -> Result<()> {
 
     let mut timestamp: usize = args.starttime; // We divide by 1000 later to get ms
     for (frame_no, frame) in f_it.enumerate() {
+        // We skip if we have supplied outputstartframe/outputstarttimestamp
+        // and we have not reached the lower threshold yet.
         let the_frame_no: &usize = mocap_file.get_frame_number(frame_no);
         if *the_frame_no < args.outputstartframe {
             continue;
@@ -317,7 +319,7 @@ fn main() -> Result<()> {
 		       azim, incl, the_d, nor_d, std_d,
 		       the_v, nor_v,
 		       the_a, nor_a
-		);
+		        );
             } else {
                 print!(
                     "{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}",
@@ -526,7 +528,8 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> (Frames, Vec<usize>, 
     (frames, frame_numbers, timestamps)
 }
 
-/// Prints az, in, d, dN, dS, v, vN, a, aN
+/// Prints sensor name plus az, in, d, dN, dS, v, vN, a, aN
+/// Optionally includes X, Y, Z coordinates.
 fn emit_header(marker_name: &String, xyz: bool) {
     if xyz == true {
         print!(
