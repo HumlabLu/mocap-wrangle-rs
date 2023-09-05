@@ -1,9 +1,5 @@
-#![allow(unused)] // Remove me for release build
 use clap::Parser;
 use color_eyre::Result;
-use rand::Rng;
-use regex::{Regex, RegexSet};
-use std::env;
 use std::fs::{remove_file, File, OpenOptions};
 use std::io::{BufRead, BufWriter, Cursor, Seek, SeekFrom, Write};
 use std::path::Path;
