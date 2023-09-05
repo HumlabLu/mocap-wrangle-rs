@@ -425,14 +425,13 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> (Frames, Vec<usize>, 
     let mut timestamps = Vec::<usize>::with_capacity(mocap_file.no_of_frames as usize);
     let mut timestamp: usize = 0;
 
-    let time_start = Instant::now();
-
     // Using a framestep > 1 can be used to "smooth" the data (kind of).
     for line in fileiter.step_by(args.framestep) {
         if let Ok(l) = line {
             if l.len() < 1 {
                 continue;
             }
+            // Check if identical to previous line?
             let ch = &l.chars().take(1).last().unwrap(); // Surely, this could be simplified?!
             if ch.is_ascii_uppercase() {
                 // this shouldn't happen, FIX.
@@ -497,7 +496,7 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> (Frames, Vec<usize>, 
                     None => {
                         // Negative, we got fewer fields than expected.
                         info!(
-                            "Got {} (want {}) missing fields in line {}, skipping!",
+                            "Got {} (want {}); missing fields in line {}, skipping!",
                             num_bits, expected_num_bits, line_no
                         );
                     }
