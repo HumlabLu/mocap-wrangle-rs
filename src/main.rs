@@ -439,7 +439,7 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> (Frames, Vec<usize>, 
             }
             let ch = &l.chars().take(1).last().unwrap(); // Surely, this could be simplified?!
             if ch.is_ascii_uppercase() {
-                // this shouldn't happen
+                // this shouldn't happen, FIX.
             } else {
                 // Assume we are in the data part.
                 //let bits: Vec<&str> = l.split("\t").collect();
