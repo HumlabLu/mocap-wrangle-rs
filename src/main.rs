@@ -268,7 +268,7 @@ fn main() -> Result<()> {
         }
 
         let it = mocap_file.marker_names.iter(); // Match to include?
-        for (sensor_id, marker_name) in it.enumerate() {
+        for (sensor_id, _marker_name) in it.enumerate() {
             // The sensor_id-th column of triplets (a sensor)
             let the_triplet = &frame[sensor_id];
 
@@ -457,7 +457,7 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> (Frames, Vec<usize>, 
                         let mut triplets = Frame::new();
                         for triplet in (0..num_bits).step_by(3) {
                             // Process per triple. (FIX duplicate code, see below!)
-                            let slice = &bits[triplet..triplet + 3];
+                            let _slice = &bits[triplet..triplet + 3];
                             let triplet: Triplet = bits[triplet..triplet + 3].to_vec(); //vec![1.0, 2.0, 3.0];
                             triplets.push(triplet);
                         }
@@ -480,7 +480,7 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> (Frames, Vec<usize>, 
                         let mut triplets = Frame::new();
                         for triplet in (2..num_bits).step_by(3) {
                             // Process per triple.
-                            let slice = &bits[triplet..triplet + 3];
+                            let _slice = &bits[triplet..triplet + 3];
                             let triplet: Triplet = bits[triplet..triplet + 3].to_vec(); //vec![1.0, 2.0, 3.0];
                             triplets.push(triplet);
                         }
@@ -557,9 +557,9 @@ fn emit_header(marker_name: &String, xyz: bool) {
 /// Calculates the distances on the in-memory data frame. Returns a
 /// vector with a vector containing distances for each sensor. Indexed
 /// by position in the marker_names vector.
-fn calculate_distances(mocap_file: &MoCapFile, frames: &Frames) -> Distances {
-    let mut dist = 0.0;
-    let mut prev_triplet: Option<&Triplet> = None;
+fn _calculate_distances(mocap_file: &MoCapFile, frames: &Frames) -> Distances {
+    let mut dist;
+    let mut prev_triplet: Option<&Triplet>;
     let mut distances: Distances = vec![Vec::<SensorFloat>::new(); mocap_file.marker_names.len()]; // HashMap?
 
     // We can even reserve the size of the distance vectors...
@@ -568,7 +568,7 @@ fn calculate_distances(mocap_file: &MoCapFile, frames: &Frames) -> Distances {
     }
 
     let it = mocap_file.marker_names.iter();
-    for (i, marker_name) in it.enumerate() {
+    for (i, _marker_name) in it.enumerate() {
         //info!("Calculating distances for {}", marker_name);
 
         dist = 0.0;
@@ -595,11 +595,11 @@ fn calculate_distances(mocap_file: &MoCapFile, frames: &Frames) -> Distances {
 /// by position in the marker_names vector.
 /// Note that the velocity per frame is the same as the distance calculated above,
 /// so unless we convert to m/s, they are the same.
-fn calculate_velocities(mocap_file: &MoCapFile, distances: &Distances) -> Velocities {
+fn _calculate_velocities(mocap_file: &MoCapFile, distances: &Distances) -> Velocities {
     let mut velocities: Velocities = vec![SensorData::new(); mocap_file.marker_names.len()];
 
     let it = mocap_file.marker_names.iter();
-    for (i, marker_name) in it.enumerate() {
+    for (i, _marker_name) in it.enumerate() {
         let mut result = distances[i].clone();
         velocities[i].append(&mut result);
     }
@@ -610,11 +610,11 @@ fn calculate_velocities(mocap_file: &MoCapFile, distances: &Distances) -> Veloci
 /// Calculates the accelerations on the supplied Acceleration data.
 /// Returns a vector with a vector containing accelerations for each sensor. Indexed
 /// by position in the marker_names vector.
-fn calculate_accelerations(mocap_file: &MoCapFile, velocities: &Velocities) -> Accelerations {
+fn _calculate_accelerations(mocap_file: &MoCapFile, velocities: &Velocities) -> Accelerations {
     let mut accelerations: Accelerations = vec![SensorData::new(); mocap_file.marker_names.len()];
 
     let it = mocap_file.marker_names.iter();
-    for (i, marker_name) in it.enumerate() {
+    for (i, _marker_name) in it.enumerate() {
         //info!("Calculating accelerations for {}", marker_name);
 
         accelerations[i].push(0.0); // Need to anchor with 0.
@@ -630,9 +630,9 @@ fn calculate_accelerations(mocap_file: &MoCapFile, velocities: &Velocities) -> A
 
 /// Return the azimuths and the inclinations between the points.
 // Note that we discard the radii.
-fn calculate_angles(mocap_file: &MoCapFile, frames: &Frames) -> (Distances, Distances) {
-    let mut angle = (0.0, 0.0, 0.0);
-    let mut prev_triplet: Option<&Triplet> = None;
+fn _calculate_angles(mocap_file: &MoCapFile, frames: &Frames) -> (Distances, Distances) {
+    let mut angle;
+    let mut prev_triplet: Option<&Triplet>;
     // Prepare the vector of vectors for the data.
     let mut azis: Distances = vec![Vec::<SensorFloat>::new(); mocap_file.marker_names.len()];
     let mut incs: Distances = vec![Vec::<SensorFloat>::new(); mocap_file.marker_names.len()];
@@ -646,7 +646,7 @@ fn calculate_angles(mocap_file: &MoCapFile, frames: &Frames) -> (Distances, Dist
     }
 
     let it = mocap_file.marker_names.iter();
-    for (i, marker_name) in it.enumerate() {
+    for (i, _marker_name) in it.enumerate() {
         //info!("Calculating distances for {}", marker_name);
 
         angle = (0.0, 0.0, 0.0);
@@ -674,7 +674,7 @@ fn calculate_angles(mocap_file: &MoCapFile, frames: &Frames) -> (Distances, Dist
 ///
 /// Short input filenames will return `output_d3D.tsv`.
 ///
-fn create_outputfilename(filename: &str) -> String {
+fn _create_outputfilename(filename: &str) -> String {
     let len = filename.len();
     if len > 4 {
         let suffix = &filename[len - 4..len]; // Also test for ".tsv" suffix.
