@@ -195,8 +195,8 @@ fn main() -> Result<()> {
         mocap_file.calculate_velocities();
     }
 
-    // Acceleration becomes in m/s automatically if velocity
-    // is in m/s.
+    // Acceleration becomes in m/s/s automatically if velocity
+    // is in m/s. Does it? CHECK
     if args.metric == true {
         info!("Calculating accelerations in m/s.");
         mocap_file.calculate_accelerations_ms();
