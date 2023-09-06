@@ -1,15 +1,12 @@
 use clap::Parser;
 use color_eyre::Result;
-use std::fs::{remove_file, File, OpenOptions};
-use std::io::{BufRead, BufWriter, Cursor, Seek, SeekFrom, Write};
-use std::path::Path;
-use std::process::exit;
-use std::time::{Duration, Instant};
+use std::fs::{File, OpenOptions};
+use std::io::BufRead;
+use std::time::Instant;
 
-use mocap::{dist_3d, dist_3d_t, MoCapFile};
+use mocap::{dist_3d_t, MoCapFile};
 use mocap::{
-    Accelerations, Distances, Frame, Frames, SensorData, SensorFloat, SensorInt, Triplet,
-    Velocities,
+    Accelerations, Distances, Frame, Frames, SensorData, SensorFloat, Triplet, Velocities,
 };
 
 #[macro_use]
@@ -156,7 +153,7 @@ fn main() -> Result<()> {
     };
 
     info!("Reading header file {}", filename);
-    parse_header(&mut mocap_file);
+    parse_header(&mut mocap_file)?;
 
     info!(
         "Header contains {} lines, {} matched.",
@@ -225,7 +222,7 @@ fn main() -> Result<()> {
     mocap_file.calculate_mean_accelerations();
     mocap_file.calculate_stdev_accelerations();
 
-    /// Output to std out.
+    // Output to std out.
     if mocap_file.num_frames == 0 {
         info!("No data to output!");
         std::process::exit(1);
@@ -250,7 +247,6 @@ fn main() -> Result<()> {
         println!();
     }
 
-    let mut timestamp: usize = args.starttime; // We divide by 1000 later to get ms
     for (frame_no, frame) in f_it.enumerate() {
         // We skip if we have supplied outputstartframe/outputstarttimestamp
         // and we have not reached the lower threshold yet.
@@ -347,8 +343,6 @@ fn parse_header(mocap_file: &mut MoCapFile) -> Result<()> {
     let fileiter = std::io::BufReader::new(&file).lines();
     let mut line_no: usize = 0; // Counts lines in the file.
     let mut num_matches: usize = 0; // Counts regex matches.
-    let mut bytes_read: u64 = 0;
-    let time_start = Instant::now();
 
     for line in fileiter {
         if let Ok(l) = line {
