@@ -698,31 +698,31 @@ mod tests {
 
     #[test]
     fn filename_normal() {
-        let result = create_outputfilename("filename.tsv");
+        let result = _create_outputfilename("filename.tsv");
         assert!(result == "filename_d3D.tsv");
     }
 
     #[test]
     fn filename_short() {
-        let result = create_outputfilename("");
+        let result = _create_outputfilename("");
         assert!(result == "output_d3D.tsv");
     }
 
     #[test]
     fn filename_four_chars() {
-        let result = create_outputfilename("abcd");
+        let result = _create_outputfilename("abcd");
         assert!(result == "output_d3D.tsv");
     }
 
     #[test]
     fn filename_five_chars() {
-        let result = create_outputfilename("a.tsv");
+        let result = _create_outputfilename("a.tsv");
         assert!(result == "a_d3D.tsv");
     }
 
     #[test]
     fn filename_no_tsv() {
-        let result = create_outputfilename("abcde");
+        let result = _create_outputfilename("abcde");
         assert!(result == "abcde_d3D.tsv");
     }
 }
