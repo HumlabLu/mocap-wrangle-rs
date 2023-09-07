@@ -300,13 +300,14 @@ fn main() -> Result<()> {
             let std_a = mocap::standardise(&the_a, &mean_a, &stdev_a); // First one should really be 0.0?
 
             let azim = mocap_file.get_azimuth(sensor_id, frame_no);
-            let incl = mocap_file.get_inclination(sensor_id, frame_no);
+            let mut incl = mocap_file.get_inclination(sensor_id, frame_no);
 
             if incl.is_nan() {
                 warn!(
-                    "NaN detected in frame {}, sensor {}/{}.",
+                    "Inclination NaN fixed in frame {}, sensor {}/{}.",
                     frame_no, sensor_id, marker_name
                 );
+                incl = &0.0;
             }
             if sensor_id > 0 {
                 print!("\t");
