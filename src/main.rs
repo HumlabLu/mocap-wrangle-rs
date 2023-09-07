@@ -268,7 +268,7 @@ fn main() -> Result<()> {
         }
 
         let it = mocap_file.marker_names.iter(); // Match to include?
-        for (sensor_id, _marker_name) in it.enumerate() {
+        for (sensor_id, marker_name) in it.enumerate() {
             // The sensor_id-th column of triplets (a sensor)
             let the_triplet = &frame[sensor_id];
 
@@ -302,6 +302,12 @@ fn main() -> Result<()> {
             let azim = mocap_file.get_azimuth(sensor_id, frame_no);
             let incl = mocap_file.get_inclination(sensor_id, frame_no);
 
+            if incl.is_nan() {
+                warn!(
+                    "NaN detected in frame {}, sensor {}/{}.",
+                    frame_no, sensor_id, marker_name
+                );
+            }
             if sensor_id > 0 {
                 print!("\t");
             }
@@ -325,7 +331,7 @@ fn main() -> Result<()> {
     let lps = mocap_file.num_frames as u128 * 1000 / time_duration;
 
     info!(
-        "Ready, frames: {} (in {} ms, {} l/s)",
+        "Ready, frames: {} (in {} ms, {} l/s).",
         mocap_file.num_frames, time_duration, lps
     );
 
@@ -445,12 +451,7 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> (Frames, Vec<usize>, 
                 }
                 let num_bits = bits.len(); // Should be 3 * marker_names.len()
                 let expected_num_bits = (mocap_file.no_of_markers * 3) as usize;
-                let num_extra = num_bits.checked_sub(expected_num_bits);
-                // println!(
-                //     "{:?} {:?}",
-                //     num_extra,
-                //     num_bits.overflowing_sub(expected_num_bits)
-                // );
+                let num_extra = num_bits.checked_sub(expected_num_bits); // Unsigned values.
                 match num_extra {
                     Some(0) => {
                         // We got exactly what we expected.

@@ -59,7 +59,7 @@ pub fn calculate_azimuth_inclination(
     let z = coords1[2] - coords0[2];
 
     let r = dist_3d_t(&coords0, &coords1); // sqrt of sum coordinates^2
-    let inc = (z / r).acos();
+    let inc = (z / r).acos(); // r can be 0 if identical coordinates, then inc == NaN.
     let azimuth = y.atan2(x);
 
     //(r, azimuth.to_degrees(), inc.to_degrees())
