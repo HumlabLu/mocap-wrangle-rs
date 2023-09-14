@@ -175,8 +175,21 @@ fn main() -> Result<()> {
     parse_header(&mut mocap_file)?;
 
     // Print markers and indices.
-    for (i, marker_name) in mocap_file.marker_names.iter().enumerate() {
-        info!("{i:02}: {marker_name}"); //if keep.contains(i) ...
+    match &args.keep {
+        Some(keep) => {
+            for (i, marker_name) in mocap_file.marker_names.iter().enumerate() {
+                if keep.contains(&i) {
+                    info!("{i:02}: {marker_name} *");
+                } else {
+                    info!("{i:02}: {marker_name}");
+                }
+            }
+        }
+        None => {
+            for (i, marker_name) in mocap_file.marker_names.iter().enumerate() {
+                info!("{i:02}: {marker_name}");
+            }
+        }
     }
 
     // We also need to filter the marker_names, if we select
