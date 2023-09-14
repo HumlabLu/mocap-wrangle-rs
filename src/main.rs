@@ -6,8 +6,8 @@ use std::time::Instant;
 
 use mocap::{dist_3d_t, MoCapFile};
 use mocap::{
-    extract_values, extract_values_inplace, Accelerations, Distances, Frame, Frames, SensorData,
-    SensorFloat, Triplet, Velocities,
+    extract_values_inplace, Accelerations, Distances, Frame, Frames, SensorData, SensorFloat,
+    Triplet, Velocities,
 };
 
 #[macro_use]
