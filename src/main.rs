@@ -181,7 +181,7 @@ fn main() -> Result<()> {
                 if keep.contains(&i) {
                     info!("{i:02}: {marker_name} *");
                 } else {
-                    info!("{i:02}: {marker_name}");
+                    //info!("{i:02}: {marker_name}");
                 }
             }
         }
