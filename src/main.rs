@@ -92,7 +92,7 @@ struct Args {
 
     #[arg(num_args(0..))]
     #[clap(short, long, action, help = "Sensor IDs")]
-    keep: Option<Vec<String>>,
+    keep: Option<Vec<usize>>,
 }
 
 // =====================================================================
@@ -176,6 +176,13 @@ fn main() -> Result<()> {
 
     // We also need to filter the marker_names, if we select
     // only some sensors...
+    if let Some(keep) = &args.keep {
+        let mut kept_marker_names: Vec<String> = vec![];
+        for idx in keep.iter() {
+            kept_marker_names.push(mocap_file.marker_names[*idx].clone());
+        }
+        mocap_file.marker_names = kept_marker_names;
+    }
 
     info!(
         "Header contains {} lines, {} matched.",
@@ -484,7 +491,7 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> (Frames, Vec<usize>, 
                 // step_by? or just iter over keep? if x in keep?
                 //let kept = keep.iter().enumerate().filter();
 
-                let num_bits = bits.len(); // Should be 3 * marker_names.len()
+                let mut num_bits = bits.len(); // Should be 3 * marker_names.len()
                 let expected_num_bits = (mocap_file.no_of_markers * 3) as usize;
                 let num_extra = num_bits.checked_sub(expected_num_bits); // Unsigned values.
                 match num_extra {
@@ -492,6 +499,10 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> (Frames, Vec<usize>, 
                         // We got exactly what we expected.
                         //extract_values_inplace(&mut bits, &keep);
                         //let num_bits = bits.len(); // Should be 3 * marker_names.len()
+                        if let Some(keep) = &args.keep {
+                            extract_values_inplace(&mut bits, &keep);
+                            num_bits = bits.len(); // Should be 3 * marker_names.len()
+                        }
 
                         let mut triplets = Frame::new();
                         for triplet in (0..num_bits).step_by(3) {
