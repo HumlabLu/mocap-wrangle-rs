@@ -897,3 +897,39 @@ pub fn calculate_stdevs(data: &Vec<SensorData>) -> SensorData {
     }
     stdevs
 }
+
+pub fn extract_values(bits: &Vec<f32>, keep: &Vec<usize>) -> Vec<f32> {
+    keep.iter()
+        .filter_map(|&index| {
+            let start = index * 3;
+            let end = start + 3;
+            if end <= bits.len() {
+                Some(&bits[start..end])
+            } else {
+                None
+            }
+        })
+        .flatten()
+        .cloned()
+        .collect()
+}
+
+pub fn extract_values_inplace(bits: &mut Vec<f32>, keep: &Vec<usize>) {
+    let mut to_retain = vec![false; bits.len()];
+
+    for &index in keep {
+        let start = index * 3;
+        if start + 2 < bits.len() {
+            to_retain[start] = true;
+            to_retain[start + 1] = true;
+            to_retain[start + 2] = true;
+        }
+    }
+
+    let mut i = 0;
+    bits.retain(|_| {
+        let keep = to_retain[i];
+        i += 1;
+        keep
+    });
+}

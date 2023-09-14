@@ -6,7 +6,8 @@ use std::time::Instant;
 
 use mocap::{dist_3d_t, MoCapFile};
 use mocap::{
-    Accelerations, Distances, Frame, Frames, SensorData, SensorFloat, Triplet, Velocities,
+    extract_values, extract_values_inplace, Accelerations, Distances, Frame, Frames, SensorData,
+    SensorFloat, Triplet, Velocities,
 };
 
 #[macro_use]
@@ -47,7 +48,7 @@ struct Args {
     )]
     skip: usize,
 
-    // Step for readinf frames
+    // Step for reading frames
     #[clap(long, action, default_value_t = 1, help = "Read frames in steps.")]
     framestep: usize,
 
@@ -88,6 +89,10 @@ struct Args {
 
     #[clap(long, short, action, help = "Convert vel/acc to m/s.")]
     metric: bool,
+
+    #[arg(num_args(0..))]
+    #[clap(short, long, action, help = "Sensor IDs")]
+    keep: Option<Vec<String>>,
 }
 
 // =====================================================================
@@ -122,6 +127,20 @@ fn main() -> Result<()> {
     let args = Args::parse();
     info!("{:?}", args);
 
+    /*
+    let bits = vec![0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2];
+    let keep = vec![1, 3];
+    let result = extract_values(&bits, &keep);
+    println!("{:?}", result); // This should print [0.4, 0.5, 0.6, 1.0, 1.1, 1.2]
+    */
+
+    /*
+    let mut bits = vec![0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2];
+    let keep = vec![1, 3];
+    extract_values_inplace(&mut bits, &keep);
+    println!("{:?}", bits); // This should print [0.4, 0.5, 0.6, 1.0, 1.1, 1.2]
+    */
+
     // =====================================================================
     // Read file line by line and calculate d3D
     //
@@ -154,6 +173,9 @@ fn main() -> Result<()> {
 
     info!("Reading header file {}", filename);
     parse_header(&mut mocap_file)?;
+
+    // We also need to filter the marker_names, if we select
+    // only some sensors...
 
     info!(
         "Header contains {} lines, {} matched.",
@@ -430,12 +452,13 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> (Frames, Vec<usize>, 
     for line in fileiter.step_by(args.framestep) {
         if let Ok(l) = line {
             if l.len() < 1 {
-                continue;
+                continue; // Very short lines, empty, &c.
             }
-            // Check if identical to previous line?
+            // Should we check if it is identical to the previous line?
             let ch = &l.chars().take(1).last().unwrap(); // Surely, this could be simplified?!
             if ch.is_ascii_uppercase() {
                 // this shouldn't happen, FIX.
+                // Actually it should be numeric only...
             } else {
                 // Assume we are in the data part.
                 //let bits: Vec<&str> = l.split("\t").collect();
@@ -450,15 +473,31 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> (Frames, Vec<usize>, 
                     //let u: Vec<_> = bits.drain(0..args.skip).collect(); // Keep them, output them?
                     bits.drain(0..args.skip);
                 }
+
+                // We now have a vector with all the values.
+                // If we want to select sensors... would we do that here?
+                // Imagine we want sensors index 1 and 3.
+                // x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3, ...
+                // 0   1   2   3   4   5   6   7   8   9   10  11  ...
+                // So we want (1*3)+(0,1,2) and (3*3)+(0,1,2)
+                // let keep = vec![1, 3];
+                // step_by? or just iter over keep? if x in keep?
+                //let kept = keep.iter().enumerate().filter();
+
                 let num_bits = bits.len(); // Should be 3 * marker_names.len()
                 let expected_num_bits = (mocap_file.no_of_markers * 3) as usize;
                 let num_extra = num_bits.checked_sub(expected_num_bits); // Unsigned values.
                 match num_extra {
                     Some(0) => {
                         // We got exactly what we expected.
+                        //extract_values_inplace(&mut bits, &keep);
+                        //let num_bits = bits.len(); // Should be 3 * marker_names.len()
+
                         let mut triplets = Frame::new();
                         for triplet in (0..num_bits).step_by(3) {
                             // Process per triple. (FIX duplicate code, see below!)
+                            // Here we should check whether to include or not?
+                            // if index in keep ...
                             let _slice = &bits[triplet..triplet + 3];
                             let triplet: Triplet = bits[triplet..triplet + 3].to_vec(); //vec![1.0, 2.0, 3.0];
                             triplets.push(triplet);
