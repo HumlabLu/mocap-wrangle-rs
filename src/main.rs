@@ -174,6 +174,11 @@ fn main() -> Result<()> {
     info!("Reading header file {}", filename);
     parse_header(&mut mocap_file)?;
 
+    // Print markers and indices.
+    for (i, marker_name) in mocap_file.marker_names.iter().enumerate() {
+        info!("{i:02}: {marker_name}"); //if keep.contains(i) ...
+    }
+
     // We also need to filter the marker_names, if we select
     // only some sensors...
     if let Some(keep) = &args.keep {
