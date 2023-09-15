@@ -93,6 +93,10 @@ struct Args {
     #[arg(num_args(0..))]
     #[clap(short, long, action, help = "Sensor IDs")]
     keep: Option<Vec<usize>>,
+
+    // Info only output
+    #[clap(long, short, action, help = "Only parse header and print info.")]
+    info: bool,
 }
 
 // =====================================================================
@@ -212,6 +216,10 @@ fn main() -> Result<()> {
     if (mocap_file.num_header_lines == 0) || (mocap_file.num_matches == 0) {
         error!("File contains no header!");
         std::process::exit(3);
+    }
+
+    if args.info == true {
+        std::process::exit(0);
     }
 
     let time_start = Instant::now();
