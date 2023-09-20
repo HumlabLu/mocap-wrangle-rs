@@ -97,6 +97,12 @@ struct Args {
     // Info only output
     #[clap(long, short, action, help = "Only parse header and print info.")]
     info: bool,
+
+    // Do not warn for NaN, it appears the  LogLevel cannot
+    // be changed after initialisation? CHECK
+    // This hack works for now.
+    #[clap(long, short, action, help = "Do not emit warnings for NaNs.")]
+    nonans: bool,
 }
 
 // =====================================================================
@@ -357,11 +363,15 @@ fn main() -> Result<()> {
             let azim = mocap_file.get_azimuth(sensor_id, frame_no);
             let mut incl = mocap_file.get_inclination(sensor_id, frame_no);
 
+            // We fix NaNs (make them 0.0). Default is to warn, but
+            // this can cause a lot of output.
             if incl.is_nan() {
-                warn!(
-                    "Inclination NaN fixed in frame {}, sensor {}/{}.",
-                    frame_no, sensor_id, marker_name
-                );
+                if !args.nonans {
+                    warn!(
+                        "Inclination NaN fixed in frame {}, sensor {}/{}.",
+                        frame_no, sensor_id, marker_name
+                    );
+                }
                 incl = &0.0;
             }
             if sensor_id > 0 {
