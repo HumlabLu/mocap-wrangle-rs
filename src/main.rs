@@ -38,6 +38,10 @@ struct Args {
     )]
     coords: bool,
 
+    // Output position coordinates ONLYU
+    #[clap(long, action, help = "Only X, Y and Z coordinates in output.")]
+    coordsonly: bool,
+
     // Skip fields
     #[clap(
         long,
@@ -377,18 +381,27 @@ fn main() -> Result<()> {
             if sensor_id > 0 {
                 print!("\t");
             }
-            if args.coords == true {
-                print!("{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}",
+            if args.coordsonly == true {
+                print!(
+                    "{:.2}\t{:.2}\t{:.2}",
+                    the_triplet.get(0).unwrap(),
+                    the_triplet.get(1).unwrap(),
+                    the_triplet.get(2).unwrap(),
+                );
+            } else {
+                if args.coords == true {
+                    print!("{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}",
 		       the_triplet.get(0).unwrap(), the_triplet.get(1).unwrap(), the_triplet.get(2).unwrap(),
 		       azim, incl, the_d, nor_d, std_d,
 		       the_v, nor_v,
 		       the_a, nor_a
 		        );
-            } else {
-                print!(
+                } else {
+                    print!(
                     "{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}",
                     azim, incl, the_d, nor_d, std_d, the_v, nor_v, std_v, the_a, nor_a, std_a
                 );
+                }
             }
         }
         println!();
