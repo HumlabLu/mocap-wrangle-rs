@@ -307,7 +307,7 @@ fn main() -> Result<()> {
                 print!("\t"); // Separator, but not at start/end.
             }
             // We need a "output fields for sensor" function, taking args to output relevant header.
-            emit_header(&marker_name, args.coords);
+            emit_header(&marker_name, args.coords, args.coordsonly);
         }
         println!();
     }
@@ -620,7 +620,11 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> (Frames, Vec<usize>, 
 
 /// Prints sensor name plus az, in, d, dN, dS, v, vN, a, aN
 /// Optionally includes X, Y, Z coordinates.
-fn emit_header(marker_name: &String, xyz: bool) {
+fn emit_header(marker_name: &String, xyz: bool, xyzonly: bool) {
+    if xyzonly == true {
+        print!("{}_X\t{}_Y\t{}_Z", marker_name, marker_name, marker_name);
+        return;
+    }
     if xyz == true {
         print!(
             "{}_X\t{}_Y\t{}_Z\t{}_az\t{}_in\t{}_d\t{}_dN\t{}_dS\t{}_v\t{}_vN\t{}_a\t{}_aN",
