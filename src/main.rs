@@ -172,7 +172,7 @@ fn main() -> Result<()> {
     // =====================================================================
 
     let filename = &args.file;
-    let file_size = std::fs::metadata(&filename)?.len();
+    let file_size = std::fs::metadata(filename)?.len();
     if file_size < 8 {
         // Arbitrary size... but to prevent creation of 0-byte files.
         error!("Error: Inputfile is too small!");
@@ -228,7 +228,7 @@ fn main() -> Result<()> {
         std::process::exit(3);
     }
 
-    if args.info == true {
+    if args.info {
         std::process::exit(0);
     }
 
@@ -252,7 +252,7 @@ fn main() -> Result<()> {
     info!("Calculating distances.");
     mocap_file.calculate_distances();
 
-    if args.metric == true {
+    if args.metric {
         info!("Calculating velocities in m/s.");
         mocap_file.calculate_velocities_ms();
     } else {
@@ -262,7 +262,7 @@ fn main() -> Result<()> {
 
     // Acceleration becomes in m/s/s automatically if velocity
     // is in m/s. Does it? CHECK
-    if args.metric == true {
+    if args.metric {
         info!("Calculating accelerations in m/s.");
         mocap_file.calculate_accelerations_ms();
     } else {
@@ -298,7 +298,7 @@ fn main() -> Result<()> {
     let time_start = Instant::now();
     let f_it = mocap_file.get_frames().iter();
 
-    if args.noheader == false {
+    if !args.noheader {
         if args.timestamp {
             print!("Frame\tTimestamp\t");
         }
@@ -307,7 +307,7 @@ fn main() -> Result<()> {
                 print!("\t"); // Separator, but not at start/end.
             }
             // We need a "output fields for sensor" function, taking args to output relevant header.
-            emit_header(&marker_name, args.coords, args.coordsonly);
+            emit_header(marker_name, args.coords, args.coordsonly);
         }
         println!();
     }
@@ -324,7 +324,7 @@ fn main() -> Result<()> {
             continue;
         }
 
-        if args.timestamp == true {
+        if args.timestamp {
             print!(
                 "{:.3}\t{:.3}\t",
                 the_frame_no,
@@ -343,8 +343,8 @@ fn main() -> Result<()> {
 
             let mean_d = mocap_file.get_mean_distance(sensor_id);
             let stdev_d = mocap_file.get_stdev_distance(sensor_id);
-            let nor_d = mocap::normalise_minmax(&the_d, &min_d, &max_d);
-            let std_d = mocap::standardise(&the_d, &mean_d, &stdev_d); // First one should really be 0.0?
+            let nor_d = mocap::normalise_minmax(the_d, min_d, max_d);
+            let std_d = mocap::standardise(the_d, mean_d, stdev_d); // First one should really be 0.0?
 
             let the_v = mocap_file.get_velocity(sensor_id, frame_no);
             let min_v = mocap_file.get_min_velocity(sensor_id);
@@ -352,8 +352,8 @@ fn main() -> Result<()> {
 
             let mean_v = mocap_file.get_mean_velocity(sensor_id);
             let stdev_v = mocap_file.get_stdev_velocity(sensor_id);
-            let nor_v = mocap::normalise_minmax(&the_v, &min_v, &max_v);
-            let std_v = mocap::standardise(&the_v, &mean_v, &stdev_v); // First one should really be 0.0?
+            let nor_v = mocap::normalise_minmax(the_v, min_v, max_v);
+            let std_v = mocap::standardise(the_v, mean_v, stdev_v); // First one should really be 0.0?
 
             let the_a = mocap_file.get_acceleration(sensor_id, frame_no);
             let min_a = mocap_file.get_min_acceleration(sensor_id);
@@ -361,8 +361,8 @@ fn main() -> Result<()> {
 
             let mean_a = mocap_file.get_mean_acceleration(sensor_id);
             let stdev_a = mocap_file.get_stdev_acceleration(sensor_id);
-            let nor_a = mocap::normalise_minmax(&the_a, &min_a, &max_a);
-            let std_a = mocap::standardise(&the_a, &mean_a, &stdev_a); // First one should really be 0.0?
+            let nor_a = mocap::normalise_minmax(the_a, min_a, max_a);
+            let std_a = mocap::standardise(the_a, mean_a, stdev_a); // First one should really be 0.0?
 
             let azim = mocap_file.get_azimuth(sensor_id, frame_no);
             let mut incl = mocap_file.get_inclination(sensor_id, frame_no);
@@ -381,28 +381,26 @@ fn main() -> Result<()> {
             if sensor_id > 0 {
                 print!("\t");
             }
-            if args.coordsonly == true {
+            if args.coordsonly {
                 print!(
                     "{:.2}\t{:.2}\t{:.2}",
-                    the_triplet.get(0).unwrap(),
+                    the_triplet.first().unwrap(),
                     the_triplet.get(1).unwrap(),
                     the_triplet.get(2).unwrap(),
                 );
-            } else {
-                if args.coords == true {
-                    print!("{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}",
-		       the_triplet.get(0).unwrap(), the_triplet.get(1).unwrap(), the_triplet.get(2).unwrap(),
-		       azim, incl, the_d, nor_d, std_d,
-		       the_v, nor_v,
-		       the_a, nor_a
-		        );
-                } else {
-                    print!(
-                    "{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}",
-                    azim, incl, the_d, nor_d, std_d, the_v, nor_v, std_v, the_a, nor_a, std_a
-                );
-                }
-            }
+            } else if args.coords {
+                                print!("{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}",
+            		       the_triplet.first().unwrap(), the_triplet.get(1).unwrap(), the_triplet.get(2).unwrap(),
+            		       azim, incl, the_d, nor_d, std_d,
+            		       the_v, nor_v,
+            		       the_a, nor_a
+            		        );
+                            } else {
+                                print!(
+                                "{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}",
+                                azim, incl, the_d, nor_d, std_d, the_v, nor_v, std_v, the_a, nor_a, std_a
+                            );
+                            }
         }
         println!();
     }
@@ -432,7 +430,7 @@ fn parse_header(mocap_file: &mut MoCapFile) -> Result<()> {
     for line in fileiter {
         if let Ok(l) = line {
             //println!("{}", l);
-            if l.len() < 1 {
+            if l.is_empty() {
                 // In case of empty lines.
                 continue;
             }
@@ -507,7 +505,7 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> (Frames, Vec<usize>, 
     // Using a framestep > 1 can be used to "smooth" the data (kind of).
     for line in fileiter.step_by(args.framestep) {
         if let Ok(l) = line {
-            if l.len() < 1 {
+            if l.is_empty() {
                 continue; // Very short lines, empty, &c.
             }
             // Should we check if it is identical to the previous line?
@@ -519,7 +517,7 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> (Frames, Vec<usize>, 
                 // Assume we are in the data part.
                 //let bits: Vec<&str> = l.split("\t").collect();
                 let mut bits = l
-                    .split("\t")
+                    .split('\t')
                     .filter_map(
                         |s| s.parse::<SensorFloat>().ok(), // We assume all SensorFloat values for now.
                     )
@@ -549,7 +547,7 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> (Frames, Vec<usize>, 
                         //extract_values_inplace(&mut bits, &keep);
                         //let num_bits = bits.len(); // Should be 3 * marker_names.len()
                         if let Some(keep) = &args.keep {
-                            extract_values_inplace(&mut bits, &keep);
+                            extract_values_inplace(&mut bits, keep);
                             num_bits = bits.len(); // Should be 3 * marker_names.len()
                         }
 
@@ -567,11 +565,11 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> (Frames, Vec<usize>, 
                         frame_numbers.push(frame_no + args.startframe);
                         timestamps.push(timestamp + args.starttime);
                         frame_no += 1;
-                        timestamp = timestamp + mocap_file.get_timeinc();
+                        timestamp += mocap_file.get_timeinc();
                     }
                     Some(2) => {
                         // Two extra, we assume frame number and timestamp.
-                        let frame_number = *&bits[0];
+                        let frame_number = bits[0];
                         let frame_number = frame_number as usize;
                         let timestamp = &bits[1] * 1000.0; // We convert to milliseconds.
                         let timestamp = timestamp as usize;
@@ -621,11 +619,11 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> (Frames, Vec<usize>, 
 /// Prints sensor name plus az, in, d, dN, dS, v, vN, a, aN
 /// Optionally includes X, Y, Z coordinates.
 fn emit_header(marker_name: &String, xyz: bool, xyzonly: bool) {
-    if xyzonly == true {
+    if xyzonly {
         print!("{}_X\t{}_Y\t{}_Z", marker_name, marker_name, marker_name);
         return;
     }
-    if xyz == true {
+    if xyz {
         print!(
             "{}_X\t{}_Y\t{}_Z\t{}_az\t{}_in\t{}_d\t{}_dN\t{}_dS\t{}_v\t{}_vN\t{}_a\t{}_aN",
             marker_name,
@@ -683,7 +681,7 @@ fn _calculate_distances(mocap_file: &MoCapFile, frames: &Frames) -> Distances {
             let curr_triplet: &Triplet = &frame[i];
 
             if let Some(pt) = prev_triplet {
-                dist = dist_3d_t(&curr_triplet, &pt);
+                dist = dist_3d_t(curr_triplet, pt);
             }
             distances[i].push(dist);
 
@@ -761,7 +759,7 @@ fn _calculate_angles(mocap_file: &MoCapFile, frames: &Frames) -> (Distances, Dis
             let curr_triplet: &Triplet = &frame[i];
 
             if let Some(pt) = prev_triplet {
-                angle = mocap::calculate_azimuth_inclination(&curr_triplet, &pt);
+                angle = mocap::calculate_azimuth_inclination(curr_triplet, pt);
             }
             azis[i].push(angle.1);
             incs[i].push(angle.2);

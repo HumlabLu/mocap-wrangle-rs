@@ -58,7 +58,7 @@ pub fn calculate_azimuth_inclination(
     let y = coords1[1] - coords0[1];
     let z = coords1[2] - coords0[2];
 
-    let r = dist_3d_t(&coords0, &coords1); // sqrt of sum coordinates^2
+    let r = dist_3d_t(coords0, coords1); // sqrt of sum coordinates^2
     let inc = (z / r).acos(); // r can be 0 if identical coordinates, then inc == NaN.
     let azimuth = y.atan2(x);
 
@@ -174,11 +174,7 @@ impl MoCapFile {
     // contained a valid header. Maybe frequency should be
     // an Option?
     pub fn is_valid(&self) -> bool {
-        if self.frequency > 0 && self.num_markers() > 0 {
-            true
-        } else {
-            false
-        }
+        self.frequency > 0 && self.num_markers() > 0
     }
 
     // Should be precalculated and stored.
@@ -222,8 +218,8 @@ impl MoCapFile {
 
                 if prev_triplet.is_some() {
                     // Do we have a saved "previous line/triplet"?
-                    let x = prev_triplet.clone().unwrap();
-                    dist = dist_3d_t(&curr_triplet, &x);
+                    let x = prev_triplet.unwrap();
+                    dist = dist_3d_t(curr_triplet, x);
                 }
                 distances[i].push(dist);
 
@@ -248,7 +244,7 @@ impl MoCapFile {
         let r = self.resolution as f32;
         let it = self.marker_names.iter();
         for (i, _marker_name) in it.enumerate() {
-            let distances: &Distances = &self.distances.as_ref().unwrap().as_ref();
+            let distances: &Distances = self.distances.as_ref().unwrap();
             //velocities[i].push(0.0); // Need to anchor with 0.
             let mut result = distances[i]
                 .windows(1)
@@ -267,7 +263,7 @@ impl MoCapFile {
         for (i, _marker_name) in it.enumerate() {
             //info!("Calculating accelerations for {}", marker_name);
 
-            let velocities: &Velocities = &self.velocities.as_ref().unwrap().as_ref();
+            let velocities: &Velocities = self.velocities.as_ref().unwrap();
             accelerations[i].push(0.0); // Need to anchor with 0.
             let mut result = velocities[i]
                 .windows(2)
@@ -287,7 +283,7 @@ impl MoCapFile {
         for (i, _marker_name) in it.enumerate() {
             //info!("Calculating accelerations for {}", marker_name);
 
-            let velocities: &Velocities = &self.velocities.as_ref().unwrap().as_ref();
+            let velocities: &Velocities = self.velocities.as_ref().unwrap();
             accelerations[i].push(0.0); // Need to anchor with 0.
             let mut result = velocities[i]
                 .windows(2)
@@ -325,8 +321,8 @@ impl MoCapFile {
 
                 if prev_triplet.is_some() {
                     // Do we have a saved "previous line/triplet"?
-                    let x = prev_triplet.clone().unwrap();
-                    angle = calculate_azimuth_inclination(&curr_triplet, &x);
+                    let x = prev_triplet.unwrap();
+                    angle = calculate_azimuth_inclination(curr_triplet, x);
                 }
                 azis[i].push(angle.1);
                 incs[i].push(angle.2);
@@ -423,7 +419,7 @@ impl MoCapFile {
             // .as_mut() returns a mutable reference.
             let distances = self.distances.as_mut().unwrap(); // Vector with the distances
             for d in distances {
-                let mean_d = mean(&d);
+                let mean_d = mean(d);
                 mean_distances.push(mean_d);
             }
             self.mean_distances = Some(mean_distances);
@@ -436,7 +432,7 @@ impl MoCapFile {
             // .as_mut() returns a mutable reference.
             let distances = self.distances.as_mut().unwrap(); // Vector with the distances
             for d in distances {
-                let stdev_d = standard_dev(&d);
+                let stdev_d = standard_dev(d);
                 stdev_distances.push(stdev_d);
             }
             self.stdev_distances = Some(stdev_distances);
@@ -449,7 +445,7 @@ impl MoCapFile {
             // .as_mut() returns a mutable reference.
             let velocities = self.velocities.as_mut().unwrap(); // Vector with the velocities
             for d in velocities {
-                let mean_d = mean(&d);
+                let mean_d = mean(d);
                 mean_velocities.push(mean_d);
             }
             self.mean_velocities = Some(mean_velocities);
@@ -462,7 +458,7 @@ impl MoCapFile {
             // .as_mut() returns a mutable reference.
             let velocities = self.velocities.as_mut().unwrap(); // Vector with the velocities
             for d in velocities {
-                let stdev_d = standard_dev(&d);
+                let stdev_d = standard_dev(d);
                 stdev_velocities.push(stdev_d);
             }
             self.stdev_velocities = Some(stdev_velocities);
@@ -475,7 +471,7 @@ impl MoCapFile {
             // .as_mut() returns a mutable reference.
             let accelerations = self.accelerations.as_mut().unwrap(); // Vector with the accelerations
             for d in accelerations {
-                let mean_d = mean(&d);
+                let mean_d = mean(d);
                 mean_accelerations.push(mean_d);
             }
             self.mean_accelerations = Some(mean_accelerations);
@@ -488,7 +484,7 @@ impl MoCapFile {
             // .as_mut() returns a mutable reference.
             let accelerations = self.accelerations.as_mut().unwrap(); // Vector with the accelerations
             for d in accelerations {
-                let stdev_d = standard_dev(&d);
+                let stdev_d = standard_dev(d);
                 stdev_accelerations.push(stdev_d);
             }
             self.stdev_accelerations = Some(stdev_accelerations);
@@ -685,14 +681,14 @@ impl MoCapFile {
 impl std::fmt::Display for MoCapFile {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         // write!(f, "NAME {}\n", self.name); // Not part of original meta data.
-        write!(f, "NO_OF_FRAMES\t{}\n", self.no_of_frames).unwrap(); // Should print the real count?
-        write!(f, "NO_OF_CAMERAS\t{}\n", self.no_of_cameras).unwrap();
-        write!(f, "NO_OF_MARKERS\t{}\n", self.no_of_markers).unwrap();
-        write!(f, "FREQUENCY\t{}\n", self.frequency).unwrap();
-        write!(f, "NO_OF_ANALOG\t{}\n", self.no_of_analog).unwrap();
-        write!(f, "DESCRIPTION\t{}\n", self.description).unwrap();
-        write!(f, "TIME_STAMP\t{}\n", self.time_stamp).unwrap();
-        write!(f, "DATA_INCLUDED\t{}\n", self.data_included).unwrap();
+        writeln!(f, "NO_OF_FRAMES\t{}", self.no_of_frames).unwrap(); // Should print the real count?
+        writeln!(f, "NO_OF_CAMERAS\t{}", self.no_of_cameras).unwrap();
+        writeln!(f, "NO_OF_MARKERS\t{}", self.no_of_markers).unwrap();
+        writeln!(f, "FREQUENCY\t{}", self.frequency).unwrap();
+        writeln!(f, "NO_OF_ANALOG\t{}", self.no_of_analog).unwrap();
+        writeln!(f, "DESCRIPTION\t{}", self.description).unwrap();
+        writeln!(f, "TIME_STAMP\t{}", self.time_stamp).unwrap();
+        writeln!(f, "DATA_INCLUDED\t{}", self.data_included).unwrap();
         write!(f, "MARKER_NAMES\t{:?}", self.marker_names) // Needs fixing!
     }
 }
@@ -794,7 +790,6 @@ pub fn extract_marker_names(l: &str) -> Option<Vec<String>> {
             let splits: Vec<String> = seperator
                 .split(cap)
                 .map(|s| s.to_string())
-                .into_iter()
                 .collect();
             //println!( "{:?}", splits );
             Some(splits)
@@ -807,7 +802,7 @@ pub fn extract_marker_names(l: &str) -> Option<Vec<String>> {
 }
 
 pub fn extract_time_stamp(l: &str) -> Option<String> {
-    match RE_TIME_STAMP.captures(&l) {
+    match RE_TIME_STAMP.captures(l) {
         Some(caps) => {
             //println!("caps {:?}", caps);
             let cap = caps.get(1).unwrap().as_str();
@@ -821,7 +816,7 @@ pub fn extract_time_stamp(l: &str) -> Option<String> {
 }
 
 pub fn extract_description(l: &str) -> Option<String> {
-    match RE_DESCRIPTION.captures(&l) {
+    match RE_DESCRIPTION.captures(l) {
         Some(caps) => {
             //println!("caps {:?}", caps);
             let cap = caps.get(1).unwrap().as_str();
@@ -835,7 +830,7 @@ pub fn extract_description(l: &str) -> Option<String> {
 }
 
 pub fn extract_data_included(l: &str) -> Option<String> {
-    match RE_DATA_INCLUDED.captures(&l) {
+    match RE_DATA_INCLUDED.captures(l) {
         Some(caps) => {
             //println!("caps {:?}", caps);
             let cap = caps.get(1).unwrap().as_str();
@@ -858,7 +853,7 @@ pub fn mean(data: &SensorData) -> SensorFloat {
 }
 
 pub fn variance(data: &SensorData) -> SensorFloat {
-    let mean = mean(&data);
+    let mean = mean(data);
     let sum_diffs = data
         .iter()
         .map(|value| {
@@ -870,7 +865,7 @@ pub fn variance(data: &SensorData) -> SensorFloat {
 }
 
 pub fn standard_dev(data: &SensorData) -> SensorFloat {
-    let variance = variance(&data);
+    let variance = variance(data);
     variance.sqrt()
 }
 
@@ -882,7 +877,7 @@ pub fn standardise(val: &SensorFloat, mean: &SensorFloat, stddev: &SensorFloat) 
 pub fn calculate_means(data: &Vec<SensorData>) -> SensorData {
     let mut means: SensorData = vec![];
     for d in data {
-        let mean = mean(&d);
+        let mean = mean(d);
         means.push(mean);
     }
     means
@@ -892,7 +887,7 @@ pub fn calculate_means(data: &Vec<SensorData>) -> SensorData {
 pub fn calculate_stdevs(data: &Vec<SensorData>) -> SensorData {
     let mut stdevs: SensorData = vec![];
     for d in data {
-        let stdev_d = standard_dev(&d);
+        let stdev_d = standard_dev(d);
         stdevs.push(stdev_d);
     }
     stdevs
