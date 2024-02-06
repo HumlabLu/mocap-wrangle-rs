@@ -140,7 +140,8 @@ fn main() -> Result<()> {
     .unwrap();
 
     let output = Command::new("git").args(&["rev-parse", "HEAD"]).output().unwrap();
-    let git_hash = String::from_utf8(output.stdout).unwrap();
+    let mut git_hash = String::from_utf8(output.stdout).unwrap();
+    git_hash.pop(); // Remove trailing newline.
     info!("GIT_HASH={}", git_hash);
 
     let args = Args::parse();
