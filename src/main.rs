@@ -14,6 +14,7 @@ use mocap::{
 extern crate log;
 extern crate simplelog;
 use simplelog::*;
+use std::process::Command;
 
 // =====================================================================
 // Command line arguments.
@@ -138,9 +139,13 @@ fn main() -> Result<()> {
     ])
     .unwrap();
 
+    let output = Command::new("git").args(&["rev-parse", "HEAD"]).output().unwrap();
+    let git_hash = String::from_utf8(output.stdout).unwrap();
+    info!("GIT_HASH={}", git_hash);
+
     let args = Args::parse();
     info!("{:?}", args);
-
+    
     /*
     let bits = vec![0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2];
     let keep = vec![1, 3];
