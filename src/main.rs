@@ -23,7 +23,7 @@ use std::process::Command;
 #[derive(Parser, Debug, Clone)]
 struct Args {
     // Filename
-    #[arg(short, long, default_value_t = String::from("street_adapt_1.tsv"))]
+    #[arg(short, long, help = "The input file with MoCap sensor data.")]
     file: String, // Path thingy?
 
     // Extra output
