@@ -318,6 +318,8 @@ fn main() -> Result<()> {
         println!();
     }
 
+    let mut output_frames: usize = 0; // Counter.
+    
     for (frame_no, frame) in f_it.enumerate() {
         // We skip if we have supplied outputstartframe/outputstarttimestamp
         // and we have not reached the lower threshold yet.
@@ -409,13 +411,14 @@ fn main() -> Result<()> {
             }
         }
         println!();
+        output_frames += 1;
     }
     let time_duration = time_start.elapsed().as_millis() + 1; // Add one to avoid division by zero.
     let lps = mocap_file.num_frames as u128 * 1000 / time_duration;
 
     info!(
-        "Ready, frames: {} (in {} ms, {} l/s).",
-        mocap_file.num_frames, time_duration, lps
+        "Ready, frames: {}/{} (in {} ms, {} l/s).",
+        output_frames, mocap_file.num_frames, time_duration, lps
     );
     
     if args.verbose {
