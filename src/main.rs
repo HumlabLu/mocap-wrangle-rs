@@ -395,18 +395,18 @@ fn main() -> Result<()> {
                     the_triplet.get(2).unwrap(),
                 );
             } else if args.coords {
-                                print!("{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}",
-            		       the_triplet.first().unwrap(), the_triplet.get(1).unwrap(), the_triplet.get(2).unwrap(),
-            		       azim, incl, the_d, nor_d, std_d,
-            		       the_v, nor_v,
-            		       the_a, nor_a
-            		        );
-                            } else {
-                                print!(
-                                "{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}",
-                                azim, incl, the_d, nor_d, std_d, the_v, nor_v, std_v, the_a, nor_a, std_a
-                            );
-                            }
+                print!("{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}",
+            	    the_triplet.first().unwrap(), the_triplet.get(1).unwrap(), the_triplet.get(2).unwrap(),
+            	    azim, incl, the_d, nor_d, std_d,
+            	    the_v, nor_v,
+            	    the_a, nor_a
+            	);
+            } else {
+                print!(
+                    "{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}",
+                    azim, incl, the_d, nor_d, std_d, the_v, nor_v, std_v, the_a, nor_a, std_a
+                );
+            }
         }
         println!();
     }
@@ -417,7 +417,7 @@ fn main() -> Result<()> {
         "Ready, frames: {} (in {} ms, {} l/s).",
         mocap_file.num_frames, time_duration, lps
     );
-
+    
     if args.verbose {
         info!("{}", mocap_file);
     }
