@@ -2,6 +2,7 @@ use clap::Parser;
 use color_eyre::Result;
 use std::fs::{File, OpenOptions};
 use std::io::BufRead;
+use std::mem::transmute_copy;
 use std::time::Instant;
 
 use mocap::{dist_3d_t, MoCapFile};
@@ -91,6 +92,15 @@ struct Args {
         help = "Start outputting at this frame number."
     )]
     outputstartframe: usize,
+
+    // Output this number if frames.
+    #[clap(
+        long,
+        action,
+        default_value_t = 0,
+        help = "Output this many frames."
+    )]
+    outputframes: usize,
 
     #[clap(long, short, action, help = "Convert vel/acc to m/s.")]
     metric: bool,
@@ -412,6 +422,9 @@ fn main() -> Result<()> {
         }
         println!();
         output_frames += 1;
+        if (args.outputframes > 0) && (output_frames >= args.outputframes) { // we could count-down this one...
+            break;
+        }
     }
     let time_duration = time_start.elapsed().as_millis() + 1; // Add one to avoid division by zero.
     let lps = mocap_file.num_frames as u128 * 1000 / time_duration;
