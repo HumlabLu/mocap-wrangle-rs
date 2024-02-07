@@ -427,7 +427,7 @@ fn main() -> Result<()> {
         }
     }
     let time_duration = time_start.elapsed().as_millis() + 1; // Add one to avoid division by zero.
-    let lps = mocap_file.num_frames as u128 * 1000 / time_duration;
+    let lps = output_frames as u128 * 1000 / time_duration;
 
     info!(
         "Ready, frames: {}/{} (in {} ms, {} l/s).",
