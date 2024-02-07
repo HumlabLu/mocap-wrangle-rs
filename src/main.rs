@@ -236,8 +236,9 @@ fn main() -> Result<()> {
         "Header contains {} lines, {} matched.",
         mocap_file.num_header_lines, mocap_file.num_matches
     );
-    info!("Expecting {} frames.", mocap_file.no_of_frames);
-
+    let (hours, minutes, seconds, milliseconds) = frames_to_time(mocap_file.no_of_frames as usize);
+    info!("Expecting {} frames ({:02}:{:02}:{:02}.{:03}).", mocap_file.no_of_frames, hours, minutes, seconds, milliseconds);
+    
     // Without a header, we abort.
     if (mocap_file.num_header_lines == 0) || (mocap_file.num_matches == 0) {
         error!("File contains no header!");
@@ -811,6 +812,16 @@ fn _create_outputfilename(filename: &str) -> String {
     } else {
         "output_d3D.tsv".to_string()
     }
+}
+
+fn frames_to_time(frames: usize) -> (usize, usize, usize, usize) {
+    let total_seconds = frames / 200; // Convert frames to seconds
+    let hours = total_seconds / 3600; // Find total hours
+    let minutes = (total_seconds % 3600) / 60; // Find remaining minutes
+    let seconds = total_seconds % 60; // Find remaining seconds
+    let milliseconds = (frames % 200) * 5; // Convert remaining frames to milliseconds
+
+    (hours, minutes, seconds, milliseconds)
 }
 
 // =====================================================================
