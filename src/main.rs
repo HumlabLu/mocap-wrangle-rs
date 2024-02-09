@@ -2,7 +2,6 @@ use clap::Parser;
 use color_eyre::Result;
 use std::fs::{File, OpenOptions};
 use std::io::BufRead;
-use std::mem::transmute_copy;
 use std::time::Instant;
 
 use mocap::{dist_3d_t, MoCapFile};
@@ -245,13 +244,12 @@ fn main() -> Result<()> {
         std::process::exit(3);
     }
 
-    if args.info {
+    if args.info { // Print info only, exit here.
         std::process::exit(0);
     }
 
     let time_start = Instant::now();
     let (frames, frame_numbers, timestamps) = read_frames(&mut mocap_file, &args);
-    //mocap_file.add_frames(frames);
     let time_duration = time_start.elapsed().as_millis() + 1; // Add one to avoid division by zero.
     let lps = mocap_file.num_frames as u128 * 1000 / time_duration;
 
@@ -290,7 +288,7 @@ fn main() -> Result<()> {
     info!("Calculating angles.");
     mocap_file.calculate_angles();
 
-    info!("Calculating min/max.");
+    info!("Calculating min/max/mean/stdev.");
     mocap_file.calculate_min_distances();
     mocap_file.calculate_max_distances();
     mocap_file.calculate_min_velocities();

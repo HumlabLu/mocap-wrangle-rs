@@ -719,7 +719,7 @@ lazy_static! {
 // over it.
 // (or even give a regexp and the mocap field/type, so we only
 // need one generic match function).
-pub fn extract_no_of_frames(l: &str) -> Option<SensorInt> {
+pub fn extract_no_of_frames(l: &str) -> Option<SensorInt> { // should return a usize?
     match RE_FRAMES.captures(l) {
         Some(caps) => {
             let cap = caps.get(1).unwrap().as_str();
