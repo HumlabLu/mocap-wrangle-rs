@@ -235,7 +235,7 @@ fn main() -> Result<()> {
         "Header contains {} lines, {} matched.",
         mocap_file.num_header_lines, mocap_file.num_matches
     );
-    let (hours, minutes, seconds, milliseconds) = frames_to_time(mocap_file.no_of_frames as usize);
+    let (hours, minutes, seconds, milliseconds) = frames_to_time(&mocap_file);
     info!("Expecting {} frames ({:02}:{:02}:{:02}.{:03}).", mocap_file.no_of_frames, hours, minutes, seconds, milliseconds);
     
     // Without a header, we abort.
@@ -524,6 +524,7 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> (Frames, Vec<usize>, 
     let mut timestamp: usize = 0;
 
     // Using a framestep > 1 can be used to "smooth" the data (kind of).
+    // TODO: this affects the calculations!
     for line in fileiter.step_by(args.framestep) {
         if let Ok(l) = line {
             if l.is_empty() {
@@ -812,12 +813,13 @@ fn _create_outputfilename(filename: &str) -> String {
     }
 }
 
-fn frames_to_time(frames: usize) -> (usize, usize, usize, usize) {
-    let total_seconds = frames / 200; // Convert frames to seconds
+fn frames_to_time(mocap_file: &MoCapFile) -> (usize, usize, usize, usize) {
+    let total_seconds = mocap_file.no_of_frames as usize / mocap_file.frequency as usize;
     let hours = total_seconds / 3600; // Find total hours
     let minutes = (total_seconds % 3600) / 60; // Find remaining minutes
     let seconds = total_seconds % 60; // Find remaining seconds
-    let milliseconds = (frames % 200) * 5; // Convert remaining frames to milliseconds
+    let milliseconds = (mocap_file.no_of_frames as usize % mocap_file.frequency as usize)
+        * mocap_file.get_timeinc();
 
     (hours, minutes, seconds, milliseconds)
 }

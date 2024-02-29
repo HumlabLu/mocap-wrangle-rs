@@ -179,6 +179,7 @@ impl MoCapFile {
 
     // Should be precalculated and stored.
     /// Returns the frame gap in ms, e.g 200Hz -> 5ms.
+    /// TODO: incorporate framestep.
     pub fn get_timeinc(&self) -> usize {
         (1000 / self.frequency).try_into().unwrap()
     }
@@ -232,7 +233,7 @@ impl MoCapFile {
 
     /// Calculates the velocities on the distance data.
     /// Note that the velocity per frame is the same as the distance calculated above,
-    /// so unless we convert to m/s, they are the same.
+    /// so unless we convert to m/s, they are the same (they are meters/frame).
     pub fn calculate_velocities(&mut self) {
         self.velocities = self.distances.clone();
     }
