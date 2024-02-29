@@ -406,11 +406,11 @@ fn main() -> Result<()> {
                     the_triplet.get(2).unwrap(),
                 );
             } else if args.coords {
-                print!("{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}",
+                print!("{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:.2}",
             	    the_triplet.first().unwrap(), the_triplet.get(1).unwrap(), the_triplet.get(2).unwrap(),
             	    azim, incl, the_d, nor_d, std_d,
-            	    the_v, nor_v,
-            	    the_a, nor_a
+            	    the_v, nor_v, std_v,
+            	    the_a, nor_a, std_a,
             	);
             } else {
                 print!(
@@ -647,7 +647,9 @@ fn emit_header(marker_name: &String, xyz: bool, xyzonly: bool) {
     }
     if xyz {
         print!(
-            "{}_X\t{}_Y\t{}_Z\t{}_az\t{}_in\t{}_d\t{}_dN\t{}_dS\t{}_v\t{}_vN\t{}_a\t{}_aN",
+            "{}_X\t{}_Y\t{}_Z\t{}_az\t{}_in\t{}_d\t{}_dN\t{}_dS\t{}_v\t{}_vN\t{}_vS\t{}_a\t{}_aN\t{}_aS",
+            marker_name,
+            marker_name,
             marker_name,
             marker_name,
             marker_name,
