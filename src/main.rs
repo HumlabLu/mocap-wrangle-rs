@@ -148,34 +148,6 @@ fn main() -> Result<()> {
     ])
     .unwrap();
 
-    // This only works in the git branch...
-    let output = Command::new("git").args(&["rev-parse", "HEAD"]).output();
-    let git_hash = match output {
-        Ok(output) => {
-            match String::from_utf8(output.stdout) {
-                Ok(mut hash) => {
-                    hash.pop(); // Remove trailing newline.
-                    hash
-                },
-                Err(e) => {
-                    error!("Failed to convert output to UTF-8: {}", e);
-                    "??".to_string()
-                }
-            }
-        },
-        Err(e) => {
-            error!("Command execution failed: {}", e);
-            "??".to_string()
-        }
-    };
-    info!("GIT_HASH={}", git_hash);
-
-    
-/*    let output = Command::new("git").args(&["rev-parse", "HEAD"]).output().unwrap();
-    let mut git_hash = String::from_utf8(output.stdout).unwrap();
-    git_hash.pop(); // Remove trailing newline.
-    info!("GIT_HASH={}", git_hash);*/
-
     let args = Args::parse();
     info!("{:?}", args);
     
