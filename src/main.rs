@@ -14,7 +14,6 @@ use mocap::{
 extern crate log;
 extern crate simplelog;
 use simplelog::*;
-use std::process::Command;
 
 // =====================================================================
 // Command line arguments.
@@ -192,6 +191,7 @@ fn main() -> Result<()> {
     // We have the filenames, create the structure.
     let mut mocap_file = MoCapFile {
         filename: filename.clone(),
+        framestep: args.framestep,
         ..Default::default()
     };
 

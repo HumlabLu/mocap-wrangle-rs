@@ -94,6 +94,7 @@ pub struct MoCapFile {
     pub no_of_cameras: SensorInt,
     pub no_of_markers: SensorInt,
     pub frequency: SensorInt,
+    pub framestep: usize, // This is from args but is needed for calculations.
     pub no_of_analog: SensorInt,
     pub description: String,
     pub time_stamp: String,
@@ -134,6 +135,7 @@ impl Default for MoCapFile {
             no_of_cameras: 0,
             no_of_markers: 0,
             frequency: 0,
+            framestep: 1,
             no_of_analog: 0,
             description: String::new(),
             time_stamp: String::new(),
@@ -221,6 +223,8 @@ impl MoCapFile {
                     // Do we have a saved "previous line/triplet"?
                     let x = prev_triplet.unwrap();
                     dist = dist_3d_t(curr_triplet, x);
+                    // For framesteps > 1, we get ... yes, what?
+                    // Maybe
                 }
                 distances[i].push(dist);
 
