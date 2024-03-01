@@ -148,10 +148,33 @@ fn main() -> Result<()> {
     ])
     .unwrap();
 
-    let output = Command::new("git").args(&["rev-parse", "HEAD"]).output().unwrap();
+    // This only works in the git branch...
+    let output = Command::new("git").args(&["rev-parse", "HEAD"]).output();
+    let git_hash = match output {
+        Ok(output) => {
+            match String::from_utf8(output.stdout) {
+                Ok(mut hash) => {
+                    hash.pop(); // Remove trailing newline.
+                    hash
+                },
+                Err(e) => {
+                    error!("Failed to convert output to UTF-8: {}", e);
+                    "??".to_string()
+                }
+            }
+        },
+        Err(e) => {
+            error!("Command execution failed: {}", e);
+            "??".to_string()
+        }
+    };
+    info!("GIT_HASH={}", git_hash);
+
+    
+/*    let output = Command::new("git").args(&["rev-parse", "HEAD"]).output().unwrap();
     let mut git_hash = String::from_utf8(output.stdout).unwrap();
     git_hash.pop(); // Remove trailing newline.
-    info!("GIT_HASH={}", git_hash);
+    info!("GIT_HASH={}", git_hash);*/
 
     let args = Args::parse();
     info!("{:?}", args);
@@ -638,7 +661,7 @@ fn read_frames(mocap_file: &mut MoCapFile, args: &Args) -> (Frames, Vec<usize>, 
     (frames, frame_numbers, timestamps)
 }
 
-/// Prints sensor name plus az, in, d, dN, dS, v, vN, a, aN
+/// Prints sensor name plus az, in, d, dN, dS, v, vN, vS, a, aN, aS 
 /// Optionally includes X, Y, Z coordinates.
 fn emit_header(marker_name: &String, xyz: bool, xyzonly: bool) {
     if xyzonly {
