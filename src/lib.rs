@@ -168,7 +168,7 @@ impl Default for MoCapFile {
 
 impl MoCapFile {
     // The number of markers in the vector.
-    fn num_markers(&self) -> usize {
+    pub fn num_markers(&self) -> usize {
         self.marker_names.len()
     }
 

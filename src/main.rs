@@ -232,6 +232,16 @@ fn main() -> Result<()> {
     );
     let (hours, minutes, seconds, milliseconds) = frames_to_time(&mocap_file);
     info!("Expecting {} frames ({:02}:{:02}:{:02}.{:03}).", mocap_file.no_of_frames, hours, minutes, seconds, milliseconds);
+
+    // How many columns?
+    let mut num_cols = mocap_file.num_markers() * 11;
+    if args.timestamp == true {
+        num_cols += 2;
+    }
+    if args.coords == true {
+        num_cols += mocap_file.num_markers() * 3;
+    }
+    info!("Generating {} output columns.", num_cols);
     
     // Without a header, we abort.
     if (mocap_file.num_header_lines == 0) || (mocap_file.num_matches == 0) {
