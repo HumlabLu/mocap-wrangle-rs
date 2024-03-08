@@ -1,4 +1,4 @@
-import sys
+import sys, os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -437,6 +437,21 @@ def test_model(data_loader, model, loss_function):
     return avg_loss
 
 epoch_start = 0
+model_str = "conv_04.model"
+
+if os.path.exists( model_str ):
+    print( f"Loading {model_str}" )
+    checkpoint = torch.load( model_str )
+    model.load_state_dict(checkpoint['model_state_dict'])
+    optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+    epoch_start = checkpoint['epoch']
+    ix_epoch = epoch_start # if epochs=0, for eval
+    train_losses = checkpoint['train_losses'],
+    test_losses  = checkpoint['test_losses'],
+    lowest_test_loss = checkpoint['lowest_test_loss']
+    train_losses = train_losses[0] # these are tuples
+    test_losses  = test_losses[0]  
+
 for ix_epoch in range(epoch_start+1, epoch_start+args.epochs+1):
     print( f"Epoch {ix_epoch}/{args.epochs+epoch_start}" )
     train_loss = train_model(train_loader, model, criterion, optimizer, ix_epoch)
@@ -446,6 +461,15 @@ for ix_epoch in range(epoch_start+1, epoch_start+args.epochs+1):
     print(f"Train loss: {train_loss:.4f}, Test loss: {test_loss:.4f}")
     print()
 
+torch.save({
+        'epoch': ix_epoch,
+        'model_state_dict': model.state_dict(),
+        'optimizer_state_dict': optimizer.state_dict(),
+        'lowest_test_loss':lowest_test_loss,
+        'train_losses':train_losses,
+        'test_losses':test_losses
+    }, model_str)
+
 #torch.set_printoptions(precision=2)
 #foo = model.predict(fv)
 #print(foo)
@@ -454,6 +478,11 @@ fig, axs = plt.subplots(nrows=1, ncols=1, figsize=(12,6), sharex=True, sharey=Tr
 axs.plot( train_losses )
 axs.plot( test_losses )
 fig.tight_layout()
+
+png_filename = model_str+".e"+str(ix_epoch)+".png"
+print( "Saving", png_filename )
+fig.savefig(png_filename, dpi=144)
+
 plt.show()
 
 print( "END", time.asctime() )
