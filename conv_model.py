@@ -392,6 +392,9 @@ print("len data loader/total batches", len(train_loader))
 criterion = torch.nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=0.0001)
 num_epochs = 1
+train_losses = []
+test_losses  = []
+lowest_test_loss = 1e9
 
 torch.autograd.set_detect_anomaly(True)
 
@@ -438,57 +441,20 @@ for ix_epoch in range(epoch_start+1, epoch_start+args.epochs+1):
     print( f"Epoch {ix_epoch}/{args.epochs+epoch_start}" )
     train_loss = train_model(train_loader, model, criterion, optimizer, ix_epoch)
     test_loss  = test_model(test_loader, model, criterion)
+    train_losses.append( train_loss )
+    test_losses.append( test_loss )
     print(f"Train loss: {train_loss:.4f}, Test loss: {test_loss:.4f}")
     print()
 
-sys.exit(0)
+#torch.set_printoptions(precision=2)
+#foo = model.predict(fv)
+#print(foo)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-for epoch in range(args.epochs):
-    model.train()  # Set model to training mode
-    running_loss = 0.0
-
-    for i, batch in enumerate(train_loader):
-        # Get data to cuda if possible
-        features = batch[0].to(device)
-        labels = batch[1].to(device)
-
-        # Reshape features to match the model's expected input dimensions
-        #features = features.unsqueeze(1)  # Add channel dimension
-
-        # Forward pass
-        outputs = model(features)
-        loss = criterion(outputs, labels)
-
-        # Backward and optimize
-        optimizer.zero_grad()  # Clear gradients from the previous iteration
-        loss.backward()  # Backpropagation to compute gradients
-        optimizer.step()  # Update weights
-
-        running_loss += loss.item()
-
-        if (i+1) % 10 == 0:  # Print average loss every 10 steps
-            print(f'Epoch [{epoch+1}/{args.epochs}], Step [{i+1}/{len(train_loader)}], Loss: {running_loss / 10:.4f}')
-            running_loss = 0.0
-
-torch.set_printoptions(precision=2)
-foo = model.predict(fv)
-print(foo)
+fig, axs = plt.subplots(nrows=1, ncols=1, figsize=(12,6), sharex=True, sharey=True)
+axs.plot( train_losses )
+axs.plot( test_losses )
+fig.tight_layout()
+plt.show()
 
 print( "END", time.asctime() )
 print()
