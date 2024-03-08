@@ -72,7 +72,12 @@ Frame Timestamp RHandIn_dN RHandIn_vN RHandIn_aN LHandIn_dN LHandIn_vN LHandIn_a
 
 last two are targets, first two are meta-info.
 
-python eaf_extract.py -d gestures_ML_05_data.tsv -e gestures_ML_05.eaf -F "LHand" -t LHand -o gestures_ML_05_data_targets_LHLH_ND.tsv -N -D -V -A -Z -o quuz.tsv
+python eaf_extract.py -d gestures_ML_05_data.tsv -e gestures_ML_05.eaf -F "LHand" -t LHand -N -D -V -A -Z -o quuz.tsv
+
+Frame	Timestamp	LHandIn_az	LHandIn_in	LHandIn_dN	LHandIn_vN	LHandIn_aN	LHandOut_az	LHandOut_in	LHandOut_dN	LHandOut_vN	LHandOut_aN	LHand
+0	0.0	0.0	0.0	0.0	0.0	0.65	0.0	0.0	0.0	0.0	0.62	0
+1	0.005	-1.7	2.5	0.07	0.07	0.86	-2.1	2.4	0.07	0.07	0.8	0
+2	0.01	-1.9	2.6	0.07	0.07	0.65	-2.0	2.3	0.06	0.06	0.59	0
 '''
 
 def load_data(filepath, seqlen):
@@ -122,9 +127,10 @@ def load_data(filepath, seqlen):
     train_data, test_data, train_labels, test_labels = train_test_split(features,
                                                                         labels,
                                                                         test_size=0.2,
+                                                                        shuffle=True,
                                                                         random_state=42)
     print("shapes", train_data.shape, test_data.shape, train_labels.shape, test_labels.shape)
-    return (train_data, test_data, train_labels, test_labels)
+    return (train_data, test_data, train_labels, test_labels, enc)
 
 class TabSeparatedDataset(Dataset):
     def __init__(self, features, labels):
@@ -308,9 +314,10 @@ class ConvTabularModelP(nn.Module):
 # Code.
 # ============================================================================
 
-train_data, test_data, train_labels, test_labels = load_data(args.trainfile, args.seqlen)
+train_data, test_data, train_labels, test_labels, oh_enc = load_data(args.trainfile, args.seqlen)
+print(oh_enc)
+print(oh_enc.inverse_transform([[0, 0, 0, 1, 1, 0, 0], [1, 1, 0, 0, 0, 1, 0]]))
 
-#training_data = TabSeparatedDataset(args.trainfile, args.seqlen)
 training_data = TabSeparatedDataset(train_data, train_labels)
 testing_data = TabSeparatedDataset(test_data, test_labels)
 
@@ -345,7 +352,9 @@ log(model)
 #print(torch.softmax(probabilities, dim=1))
 
 train_loader = DataLoader(training_data, batch_size=args.batchsize, shuffle=True)
-test_loader = DataLoader(testing_data, batch_size=args.batchsize, shuffle=False)
+# This is already a random selection...
+# We should test a longer bit of another file.
+test_loader = DataLoader(testing_data, batch_size=args.batchsize, shuffle=False) 
 
 fv, lbl = next(iter(train_loader))
 #fv = fv.reshape(1, *fv.shape)
@@ -356,6 +365,13 @@ print("lbl.shape", lbl.shape)
 print(fv, fv.shape)
 foo = model.predict(fv)
 print(foo)
+#res_foo = oh_enc.inverse_transform(foo.detach().numpy())
+#res_lbl = oh_enc.inverse_transform(lbl.numpy())
+#for x, y in zip(res_foo, res_lbl):
+#    a = ""
+#    if x != y:
+#        a = "ERR"
+#    print(x, y, a)
 
 # ============================================================================
 # Visualise.
@@ -482,6 +498,22 @@ torch.save({
 #torch.set_printoptions(precision=2)
 #foo = model.predict(fv)
 #print(foo)
+
+fv, lbl = next(iter(train_loader))
+print("fv.shape", fv.shape)
+print("lbl.shape", lbl.shape)
+print(fv, fv.shape)
+foo = model.predict(fv)
+print(foo)
+res_foo = oh_enc.inverse_transform(foo.detach().numpy())
+res_lbl = oh_enc.inverse_transform(lbl.numpy())
+for i, xy in enumerate(zip(res_foo, res_lbl)):
+    x = xy[0]
+    y = xy[1]
+    a = ""
+    if x != y:
+        a = "ERR"
+    print(i, x, y, a)
 
 fig, axs = plt.subplots(nrows=1, ncols=1, figsize=(12,6), sharex=True, sharey=True)
 axs.plot( train_losses )
