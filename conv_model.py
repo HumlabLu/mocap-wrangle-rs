@@ -25,7 +25,7 @@ parser.add_argument( "--batchsize",     "-b", help="Batch size",          defaul
 parser.add_argument( "--seqlen",        "-s", help="Sequence length",     default= 20, type=int )
 parser.add_argument( "--hidden",        "-H", help="Hidden units",        default=104, type=int )
 #parser.add_argument( "--layers",        "-l", help="Number of layers",    default=  1, type=int )
-parser.add_argument( "--features",      "-f", help="Number of features",  default=  2, type=int )
+#parser.add_argument( "--features",      "-f", help="Number of features",  default=  2, type=int )
 parser.add_argument( "--targets",       "-T", help="Number of targets",   default=  1, type=int )
 #parser.add_argument( "--targetfeature", "-F", help="The target feature",  default=  1, type=int )
 #parser.add_argument( "--classes",       "-c", help="Number of classes",   default=  0, type=int )
@@ -357,7 +357,6 @@ print(fv, fv.shape)
 foo = model.predict(fv)
 print(foo)
 
-
 # ============================================================================
 # Visualise.
 # ============================================================================
@@ -370,9 +369,8 @@ plt.show()
 '''
 '''
 f, axs = plt.subplots(2, 2)
-train_loader = DataLoader(training_data, batch_size=args.batchsize, shuffle=True)
 for h, v in [(0, 0), (0, 1), (1, 0), (1, 1)]:
-    X, y = next(iter(train_loader))
+    X, y = next(iter(train_loader)) # We need to reset it...
     xx = axs[h, v].imshow(np.abs(X[0][0]), cmap = 'gray')
     axs[h, v].set_title(str(y[0]))
 bar = plt.colorbar(xx) # will be for the last image
@@ -383,6 +381,10 @@ plt.show()
 # ============================================================================
 # Training.
 # ============================================================================
+
+model_str = f"conv_04_{args.model}_H{args.hidden}_h{args.seqlen}xw{width}.pht"
+print("model_str", model_str)
+log("model_str", model_str)
 
 #train_loader = DataLoader(training_data, batch_size=args.batchsize, shuffle=True)
 X, y = next(iter(train_loader))
@@ -437,7 +439,6 @@ def test_model(data_loader, model, loss_function):
     return avg_loss
 
 epoch_start = 0
-model_str = "conv_04.model"
 
 if os.path.exists( model_str ):
     print( f"Loading {model_str}" )
@@ -451,7 +452,15 @@ if os.path.exists( model_str ):
     lowest_test_loss = checkpoint['lowest_test_loss']
     train_losses = train_losses[0] # these are tuples
     test_losses  = test_losses[0]  
-
+else:
+    # Bootstrap values with an untrained network at "epoch 0".
+    # Disadvantage is that this is usually large, not good for the plot.
+    train_loss = test_model(train_loader, model, criterion)
+    test_loss  = test_model(test_loader, model, criterion)
+    train_losses.append( train_loss )
+    test_losses.append( test_loss )
+    print(f"Train loss: {train_loss:.4f}, Test loss: {test_loss:.4f}")
+    
 for ix_epoch in range(epoch_start+1, epoch_start+args.epochs+1):
     print( f"Epoch {ix_epoch}/{args.epochs+epoch_start}" )
     train_loss = train_model(train_loader, model, criterion, optimizer, ix_epoch)
