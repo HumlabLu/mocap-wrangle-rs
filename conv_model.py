@@ -13,6 +13,7 @@ import argparse
 import time, datetime, json
 import matplotlib.pyplot as plt
 import matplotlib as mp
+from tqdm import tqdm
 
 # ============================================================================
 # Arguments
@@ -150,9 +151,6 @@ class TabSeparatedDataset(Dataset):
         label = torch.tensor(self.labels.values[idx], dtype=torch.float)
         #print("getitem", features.shape, label.shape)
         return features, label
-    
-        #return torch.tensor(self.features[idx], dtype=torch.float64), torch.tensor(self.labels.iloc[idx,:], dtype=torch.float64)
-        #return self.features[idx], self.labels.iloc[idx,:]
     
     def get_num_features(self):
         print("get_num_features", self.features.shape[3])
@@ -314,6 +312,7 @@ train_data, test_data, train_labels, test_labels = load_data(args.trainfile, arg
 
 #training_data = TabSeparatedDataset(args.trainfile, args.seqlen)
 training_data = TabSeparatedDataset(train_data, train_labels)
+testing_data = TabSeparatedDataset(test_data, test_labels)
 
 # Parameters for the batch of random values
 batch_size = args.batchsize  # Number of images in the batch
@@ -346,6 +345,8 @@ log(model)
 #print(torch.softmax(probabilities, dim=1))
 
 train_loader = DataLoader(training_data, batch_size=args.batchsize, shuffle=True)
+test_loader = DataLoader(testing_data, batch_size=args.batchsize, shuffle=False)
+
 fv, lbl = next(iter(train_loader))
 #fv = fv.reshape(1, *fv.shape)
 print("fv.shape", fv.shape)
@@ -397,6 +398,67 @@ torch.autograd.set_detect_anomaly(True)
 # Device configuration - use GPU if available
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model.to(device)
+
+def train_model(data_loader, model, loss_function, optimizer, epoch):
+    num_batches = len(data_loader)
+    total_loss = 0.0
+    model.train()
+    
+    # Ensure model is on the correct device (CUDA if available)
+    model.to(device)
+
+    for X, y in tqdm(data_loader): #, desc=f"Epoch {epoch}/{args.epochs+epoch_start}"):
+        X, y = X.to(device), y.to(device)
+
+        outputs = model(X)
+        loss = criterion(outputs, y)
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+        total_loss += loss.item()
+
+    avg_loss = total_loss / num_batches
+    return avg_loss
+
+def test_model(data_loader, model, loss_function):
+    num_batches = len(data_loader)
+    total_loss = 0.0
+
+    model.eval()
+    with torch.no_grad():
+        for X, y in tqdm(data_loader):
+            outputs = model(X)
+            total_loss += criterion(outputs, y).item()
+            
+    avg_loss = total_loss / num_batches
+    return avg_loss
+
+epoch_start = 0
+for ix_epoch in range(epoch_start+1, epoch_start+args.epochs+1):
+    print( f"Epoch {ix_epoch}/{args.epochs+epoch_start}" )
+    train_loss = train_model(train_loader, model, criterion, optimizer, ix_epoch)
+    test_loss  = test_model(test_loader, model, criterion)
+    print(f"Train loss: {train_loss:.4f}, Test loss: {test_loss:.4f}")
+    print()
+
+sys.exit(0)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 for epoch in range(args.epochs):
     model.train()  # Set model to training mode
     running_loss = 0.0
@@ -420,10 +482,11 @@ for epoch in range(args.epochs):
 
         running_loss += loss.item()
 
-        if (i+1) % 10 == 0:  # Print average loss every 10 batches
-            print(f'Epoch [{epoch+1}/{num_epochs}], Step [{i+1}/{len(train_loader)}], Loss: {running_loss / 10:.4f}')
+        if (i+1) % 10 == 0:  # Print average loss every 10 steps
+            print(f'Epoch [{epoch+1}/{args.epochs}], Step [{i+1}/{len(train_loader)}], Loss: {running_loss / 10:.4f}')
             running_loss = 0.0
 
+torch.set_printoptions(precision=2)
 foo = model.predict(fv)
 print(foo)
 
