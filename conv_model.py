@@ -15,6 +15,7 @@ import time, datetime, json
 import matplotlib.pyplot as plt
 import matplotlib as mp
 from tqdm import tqdm
+import seaborn as sn
 
 # ============================================================================
 # Arguments
@@ -71,7 +72,7 @@ Frame Timestamp RHandIn_dN RHandIn_vN RHandIn_aN LHandIn_dN LHandIn_vN LHandIn_a
 1	0.005	0.07	0.07	0.76	0.07	0.07	0.86	0
 2	0.01	0.07	0.07	0.59	0.07	0.07	0.65	0
 
-last two are targets, first two are meta-info.
+Last is target, first two are meta-info.
 
 python eaf_extract.py -d gestures_ML_05_data.tsv -e gestures_ML_05.eaf -F "LHand" -t LHand -N -D -V -A -Z -o quuz.tsv
 
@@ -329,8 +330,8 @@ train_data, test_data, train_labels, test_labels = train_test_split(features,
                                                                     shuffle=True,
                                                                     random_state=42)
 print("Train/test shapes", train_data.shape, test_data.shape, train_labels.shape, test_labels.shape)
-print(oh_enc)
-print(oh_enc.inverse_transform([[0, 0, 0, 1, 1, 0, 0], [1, 1, 0, 0, 0, 1, 0]]))
+#print(oh_enc)
+#print(oh_enc.inverse_transform([[0, 0, 0, 1, 1, 0, 0], [1, 1, 0, 0, 0, 1, 0]]))
 
 training_data = TabSeparatedDataset(train_data, train_labels)
 testing_data = TabSeparatedDataset(test_data, test_labels)
@@ -366,37 +367,29 @@ log(model)
 #print(torch.softmax(probabilities, dim=1))
 
 train_loader = DataLoader(training_data, batch_size=args.batchsize, shuffle=True)
-# This is already a random selection...
-# We should test a longer bit of another file.
 test_loader = DataLoader(testing_data, batch_size=args.batchsize, shuffle=False) 
 
+'''
 fv, lbl = next(iter(train_loader))
 #fv = fv.reshape(1, *fv.shape)
 print("fv.shape", fv.shape)
-#print("fv", fv)
 print("lbl.shape", lbl.shape)
-#print("lbl", lbl)
 print(fv, fv.shape)
 foo = model.predict(fv)
 print(foo)
-#res_foo = oh_enc.inverse_transform(foo.detach().numpy())
-#res_lbl = oh_enc.inverse_transform(lbl.numpy())
-#for x, y in zip(res_foo, res_lbl):
-#    a = ""
-#    if x != y:
-#        a = "ERR"
-#    print(x, y, a)
+res_foo = oh_enc.inverse_transform(foo.detach().numpy())
+res_lbl = oh_enc.inverse_transform(lbl.numpy())
+for x, y in zip(res_foo, res_lbl):
+    a = ""
+    if x != y:
+        a = "ERR"
+    print(x, y, a)
+'''
 
 # ============================================================================
 # Visualise.
 # ============================================================================
 
-'''
-plt.subplot(111)
-plt.imshow(np.abs(fv[0][0]), cmap = 'gray')
-plt.title('Level 0'), plt.xticks([]), plt.yticks([])
-plt.show()
-'''
 if args.info:
     hor=4
     ver=3
@@ -404,10 +397,10 @@ if args.info:
     for h in range(ver):
         for v in range(hor): #, v in zip(range(ver), range(hor)): #  [(0, 0), (0, 1), (1, 0), (1, 1)]:
             X, y = next(iter(train_loader)) # We need to reset it...
-            xx = axs[h, v].imshow(np.abs(X[0][0]), cmap = 'gray', aspect='auto')
+            xx = axs[h, v].imshow(np.abs(X[0][0]), cmap = 'gray', aspect='auto') # Used for colourbar.
             res_lbl = oh_enc.inverse_transform(y[0].reshape(1, -1))
             axs[h, v].set_title(res_lbl)
-    #bar = plt.colorbar(xx) # will be for the last image
+    #bar = plt.colorbar(xx) # Will be for the last image.
     f.subplots_adjust(right=0.8)
     cbar_ax = f.add_axes([0.85, 0.15, 0.05, 0.7])
     f.colorbar(xx, cax=cbar_ax)
@@ -427,9 +420,6 @@ model_str = f"conv_04_{args.model}_H{args.hidden}_h{args.seqlen}xw{width}.pht"
 print("model_str", model_str)
 log("model_str", model_str)
 
-#train_loader = DataLoader(training_data, batch_size=args.batchsize, shuffle=True)
-X, y = next(iter(train_loader))
-print(X.shape, y.shape)
 print("len data loader/total batches", len(train_loader))
 
 criterion = torch.nn.CrossEntropyLoss()
@@ -510,6 +500,7 @@ if args.epochs > 0:
         train_losses.append( train_loss )
         test_losses.append( test_loss )
         print(f"Train loss: {train_loss:.4f}, Test loss: {test_loss:.4f}")
+        log(f"Epoch {ix_epoch}/{args.epochs+epoch_start}: Train loss: {train_loss:.4f}, Test loss: {test_loss:.4f}")
         print()
 
     torch.save({
@@ -520,10 +511,6 @@ if args.epochs > 0:
             'train_losses':train_losses,
             'test_losses':test_losses
         }, model_str)
-
-#torch.set_printoptions(precision=2)
-#foo = model.predict(fv)
-#print(foo)
 
 '''
 fv, lbl = next(iter(train_loader))
@@ -551,13 +538,14 @@ if args.epochs > 0:
     png_filename = model_str+".e"+str(ix_epoch)+".png"
     print( "Saving", png_filename )
     fig.savefig(png_filename, dpi=144)
-    plt.show()
+    plt.pause(1.0)
 
 # ============================================================================
 # Separate test file.
 # ============================================================================
 
 if args.testfile:
+    log("Test file:", args.testfile)
     features, labels, oh_enc = load_data(args.testfile, args.seqlen, enc=oh_enc)
     print("Data/labels shape", features.shape, labels.shape)
     testing_data = TabSeparatedDataset(features, labels)
@@ -579,11 +567,21 @@ if args.testfile:
             golds.append(gold_lbl)
         
     cm = confusion_matrix(golds, predictions)
-    print( cm )
-    #max_cm = cm.max()
-    #print( classification_report(df_test[target_col_name], df_test["PREDICTION"], zero_division=False) )
+    print(cm)
+    log(cm)
+    max_cm = cm.max()
+    df_cm = pd.DataFrame(cm)
+    # plt.figure(figsize=(10,7))
+    scale = 1.0
+    sn.set(font_scale=scale)
+    fig, axs = plt.subplots(nrows=1, ncols=1, figsize=(8,6))
+    fig.suptitle( model_str )
+    sn.heatmap( df_cm, annot=True, fmt='d', cmap='Blues', vmax=max_cm//10, ax=axs )
+    fig.tight_layout()
+    plt.pause(2.0)
 
 print( "END", time.asctime() )
 print()
 with open("./conv_04.log", "a") as f:
     f.write(datetime.datetime.now().strftime('END %Y%m%dT%H:%M:%S\n\n'))
+plt.show()
