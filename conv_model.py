@@ -5,6 +5,7 @@ import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.metrics import confusion_matrix, classification_report
 import pandas as pd
 import numpy as np
 import torch.optim as optim
@@ -500,29 +501,31 @@ else:
     train_losses.append( train_loss )
     test_losses.append( test_loss )
     print(f"Train loss: {train_loss:.4f}, Test loss: {test_loss:.4f}")
-    
-for ix_epoch in range(epoch_start+1, epoch_start+args.epochs+1):
-    print( f"Epoch {ix_epoch}/{args.epochs+epoch_start}" )
-    train_loss = train_model(train_loader, model, criterion, optimizer, ix_epoch)
-    test_loss  = test_model(test_loader, model, criterion)
-    train_losses.append( train_loss )
-    test_losses.append( test_loss )
-    print(f"Train loss: {train_loss:.4f}, Test loss: {test_loss:.4f}")
-    print()
 
-torch.save({
-        'epoch': ix_epoch,
-        'model_state_dict': model.state_dict(),
-        'optimizer_state_dict': optimizer.state_dict(),
-        'lowest_test_loss':lowest_test_loss,
-        'train_losses':train_losses,
-        'test_losses':test_losses
-    }, model_str)
+if args.epochs > 0:
+    for ix_epoch in range(epoch_start+1, epoch_start+args.epochs+1):
+        print( f"Epoch {ix_epoch}/{args.epochs+epoch_start}" )
+        train_loss = train_model(train_loader, model, criterion, optimizer, ix_epoch)
+        test_loss  = test_model(test_loader, model, criterion)
+        train_losses.append( train_loss )
+        test_losses.append( test_loss )
+        print(f"Train loss: {train_loss:.4f}, Test loss: {test_loss:.4f}")
+        print()
+
+    torch.save({
+            'epoch': ix_epoch,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            'lowest_test_loss':lowest_test_loss,
+            'train_losses':train_losses,
+            'test_losses':test_losses
+        }, model_str)
 
 #torch.set_printoptions(precision=2)
 #foo = model.predict(fv)
 #print(foo)
 
+'''
 fv, lbl = next(iter(train_loader))
 print("fv.shape", fv.shape)
 print("lbl.shape", lbl.shape)
@@ -538,17 +541,17 @@ for i, xy in enumerate(zip(res_foo, res_lbl)):
     if x != y:
         a = "ERR"
     print(i, x, y, a)
+'''
 
-fig, axs = plt.subplots(nrows=1, ncols=1, figsize=(12,6), sharex=True, sharey=True)
-axs.plot( train_losses )
-axs.plot( test_losses )
-fig.tight_layout()
-
-png_filename = model_str+".e"+str(ix_epoch)+".png"
-print( "Saving", png_filename )
-fig.savefig(png_filename, dpi=144)
-
-plt.show()
+if args.epochs > 0:
+    fig, axs = plt.subplots(nrows=1, ncols=1, figsize=(12,6), sharex=True, sharey=True)
+    axs.plot( train_losses )
+    axs.plot( test_losses )
+    fig.tight_layout()
+    png_filename = model_str+".e"+str(ix_epoch)+".png"
+    print( "Saving", png_filename )
+    fig.savefig(png_filename, dpi=144)
+    plt.show()
 
 # ============================================================================
 # Separate test file.
@@ -559,9 +562,27 @@ if args.testfile:
     print("Data/labels shape", features.shape, labels.shape)
     testing_data = TabSeparatedDataset(features, labels)
     test_loader = DataLoader(testing_data, batch_size=args.batchsize, shuffle=False)
-    test_loss  = test_model(test_loader, model, criterion)
-    print(f"Test loss: {test_loss:.4f}")
-    
+    #test_loss  = test_model(test_loader, model, criterion)
+    #print(f"Test loss: {test_loss:.4f}")
+    model.eval()
+    predictions = []
+    golds = []
+    for X, y in tqdm(test_loader):
+        lbl = model.predict(X)
+        # We get 2D Tensors, convert to numpy and loop over values.
+        for i, (pred, gold) in enumerate(zip(lbl.detach().numpy(), y.detach().numpy())):
+            res_lbl = oh_enc.inverse_transform(pred.reshape(1, -1))[0][0] # From [[0]] to 0.
+            gold_lbl = oh_enc.inverse_transform(gold.reshape(1, -1))[0][0] 
+            #if gold_lbl != 0:
+            #    print(res_lbl, gold_lbl)
+            predictions.append(res_lbl)
+            golds.append(gold_lbl)
+        
+    cm = confusion_matrix(golds, predictions)
+    print( cm )
+    #max_cm = cm.max()
+    #print( classification_report(df_test[target_col_name], df_test["PREDICTION"], zero_division=False) )
+
 print( "END", time.asctime() )
 print()
 with open("./conv_04.log", "a") as f:
