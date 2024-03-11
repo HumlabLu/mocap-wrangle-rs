@@ -80,7 +80,7 @@ Frame	Timestamp	LHandIn_az	LHandIn_in	LHandIn_dN	LHandIn_vN	LHandIn_aN	LHandOut_
 2	0.01	-1.9	2.6	0.07	0.07	0.65	-2.0	2.3	0.06	0.06	0.59	0
 '''
 
-def load_data(filepath, seqlen):
+def load_data(filepath, seqlen, div=0.2, enc=None):
     df = pd.read_csv(filepath, sep='\t')
     
     num_columns = df.shape[1]
@@ -97,8 +97,10 @@ def load_data(filepath, seqlen):
     # The labels are in the last column.
     labels = df.iloc[:, -1].values.reshape(-1, 1) ## This reshape is wrong for 1 dim labels!
 
-    # One hot encode the values using sklearn
-    enc = OneHotEncoder(handle_unknown='ignore')
+    # One hot encode the values using sklearn. Parameter so we
+    # can re-use the encoder for another file.
+    if not enc:
+        enc = OneHotEncoder(handle_unknown='ignore')
     #enc.fit(labels)
     enc_df = pd.DataFrame(enc.fit_transform(labels).toarray())
     #print(enc_df.head())
@@ -111,7 +113,8 @@ def load_data(filepath, seqlen):
     num_samples = len(df) - seqlen + 1
 
     slices = []
-    # Loop through the DataFrame, starting each new slice one row later than the previous
+    # Loop through the DataFrame, starting each new slice one row later than the previous.
+    # (Should we take bigger steps?)
     for start_row in range(len(df) - seqlen + 1):
         slice_2d = features.iloc[start_row:start_row + seqlen].values
         #print("slice 2d", slice_2d, slice_2d.shape)
@@ -124,13 +127,16 @@ def load_data(filepath, seqlen):
     #features = features[num_samples:-1].reshape(-1, 1, seqlen, num_features)
     print("features shape", features.shape)
 
+    '''
     train_data, test_data, train_labels, test_labels = train_test_split(features,
-                                                                        labels,
-                                                                        test_size=0.2,
-                                                                        shuffle=True,
-                                                                        random_state=42)
-    print("shapes", train_data.shape, test_data.shape, train_labels.shape, test_labels.shape)
-    return (train_data, test_data, train_labels, test_labels, enc)
+                                                                            labels,
+                                                                            test_size=div,
+                                                                            shuffle=True,
+                                                                            random_state=42)
+    '''
+    #print("shapes", train_data.shape, test_data.shape, train_labels.shape, test_labels.shape)
+    #return (train_data, test_data, train_labels, test_labels, enc)
+    return (features, labels, enc)
 
 class TabSeparatedDataset(Dataset):
     def __init__(self, features, labels):
@@ -314,7 +320,14 @@ class ConvTabularModelP(nn.Module):
 # Code.
 # ============================================================================
 
-train_data, test_data, train_labels, test_labels, oh_enc = load_data(args.trainfile, args.seqlen)
+#train_data, test_data, train_labels, test_labels, oh_enc = load_data(args.trainfile, args.seqlen)
+features, labels, oh_enc = load_data(args.trainfile, args.seqlen)
+train_data, test_data, train_labels, test_labels = train_test_split(features,
+                                                                    labels,
+                                                                    test_size=0.2,
+                                                                    shuffle=True,
+                                                                    random_state=42)
+print("Train/test shapes", train_data.shape, test_data.shape, train_labels.shape, test_labels.shape)
 print(oh_enc)
 print(oh_enc.inverse_transform([[0, 0, 0, 1, 1, 0, 0], [1, 1, 0, 0, 0, 1, 0]]))
 
@@ -390,7 +403,7 @@ if args.info:
     for h in range(ver):
         for v in range(hor): #, v in zip(range(ver), range(hor)): #  [(0, 0), (0, 1), (1, 0), (1, 1)]:
             X, y = next(iter(train_loader)) # We need to reset it...
-            xx = axs[h, v].imshow(np.abs(X[0][0]), cmap = 'gray')
+            xx = axs[h, v].imshow(np.abs(X[0][0]), cmap = 'gray', aspect='auto')
             res_lbl = oh_enc.inverse_transform(y[0].reshape(1, -1))
             axs[h, v].set_title(res_lbl)
     #bar = plt.colorbar(xx) # will be for the last image
@@ -398,8 +411,11 @@ if args.info:
     cbar_ax = f.add_axes([0.85, 0.15, 0.05, 0.7])
     f.colorbar(xx, cax=cbar_ax)
     #bar.set_label('ColorBar 1')
-    f.subplots_adjust(hspace=0.4)
+    f.subplots_adjust(hspace=0.5)
     plt.show()
+    png_filename = os.path.basename(args.trainfile)+"_s"+str(args.seqlen)+".imgdata.png"
+    print( "Saving", png_filename )
+    f.savefig(png_filename, dpi=288)
     sys.exit(0)
 
 # ============================================================================
@@ -534,6 +550,18 @@ fig.savefig(png_filename, dpi=144)
 
 plt.show()
 
+# ============================================================================
+# Separate test file.
+# ============================================================================
+
+if args.testfile:
+    features, labels, oh_enc = load_data(args.testfile, args.seqlen, enc=oh_enc)
+    print("Data/labels shape", features.shape, labels.shape)
+    testing_data = TabSeparatedDataset(features, labels)
+    test_loader = DataLoader(testing_data, batch_size=args.batchsize, shuffle=False)
+    test_loss  = test_model(test_loader, model, criterion)
+    print(f"Test loss: {test_loss:.4f}")
+    
 print( "END", time.asctime() )
 print()
 with open("./conv_04.log", "a") as f:
