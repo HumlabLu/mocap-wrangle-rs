@@ -383,16 +383,24 @@ plt.imshow(np.abs(fv[0][0]), cmap = 'gray')
 plt.title('Level 0'), plt.xticks([]), plt.yticks([])
 plt.show()
 '''
-'''
-f, axs = plt.subplots(2, 2)
-for h, v in [(0, 0), (0, 1), (1, 0), (1, 1)]:
-    X, y = next(iter(train_loader)) # We need to reset it...
-    xx = axs[h, v].imshow(np.abs(X[0][0]), cmap = 'gray')
-    axs[h, v].set_title(str(y[0]))
-bar = plt.colorbar(xx) # will be for the last image
-#bar.set_label('ColorBar 1') 
-plt.show()
-'''
+if args.info:
+    hor=4
+    ver=3
+    f, axs = plt.subplots(ver, hor)
+    for h in range(ver):
+        for v in range(hor): #, v in zip(range(ver), range(hor)): #  [(0, 0), (0, 1), (1, 0), (1, 1)]:
+            X, y = next(iter(train_loader)) # We need to reset it...
+            xx = axs[h, v].imshow(np.abs(X[0][0]), cmap = 'gray')
+            res_lbl = oh_enc.inverse_transform(y[0].reshape(1, -1))
+            axs[h, v].set_title(res_lbl)
+    #bar = plt.colorbar(xx) # will be for the last image
+    f.subplots_adjust(right=0.8)
+    cbar_ax = f.add_axes([0.85, 0.15, 0.05, 0.7])
+    f.colorbar(xx, cax=cbar_ax)
+    #bar.set_label('ColorBar 1')
+    f.subplots_adjust(hspace=0.4)
+    plt.show()
+    sys.exit(0)
 
 # ============================================================================
 # Training.
