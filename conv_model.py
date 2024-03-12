@@ -82,7 +82,7 @@ Frame	Timestamp	LHandIn_az	LHandIn_in	LHandIn_dN	LHandIn_vN	LHandIn_aN	LHandOut_
 2	0.01	-1.9	2.6	0.07	0.07	0.65	-2.0	2.3	0.06	0.06	0.59	0
 '''
 
-def load_data(filepath, seqlen, div=0.2, enc=None):
+def load_data(filepath, seqlen, enc=None):
     df = pd.read_csv(filepath, sep='\t')
     
     num_columns = df.shape[1]
@@ -96,7 +96,7 @@ def load_data(filepath, seqlen, div=0.2, enc=None):
     print(features.min(axis=0))
     print(features.max(axis=0))
     
-    # The labels are in the last column.
+    # The labels are in the last column. What about unlabelled data?
     labels = df.iloc[:, -1].values.reshape(-1, 1) ## This reshape is wrong for 1 dim labels!
 
     # One hot encode the values using sklearn. Parameter so we
@@ -132,7 +132,7 @@ def load_data(filepath, seqlen, div=0.2, enc=None):
     '''
     train_data, test_data, train_labels, test_labels = train_test_split(features,
                                                                             labels,
-                                                                            test_size=div,
+                                                                            test_size=0.2,
                                                                             shuffle=True,
                                                                             random_state=42)
     '''
@@ -576,7 +576,8 @@ if args.testfile:
     sn.set(font_scale=scale)
     fig, axs = plt.subplots(nrows=1, ncols=1, figsize=(8,6))
     fig.suptitle( model_str )
-    sn.heatmap( df_cm, annot=True, fmt='d', cmap='Blues', vmax=max_cm//10, ax=axs )
+    #sn.heatmap( df_cm, annot=True, fmt='d', cmap='Blues', vmax=max_cm//10, ax=axs )
+    sn.heatmap( df_cm, annot=True, fmt='d', cmap='Blues', vmax=512, ax=axs )
     fig.tight_layout()
     plt.pause(2.0)
 
