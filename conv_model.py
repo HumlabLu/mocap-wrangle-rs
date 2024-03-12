@@ -27,18 +27,12 @@ parser.add_argument( "--batchsize",     "-b", help="Batch size",          defaul
 parser.add_argument( "--seqlen",        "-s", help="Sequence length",     default= 20, type=int )
 parser.add_argument( "--hidden",        "-H", help="Hidden units",        default=104, type=int )
 #parser.add_argument( "--layers",        "-l", help="Number of layers",    default=  1, type=int )
-#parser.add_argument( "--features",      "-f", help="Number of features",  default=  2, type=int )
 parser.add_argument( "--targets",       "-T", help="Number of targets",   default=  1, type=int )
-#parser.add_argument( "--targetfeature", "-F", help="The target feature",  default=  1, type=int )
-#parser.add_argument( "--classes",       "-c", help="Number of classes",   default=  0, type=int )
-#parser.add_argument( "--nogain",        "-g", help="Epochs without gain", default= 10, type=int )
-#parser.add_argument( "--restart",       "-r", help="Restart training",    action="store_true" )
-#parser.add_argument( "--scale",         "-S", help="Scale data",          action="store_true" )
-#parser.add_argument( "--best",          "-B", help="Load best_model.pht", action="store_true" )
-#parser.add_argument( "--alldata",       "-a", help="test on all data",    action="store_true" )
 #parser.add_argument( "--noplots",       "-p", help="Show no plots",       action="store_true" )
 parser.add_argument( "--trainfile",     "-t", help="Training file",       default="foo.tsv" )
 parser.add_argument( "--testfile",            help="Test file",           default=None )
+parser.add_argument( "--unlabelled",    "-u", help="Unlabelled file",     default=None )
+parser.add_argument( "--restart",       "-r", help="Restart training",    action="store_true" )
 parser.add_argument( "--model",         "-m", help="Model name",          default="ConvTabularModelP" )
 parser.add_argument( "--id",            "-i", help="Extra ID string",     default=None )
 parser.add_argument( "--info",          "-I", help="Print info only",     action="store_true" )
@@ -82,7 +76,7 @@ Frame	Timestamp	LHandIn_az	LHandIn_in	LHandIn_dN	LHandIn_vN	LHandIn_aN	LHandOut_
 2	0.01	-1.9	2.6	0.07	0.07	0.65	-2.0	2.3	0.06	0.06	0.59	0
 '''
 
-def load_data(filepath, seqlen, enc=None):
+def load_data(filepath, seqlen, getlabels=True, enc=None):
     df = pd.read_csv(filepath, sep='\t')
     
     num_columns = df.shape[1]
@@ -97,19 +91,23 @@ def load_data(filepath, seqlen, enc=None):
     print(features.max(axis=0))
     
     # The labels are in the last column. What about unlabelled data?
-    labels = df.iloc[:, -1].values.reshape(-1, 1) ## This reshape is wrong for 1 dim labels!
-
+    if getlabels:
+        labels = df.iloc[:, -1].values.reshape(-1, 1) ## This reshape is wrong for 1 dim labels!
+        
     # One hot encode the values using sklearn. Parameter so we
     # can re-use the encoder for another file.
-    if not enc:
-        enc = OneHotEncoder(handle_unknown='ignore')
-    #enc.fit(labels)
-    enc_df = pd.DataFrame(enc.fit_transform(labels).toarray())
-    #print(enc_df.head())
-    labels = enc_df.iloc[seqlen-1:] # remove first seqlen because we predict last row of image
-    print("labels shape", labels.shape)
-    #print(labels.head())
-
+    if getlabels:
+        if not enc:
+            enc = OneHotEncoder(handle_unknown='ignore')
+        #enc.fit(labels)
+        enc_df = pd.DataFrame(enc.fit_transform(labels).toarray())
+        #print(enc_df.head())
+        labels = enc_df.iloc[seqlen-1:] # remove first seqlen because we predict last row of image
+        print("labels shape", labels.shape)
+        #print(labels.head())
+    else:
+        print("No labels.")
+    
     # Reshape features to match the input shape (1, 28, 11)
     # We take the target of the last row as target, so we miss the first seqlen data.
     num_samples = len(df) - seqlen + 1
@@ -129,16 +127,11 @@ def load_data(filepath, seqlen, enc=None):
     #features = features[num_samples:-1].reshape(-1, 1, seqlen, num_features)
     print("features shape", features.shape)
 
-    '''
-    train_data, test_data, train_labels, test_labels = train_test_split(features,
-                                                                            labels,
-                                                                            test_size=0.2,
-                                                                            shuffle=True,
-                                                                            random_state=42)
-    '''
     #print("shapes", train_data.shape, test_data.shape, train_labels.shape, test_labels.shape)
     #return (train_data, test_data, train_labels, test_labels, enc)
-    return (features, labels, enc)
+    if getlabels:
+        return (features, labels, enc)
+    return features
 
 class TabSeparatedDataset(Dataset):
     def __init__(self, features, labels):
@@ -173,67 +166,38 @@ class TabSeparatedDataset(Dataset):
     def get_num_classes(self):
         return self.labels.shape[-1]
 
-    
-class TabSeparatedDataset_DEPRECATED(Dataset):
-    def __init__(self, filepath, seqlen):
-        # Load the data
-        self.df = pd.read_csv(filepath, sep='\t')
-        self.seqlen = seqlen
-        
-        num_columns = self.df.shape[1]
-        # sensors is a misnomer...
-        self.num_features = num_columns - 2 - args.targets # - frame, TS and targets
-        print( f"Number of features/data fields: {self.num_features}" )
+# This is for unlabelled test data, or new data we want to classify.
+class UnlabelledDataset(Dataset):
+    def __init__(self, features):
+        """
+        Args:
+            features (numpy array): Features from the dataset.
+        """
+        self.features = features
 
-        # Cut the feature values, assume last is target.
-        self.features = self.df.iloc[:, 2:-1]
-        print(self.features.info())
-        print(self.features.min(axis=0))
-        print(self.features.max(axis=0))
-        self.labels = self.df.iloc[:, -1]
-
-        # One hot encode the values using pandas.
-        self.max_class = int(self.labels.max())+1
-        self.labels = pd.get_dummies(self.labels).values.reshape(-1, self.max_class)
-        self.labels = self.labels[seqlen-1:] # remove first seqlen because we predict last row of image
-        print("labels shape", self.labels.shape)
-        print(self.labels[0])
-        
-        # Reshape features to match the input shape (1, 28, 11)
-        # We take the target of the last row as target, so we miss the first seqlen data.
-        self.num_samples = len(self.df) - seqlen + 1
-
-        slices = []
-        # Loop through the DataFrame, starting each new slice one row later than the previous
-        for start_row in range(len(self.df) - seqlen + 1):
-            slice_2d = self.features.iloc[start_row:start_row + seqlen].values
-            #print("slice 2d", slice_2d, slice_2d.shape)
-            image = slice_2d.reshape(1, seqlen, self.num_features)
-            slices.append(image)
-        # Convert the list of 2D arrays into a new DataFrame
-        self.features = np.concatenate(slices, axis=0)
-        self.features = self.features.reshape(-1, 1, seqlen, self.num_features)
-        #self.features = self.features[self.num_samples:-1].reshape(-1, 1, seqlen, num_features)
-        print("features shape", self.features.shape)
-               
     def __len__(self):
-        return self.num_samples
+        return self.features.shape[0]
 
     def __getitem__(self, idx):
-        # Retrieve features and label
-        features = torch.tensor(self.features[idx], dtype=torch.float)
-        # The first "image" has the last label as target?
-        label = torch.tensor(self.labels[idx+self.seqlen-1], dtype=torch.float)
-        return features, label
+        #if torch.is_tensor(idx):
+        #    idx = idx.tolist()
 
+        #print(idx, self.features.shape, self.labels.shape)
+        #print(self.features[idx])
+        #print(self.labels.values[idx])
+
+        features = torch.tensor(self.features[idx], dtype=torch.float)
+        return features
+    
     def get_num_features(self):
-        return self.num_features
+        print("get_num_features", self.features.shape[3])
+        return self.features.shape[3]
 
     def get_num_classes(self):
-        return self.max_class
+        return self.labels.shape[-1]
 
 # ============================================================================
-# Models.
+# Convolutional model.
 # ============================================================================
 
 # See https://pytorch.org/docs/stable/generated/torch.nn.Conv2d.html
@@ -243,8 +207,7 @@ class ConvTabularModelP(nn.Module):
     def __init__(self, channels, height, width, features, hidden, pool1_size=3, pool2_size=2):
         # channels could be sensors, height is number of frames, width is sensor values
         super(ConvTabularModelP, self).__init__()
-        # Input image: 1 x 28 x 11 (C x H x W), grayscale images
-        image_size = (args.batchsize, channels, height, width)
+        image_size = (args.batchsize, channels, height, width) # Channels is one  ("greyscale").
         # 32 is out channels
         #
         # seqlen must be at least pool1_size * pool2_size.
@@ -319,14 +282,13 @@ class ConvTabularModelP(nn.Module):
         return probabilities
 
 # ============================================================================
-# Code.
+# Training and test data.
 # ============================================================================
 
-#train_data, test_data, train_labels, test_labels, oh_enc = load_data(args.trainfile, args.seqlen)
-features, labels, oh_enc = load_data(args.trainfile, args.seqlen)
+features, labels, oh_enc = load_data(args.trainfile, args.seqlen) # return encoder for later.
 train_data, test_data, train_labels, test_labels = train_test_split(features,
                                                                     labels,
-                                                                    test_size=0.2,
+                                                                    test_size=0.3,
                                                                     shuffle=True,
                                                                     random_state=42)
 print("Train/test shapes", train_data.shape, test_data.shape, train_labels.shape, test_labels.shape)
@@ -334,12 +296,16 @@ print("Train/test shapes", train_data.shape, test_data.shape, train_labels.shape
 #print(oh_enc.inverse_transform([[0, 0, 0, 1, 1, 0, 0], [1, 1, 0, 0, 0, 1, 0]]))
 
 training_data = TabSeparatedDataset(train_data, train_labels)
-testing_data = TabSeparatedDataset(test_data, test_labels)
+testing_data  = TabSeparatedDataset(test_data, test_labels)
+
+# ============================================================================
+# Model.
+# ============================================================================
 
 # Parameters for the batch of random values
 batch_size = args.batchsize  # Number of images in the batch
 channels = 1     # Number of channels per image (1 for grayscale)
-height = args.seqlen      # Height of the images (number of frames)
+height = args.seqlen      # Height of the images (number of "mocap frames")
 width = training_data.get_num_features()      # Width of the images (sensor values)
 print("batch_size, channels, height, width", batch_size, channels, height, width)
 
@@ -368,23 +334,6 @@ log(model)
 
 train_loader = DataLoader(training_data, batch_size=args.batchsize, shuffle=True)
 test_loader = DataLoader(testing_data, batch_size=args.batchsize, shuffle=False) 
-
-'''
-fv, lbl = next(iter(train_loader))
-#fv = fv.reshape(1, *fv.shape)
-print("fv.shape", fv.shape)
-print("lbl.shape", lbl.shape)
-print(fv, fv.shape)
-foo = model.predict(fv)
-print(foo)
-res_foo = oh_enc.inverse_transform(foo.detach().numpy())
-res_lbl = oh_enc.inverse_transform(lbl.numpy())
-for x, y in zip(res_foo, res_lbl):
-    a = ""
-    if x != y:
-        a = "ERR"
-    print(x, y, a)
-'''
 
 # ============================================================================
 # Visualise.
@@ -471,7 +420,15 @@ def test_model(data_loader, model, loss_function):
 
 epoch_start = 0
 
-if os.path.exists( model_str ):
+if args.restart or not os.path.exists( model_str ):
+    # Bootstrap values with an untrained network at "epoch 0".
+    # Disadvantage is that this is usually large, not good for the plot.
+    train_loss = test_model(train_loader, model, criterion)
+    test_loss  = test_model(test_loader, model, criterion)
+    train_losses.append( train_loss )
+    test_losses.append( test_loss )
+    print(f"Train loss: {train_loss:.4f}, Test loss: {test_loss:.4f}")
+elif os.path.exists( model_str ):
     print( f"Loading {model_str}" )
     checkpoint = torch.load( model_str )
     model.load_state_dict(checkpoint['model_state_dict'])
@@ -483,14 +440,6 @@ if os.path.exists( model_str ):
     lowest_test_loss = checkpoint['lowest_test_loss']
     train_losses = train_losses[0] # these are tuples
     test_losses  = test_losses[0]  
-else:
-    # Bootstrap values with an untrained network at "epoch 0".
-    # Disadvantage is that this is usually large, not good for the plot.
-    train_loss = test_model(train_loader, model, criterion)
-    test_loss  = test_model(test_loader, model, criterion)
-    train_losses.append( train_loss )
-    test_losses.append( test_loss )
-    print(f"Train loss: {train_loss:.4f}, Test loss: {test_loss:.4f}")
 
 if args.epochs > 0:
     for ix_epoch in range(epoch_start+1, epoch_start+args.epochs+1):
@@ -534,6 +483,7 @@ if args.epochs > 0:
     fig, axs = plt.subplots(nrows=1, ncols=1, figsize=(12,6), sharex=True, sharey=True)
     axs.plot( train_losses )
     axs.plot( test_losses )
+    axs.set_ylim([0.0, None])
     fig.tight_layout()
     png_filename = model_str+".e"+str(ix_epoch)+".png"
     print( "Saving", png_filename )
@@ -565,7 +515,15 @@ if args.testfile:
             #    print(res_lbl, gold_lbl)
             predictions.append(res_lbl)
             golds.append(gold_lbl)
-        
+
+    fig, axs = plt.subplots(nrows=2, ncols=1, figsize=(12,6), sharex=True, sharey=True)
+    axs[0].vlines(range(len(predictions)), 0, predictions)
+    axs[1].vlines(range(len(golds)), 0, predictions)
+    axs[0].set_title( "Predictions" )
+    axs[1].set_title( "Gold" )
+    fig.suptitle( model_str )
+    fig.tight_layout()
+
     cm = confusion_matrix(golds, predictions)
     print(cm)
     log(cm)
@@ -580,6 +538,29 @@ if args.testfile:
     sn.heatmap( df_cm, annot=True, fmt='d', cmap='Blues', vmax=512, ax=axs )
     fig.tight_layout()
     plt.pause(2.0)
+
+if args.unlabelled:
+    log("Unlabelled file:", args.unlabelled)
+    features = load_data(args.unlabelled, args.seqlen, getlabels=False)
+    print("Data shape", features.shape)
+    unlabelled_data = UnlabelledDataset(features)
+    unlabelled_loader = DataLoader(unlabelled_data, batch_size=args.batchsize, shuffle=False) 
+    model.eval()
+    predictions = []
+    for X in tqdm(unlabelled_loader):
+        lbl = model.predict(X)
+        # We get 2D Tensors, convert to numpy and loop over values.
+        for i, pred in enumerate(lbl.detach().numpy()):
+            res_lbl = oh_enc.inverse_transform(pred.reshape(1, -1))[0][0] # From [[0]] to 0.
+            predictions.append(res_lbl)
+    #print(predictions)
+    # from torch_mocap_14.py
+    fig, axs = plt.subplots(nrows=1, ncols=1, figsize=(12,6))
+    axs.vlines(range(len(predictions)),
+                  0, predictions)
+    axs.set_title( "Unlabelled data" )
+    fig.suptitle( model_str )
+    fig.tight_layout()
 
 print( "END", time.asctime() )
 print()
