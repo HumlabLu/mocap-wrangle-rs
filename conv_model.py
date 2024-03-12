@@ -54,6 +54,13 @@ with open("./conv_04.log", "a") as f:
     json.dump(args.__dict__, f)
     f.write("\n")
 
+def ms_to_time(ms):
+    secs = int(ms / 1000)
+    millis = ms - (secs*1000)
+    mins = int(secs / 60)
+    secs = secs - (mins*60)
+    return f"{mins:02}:{secs:02}.{millis:03}"
+
 # ============================================================================
 # Data loaders.
 # ============================================================================
@@ -556,11 +563,62 @@ if args.unlabelled:
     #print(predictions)
     # from torch_mocap_14.py
     fig, axs = plt.subplots(nrows=1, ncols=1, figsize=(12,6))
-    axs.vlines(range(len(predictions)),
-                  0, predictions)
+    axs.vlines(range(len(predictions)), 0, predictions)
     axs.set_title( "Unlabelled data" )
     fig.suptitle( model_str )
     fig.tight_layout()
+    #
+    # Sequences?
+    #predictions = [0,0,1,1,1,0,1,1,2,2,2,0,0]
+    #               0   2   4 5 6 7 8  10
+    in_seq = 0
+    freq = 200 # 0.0050 # 200 Hz
+    sequence = [0, 0, 0] # ?
+    sequences = []
+    for i, y in enumerate(predictions):
+        if y == 0:
+            if in_seq > 0:
+                #print("END", i-1)
+                sequence[2] = i*freq
+                sequences.append(sequence)
+                in_seq = 0
+            continue
+        if y != in_seq:
+            if in_seq > 0:
+                #print("END", i)
+                sequence[2] = i*freq
+                sequences.append(sequence)
+            #print("START", i, y)
+            in_seq = y
+            sequence = [y, i*freq, 0]
+    last_end = 0
+    for s in sequences:
+        st = ms_to_time(s[1])
+        et = ms_to_time(s[2])
+        du = s[2]-s[1]
+        delta = s[1] - last_end
+        last_end = s[2]
+        s.append(delta) # For second run.
+        print(f"{s[0]} {st} - {et} {du:04} {delta:04}")
+    '''
+    new_sequences = [] # following is not correct FIXME
+    for i in range(0, len(sequences)-1):
+        if sequences[i][0] == sequences[i+1][0]: # next and this one same label
+            if sequences[i+1][3] == 200: #with a gap of only one frame
+                print("HICCUP", i, sequences[i+1]) # concatenate them
+                new_sequences.append([sequences[i][0], sequences[i][1], sequences[i+1][2], 9999 ])
+                i += 1
+            else:
+                new_sequences.append(sequences[i])
+        else:
+            new_sequences.append(sequences[i])
+    print("")
+    for s in new_sequences:
+        st = ms_to_time(s[1])
+        et = ms_to_time(s[2])
+        du = s[2]-s[1]
+        print(f"{s[0]} {st} - {et} {du:04}")
+    '''
 
 print( "END", time.asctime() )
 print()
