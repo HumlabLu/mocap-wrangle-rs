@@ -211,7 +211,7 @@ class UnlabelledDataset(Dataset):
 # for output size calculations!
 # and https://discuss.pytorch.org/t/utility-function-for-calculating-the-shape-of-a-conv-output/11173/5
 class ConvTabularModelP(nn.Module):
-    def __init__(self, channels, height, width, features, hidden, pool1_size=3, pool2_size=2):
+    def __init__(self, channels, height, width, features, hidden, pool1_size=2, pool2_size=2):
         # channels could be sensors, height is number of frames, width is sensor values
         super(ConvTabularModelP, self).__init__()
         image_size = (args.batchsize, channels, height, width) # Channels is one  ("greyscale").
@@ -267,12 +267,12 @@ class ConvTabularModelP(nn.Module):
 
     def forward(self, x):
         x = self.conv1(x)
-        x = F.leaky_relu(x)
+        x = F.relu(x)
         x = self.pool1(x)
         #x = self.pool(F.relu(self.conv1(x)))  # Apply conv1 -> ReLU -> Pool
         #
         x = self.conv2(x)
-        x = F.leaky_relu(x) # was F.relu(x)
+        x = F.relu(x) # was F.leaky_relu(x)
         x = self.pool2(x) 
         #x = self.pool(F.relu(self.conv2(x)))  # Apply conv2 -> ReLU -> Pool
         #
