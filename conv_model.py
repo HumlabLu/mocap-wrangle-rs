@@ -516,17 +516,19 @@ if args.testfile:
     model.eval()
     predictions = []
     golds = []
-    for X, y in tqdm(test_loader):
-        lbl = model.predict(X)
-        # We get 2D Tensors, convert to numpy and loop over values.
-        for i, (pred, gold) in enumerate(zip(lbl.detach().numpy(), y.detach().numpy())):
-            res_lbl = oh_enc.inverse_transform(pred.reshape(1, -1))[0][0] # From [[0]] to 0.
-            gold_lbl = oh_enc.inverse_transform(gold.reshape(1, -1))[0][0] 
-            #if gold_lbl != 0:
-            #    print(res_lbl, gold_lbl)
-            predictions.append(res_lbl)
-            golds.append(gold_lbl)
-
+    with torch.no_grad():
+        for X, y in tqdm(test_loader):
+            lbl = model.predict(X)
+            # We get 2D Tensors, convert to numpy and loop over values.
+            #for i, (pred, gold) in enumerate(zip(lbl.detach().numpy(), y.detach().numpy())):
+            for i, (pred, gold) in enumerate(zip(lbl.cpu().numpy(), y.cpu().numpy())):
+                res_lbl = oh_enc.inverse_transform(pred.reshape(1, -1))[0][0] # From [[0]] to 0.
+                gold_lbl = oh_enc.inverse_transform(gold.reshape(1, -1))[0][0] 
+                #if gold_lbl != 0:
+                #    print(res_lbl, gold_lbl)
+                predictions.append(res_lbl)
+                golds.append(gold_lbl)
+    #
     fig, axs = plt.subplots(nrows=2, ncols=1, figsize=(12,6), sharex=True, sharey=True)
     axs[0].vlines(range(len(predictions)), 0, predictions)
     axs[1].vlines(range(len(golds)), 0, predictions)
@@ -558,12 +560,13 @@ if args.unlabelled:
     unlabelled_loader = DataLoader(unlabelled_data, batch_size=args.batchsize, shuffle=False) 
     model.eval()
     predictions = []
-    for X in tqdm(unlabelled_loader):
-        lbl = model.predict(X)
-        # We get 2D Tensors, convert to numpy and loop over values.
-        for i, pred in enumerate(lbl.detach().numpy()):
-            res_lbl = oh_enc.inverse_transform(pred.reshape(1, -1))[0][0] # From [[0]] to 0.
-            predictions.append(res_lbl)
+    with torch.no_grad():
+        for X in tqdm(unlabelled_loader):
+            lbl = model.predict(X)
+            # We get 2D Tensors, convert to numpy and loop over values.
+            for i, pred in enumerate(lbl.cpu().numpy()):
+                res_lbl = oh_enc.inverse_transform(pred.reshape(1, -1))[0][0] # From [[0]] to 0.
+                predictions.append(res_lbl)
     #print(predictions)
     # from torch_mocap_14.py
     fig, axs = plt.subplots(nrows=1, ncols=1, figsize=(12,6))
