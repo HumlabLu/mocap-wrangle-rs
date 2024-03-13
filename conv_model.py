@@ -551,7 +551,7 @@ if args.testfile:
     cm = confusion_matrix(golds, predictions)
     print(cm)
     log(cm)
-    cm = confusion_matrix(golds, predictions, normalize='pred')
+    cm = confusion_matrix(golds, predictions, normalize='true')
     with np.printoptions(precision=2, suppress=True):
         print(cm)
         log(cm)
