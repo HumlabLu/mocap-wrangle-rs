@@ -439,6 +439,8 @@ def test_model(data_loader, model, loss_function):
 epoch_start = 0
 
 if args.restart or not os.path.exists( model_str ):
+    print("Starting from zero.")
+    log("Starting from zero.")
     # Bootstrap values with an untrained network at "epoch 0".
     # Disadvantage is that this is usually large, not good for the plot.
     train_loss = test_model(train_loader, model, criterion)
@@ -447,7 +449,8 @@ if args.restart or not os.path.exists( model_str ):
     test_losses.append( test_loss )
     print(f"Train loss: {train_loss:.4f}, Test loss: {test_loss:.4f}")
 elif os.path.exists( model_str ):
-    print( f"Loading {model_str}" )
+    print(f"Continuing existing model {model_str}")
+    log(f"Continuing existing model {model_str}")
     checkpoint = torch.load( model_str )
     model.load_state_dict(checkpoint['model_state_dict'])
     optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
@@ -542,6 +545,9 @@ if args.testfile:
     fig.suptitle( model_str )
     fig.tight_layout()
 
+    cm = confusion_matrix(golds, predictions)
+    print(cm)
+    log(cm)
     cm = confusion_matrix(golds, predictions, normalize='pred')
     print(cm)
     log(cm)
