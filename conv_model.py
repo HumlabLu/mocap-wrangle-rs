@@ -552,8 +552,9 @@ if args.testfile:
     print(cm)
     log(cm)
     cm = confusion_matrix(golds, predictions, normalize='pred')
-    print(cm)
-    log(cm)
+    with np.printoptions(precision=2, suppress=True):
+        print(cm)
+        log(cm)
     max_cm = cm.max()
     df_cm = pd.DataFrame(cm)
     # plt.figure(figsize=(10,7))
