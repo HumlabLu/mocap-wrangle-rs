@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 import matplotlib as mp
 from tqdm import tqdm
 import seaborn as sn
+from torchvision import utils
 
 # ============================================================================
 # Arguments
@@ -234,7 +235,10 @@ class ConvTabularModelP(nn.Module):
             print("Wrong pooling")
             sys.exit(0)
         #
-        self.conv1 = nn.Conv2d(channels, 32, kernel_size=3, padding=1)  # Output: 32 x height x width
+        filters1 = 32
+        filters2 = 64
+        self.conv1 = nn.Conv2d(channels, filters1, kernel_size=(20, 10), padding=(20,10))  # 32 x height x width
+        #self.conv1 = nn.Conv2d(channels, filters1, kernel_size=3, padding=1)  # Output: 32 x height x width
         out_size = tensorshape(self.conv1, image_size)
         print("out_size conv1", out_size)
         log("out_size conv1", out_size)
@@ -246,7 +250,7 @@ class ConvTabularModelP(nn.Module):
         print("out_size pool1", out_size)
         log("out_size pool1", out_size)
         #
-        self.conv2 = nn.Conv2d(32, 64, kernel_size=3, padding=1)  # Output: 64x7x2
+        self.conv2 = nn.Conv2d(filters1, filters2, kernel_size=3, padding=1)  # Output: 64x7x2
         out_size = tensorshape(self.conv2, out_size)
         print("out_size conv2", out_size)
         log("out_size conv2", out_size)
@@ -437,6 +441,7 @@ def test_model(data_loader, model, loss_function):
     return avg_loss
 
 epoch_start = 0
+ix_epoch = 0
 
 if args.restart or not os.path.exists( model_str ):
     print("Starting from zero.")
@@ -461,7 +466,20 @@ elif os.path.exists( model_str ):
     lowest_test_loss = checkpoint['lowest_test_loss']
     train_losses = train_losses[0] # these are tuples
     test_losses  = test_losses[0]  
-
+    #
+    kernels = model.conv1.weight.detach().clone()
+    print(kernels)
+    kernels = kernels - kernels.min()
+    kernels = kernels / kernels.max()
+    filter_img = utils.make_grid(kernels, nrow = 12)
+    # change ordering since matplotlib requires images to 
+    # be (H, W, C)
+    plt.imshow(filter_img.permute(1, 2, 0))
+    plt.pause(1)
+    # You can directly save the image as well using
+    #img = save_image(kernels, 'encoder_conv1_filters.png', nrow = 12)
+    #sys.exit(0)
+    
 if args.epochs > 0:
     for ix_epoch in range(epoch_start+1, epoch_start+args.epochs+1):
         print( f"Epoch {ix_epoch}/{args.epochs+epoch_start}" )
@@ -572,6 +590,11 @@ if args.testfile:
     print( "Saving", png_filename )
     fig.savefig(png_filename, dpi=144)
     plt.pause(2.0)
+
+# ============================================================================
+# An unlabelled file is a file without targets. We can predict, but
+# not calculate any statistics.
+# ============================================================================
 
 if args.unlabelled:
     log("Unlabelled file:", args.unlabelled)
