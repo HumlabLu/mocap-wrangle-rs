@@ -171,6 +171,9 @@ class TabSeparatedDataset(Dataset):
         print("get_num_features", self.features.shape[3])
         return self.features.shape[3]
 
+    def get_size(self):
+        return self.features.shape[0]
+
     def get_num_classes(self):
         return self.labels.shape[-1]
 
@@ -200,6 +203,9 @@ class UnlabelledDataset(Dataset):
     def get_num_features(self):
         print("get_num_features", self.features.shape[3])
         return self.features.shape[3]
+
+    def get_size(self):
+        return self.features.shape[0]
 
     def get_num_classes(self):
         return self.labels.shape[-1]
@@ -420,7 +426,7 @@ def train_model(data_loader, model, loss_function, optimizer, epoch):
 def test_model(data_loader, model, loss_function):
     num_batches = len(data_loader)
     total_loss = 0.0
-
+    
     model.eval()
     with torch.no_grad():
         for X, y in tqdm(data_loader):
@@ -512,8 +518,6 @@ if args.testfile:
     print("Data/labels shape", features.shape, labels.shape)
     testing_data = TabSeparatedDataset(features, labels)
     test_loader = DataLoader(testing_data, batch_size=args.batchsize, shuffle=False)
-    #test_loss  = test_model(test_loader, model, criterion)
-    #print(f"Test loss: {test_loss:.4f}")
     model.eval()
     predictions = []
     golds = []
@@ -538,7 +542,7 @@ if args.testfile:
     fig.suptitle( model_str )
     fig.tight_layout()
 
-    cm = confusion_matrix(golds, predictions)
+    cm = confusion_matrix(golds, predictions, normalize='pred')
     print(cm)
     log(cm)
     max_cm = cm.max()
@@ -549,7 +553,10 @@ if args.testfile:
     fig, axs = plt.subplots(nrows=1, ncols=1, figsize=(8,6))
     fig.suptitle( model_str )
     #sn.heatmap( df_cm, annot=True, fmt='d', cmap='Blues', vmax=max_cm//10, ax=axs )
-    sn.heatmap( df_cm, annot=True, fmt='d', cmap='Blues', vmax=512, ax=axs )
+    #sn.heatmap( df_cm, annot=True, fmt='d', cmap='Blues', vmax=512, ax=axs )
+    sn.heatmap( df_cm, annot=True, fmt='.2f', cmap='Blues', ax=axs )
+    plt.ylabel('Actual')
+    plt.xlabel('Predicted')
     fig.tight_layout()
     plt.pause(2.0)
 
