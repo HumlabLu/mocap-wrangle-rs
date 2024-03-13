@@ -25,7 +25,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument( "--epochs",        "-e", help="Num epochs",          default=  1, type=int )
 parser.add_argument( "--batchsize",     "-b", help="Batch size",          default= 10, type=int )
 parser.add_argument( "--seqlen",        "-s", help="Sequence length",     default= 20, type=int )
-parser.add_argument( "--hidden",        "-H", help="Hidden units",        default=104, type=int )
+parser.add_argument( "--hidden",        "-H", help="Hidden units",        default=108, type=int )
 #parser.add_argument( "--layers",        "-l", help="Number of layers",    default=  1, type=int )
 parser.add_argument( "--targets",       "-T", help="Number of targets",   default=  1, type=int )
 #parser.add_argument( "--noplots",       "-p", help="Show no plots",       action="store_true" )
@@ -161,8 +161,8 @@ class TabSeparatedDataset(Dataset):
         #print(self.features[idx])
         #print(self.labels.values[idx])
 
-        features = torch.tensor(self.features[idx], dtype=torch.float)
-        label = torch.tensor(self.labels.values[idx], dtype=torch.float)
+        features = torch.tensor(self.features[idx], device=device, dtype=torch.float)
+        label = torch.tensor(self.labels.values[idx], device=device, dtype=torch.float)
         #print("getitem", features.shape, label.shape)
         return features, label
     
@@ -229,13 +229,19 @@ class ConvTabularModelP(nn.Module):
             print("Setting pool sizes to 1.")
             log("Setting pool sizes to 1.")
         #
+        pool1_size = (1,1)
+        pool1_stride = (1,1)
+        pool2_size = (1,1)
+        pool2_stride = (1,1)
+        #
         self.conv1 = nn.Conv2d(channels, 32, kernel_size=3, padding=1)  # Output: 32 x height x width
         out_size = tensorshape(self.conv1, image_size)
         print("out_size conv1", out_size)
         log("out_size conv1", out_size)
         #
         self.pool1_size = pool1_size
-        self.pool1 = nn.MaxPool2d(self.pool1_size, self.pool1_size)
+        ##self.pool1 = nn.MaxPool2d(self.pool1_size, self.pool1_size)
+        self.pool1 = nn.MaxPool2d(pool1_size, pool1_stride)
         out_size = tensorshape(self.pool1, out_size)
         print("out_size pool1", out_size)
         log("out_size pool1", out_size)
@@ -246,7 +252,8 @@ class ConvTabularModelP(nn.Module):
         log("out_size conv2", out_size)
         #
         self.pool2_size = pool2_size
-        self.pool2 = nn.MaxPool2d(self.pool2_size, self.pool2_size)
+        ##self.pool2 = nn.MaxPool2d(self.pool2_size, self.pool2_size)
+        self.pool2 = nn.MaxPool2d(pool2_size, pool2_stride)
         out_size = tensorshape(self.pool2, out_size) # we run the same pool again!
         print("out_size pool2", out_size)
         log("out_size pool2", out_size)
@@ -266,6 +273,7 @@ class ConvTabularModelP(nn.Module):
         log("out_size fc2", out_size)
 
     def forward(self, x):
+        x = x.to(device)
         x = self.conv1(x)
         x = F.relu(x)
         x = self.pool1(x)
@@ -311,17 +319,13 @@ testing_data  = TabSeparatedDataset(test_data, test_labels)
 
 # Parameters for the batch of random values
 batch_size = args.batchsize  # Number of images in the batch
-channels = 1     # Number of channels per image (1 for grayscale)
-height = args.seqlen      # Height of the images (number of "mocap frames")
-width = training_data.get_num_features()      # Width of the images (sensor values)
+channels   = 1     # Number of channels per image (1 for grayscale)
+height     = args.seqlen      # Height of the images (number of "mocap frames")
+width      = training_data.get_num_features()      # Width of the images (sensor values)
 print("batch_size, channels, height, width", batch_size, channels, height, width)
 
-# Generate a batch of random input values
-#random_batch = torch.rand(batch_size, channels, height, width)
-#print("random_batch shape", random_batch.shape)
-#print(random_batch)
+# Pooling/stride?
 
-# Instantiate the model
 model = ConvTabularModelP(channels, height, width, training_data.get_num_classes(), args.hidden)
 print(model)
 log(model)
@@ -340,7 +344,7 @@ log(model)
 #print(torch.softmax(probabilities, dim=1))
 
 train_loader = DataLoader(training_data, batch_size=args.batchsize, shuffle=True)
-test_loader = DataLoader(testing_data, batch_size=args.batchsize, shuffle=False) 
+test_loader  = DataLoader(testing_data, batch_size=args.batchsize, shuffle=False) 
 
 # ============================================================================
 # Visualise.
@@ -372,7 +376,7 @@ if args.info:
 # Training.
 # ============================================================================
 
-model_str = f"conv_04_{args.model}_H{args.hidden}_h{args.seqlen}xw{width}.pht"
+model_str = f"{args.model}_H{args.hidden}_h{args.seqlen}xw{width}.pht"
 print("model_str", model_str)
 log("model_str", model_str)
 
@@ -599,7 +603,7 @@ if args.unlabelled:
         delta = s[1] - last_end
         last_end = s[2]
         s.append(delta) # For second run.
-        print(f"{s[0]} {st} - {et} {du:04} {delta:04}")
+        #print(f"{s[0]} {st} - {et} {du:04} {delta:04}")
     '''
     new_sequences = [] # following is not correct FIXME
     for i in range(0, len(sequences)-1):
