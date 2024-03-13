@@ -26,6 +26,7 @@ parser.add_argument( "--epochs",        "-e", help="Num epochs",          defaul
 parser.add_argument( "--batchsize",     "-b", help="Batch size",          default= 10, type=int )
 parser.add_argument( "--seqlen",        "-s", help="Sequence length",     default= 20, type=int )
 parser.add_argument( "--hidden",        "-H", help="Hidden units",        default=108, type=int )
+parser.add_argument( "--pooling",       "-p", help="Pooling tuple",       default=[1,1,1,1], nargs='+', type=int)
 #parser.add_argument( "--layers",        "-l", help="Number of layers",    default=  1, type=int )
 parser.add_argument( "--targets",       "-T", help="Number of targets",   default=  1, type=int )
 #parser.add_argument( "--noplots",       "-p", help="Show no plots",       action="store_true" )
@@ -211,28 +212,21 @@ class UnlabelledDataset(Dataset):
 # for output size calculations!
 # and https://discuss.pytorch.org/t/utility-function-for-calculating-the-shape-of-a-conv-output/11173/5
 class ConvTabularModelP(nn.Module):
-    def __init__(self, channels, height, width, features, hidden, pool1_size=2, pool2_size=2):
+    def __init__(self, channels, height, width, features, hidden, pooling):
         # channels could be sensors, height is number of frames, width is sensor values
         super(ConvTabularModelP, self).__init__()
         image_size = (args.batchsize, channels, height, width) # Channels is one  ("greyscale").
         # 32 is out channels
         #
-        # seqlen must be at least pool1_size * pool2_size.
-        if height < pool1_size * pool2_size:
-            pool1_size = 1
-            pool2_size = 1
-            print("Setting pool sizes to 1.")
-            log("Setting pool sizes to 1.")
-        if width < pool1_size * pool2_size:
-            pool1_size = 1
-            pool2_size = 1
-            print("Setting pool sizes to 1.")
-            log("Setting pool sizes to 1.")
-        #
-        pool1_size = (1,1)
-        pool1_stride = (1,1)
-        pool2_size = (1,1)
-        pool2_stride = (1,1)
+        try:
+            pool1_size = (pooling[0], pooling[1])
+            pool1_stride = (1,1)
+            pool2_size = (pooling[2], pooling[3])
+            pool2_stride = (1,1)
+        except:
+            log("Wrong pooling")
+            print("Wrong pooling")
+            sys.exit(0)
         #
         self.conv1 = nn.Conv2d(channels, 32, kernel_size=3, padding=1)  # Output: 32 x height x width
         out_size = tensorshape(self.conv1, image_size)
@@ -326,7 +320,7 @@ print("batch_size, channels, height, width", batch_size, channels, height, width
 
 # Pooling/stride?
 
-model = ConvTabularModelP(channels, height, width, training_data.get_num_classes(), args.hidden)
+model = ConvTabularModelP(channels, height, width, training_data.get_num_classes(), args.hidden, args.pooling)
 print(model)
 log(model)
 
@@ -376,7 +370,14 @@ if args.info:
 # Training.
 # ============================================================================
 
-model_str = f"{args.model}_H{args.hidden}_h{args.seqlen}xw{width}.pht"
+try:
+    pooling_str = "_p"+str(args.pooling[0])+str(args.pooling[1])+str(args.pooling[2])+str(args.pooling[3])
+except:
+    pooling_str = ""
+if args.id:
+    model_str = f"{args.model}_{args.id}_H{args.hidden}_h{args.seqlen}xw{width}{pooling_str}.pht"
+else:
+    model_str = f"{args.model}_H{args.hidden}_h{args.seqlen}xw{width}{pooling_str}.pht"
 print("model_str", model_str)
 log("model_str", model_str)
 
