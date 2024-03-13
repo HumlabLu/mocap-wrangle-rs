@@ -544,6 +544,9 @@ if args.testfile:
     axs[1].set_title( "Gold" )
     fig.suptitle( model_str )
     fig.tight_layout()
+    png_filename = model_str+".e"+str(ix_epoch)+".testfile.png"
+    print( "Saving", png_filename )
+    fig.savefig(png_filename, dpi=144)
 
     cm = confusion_matrix(golds, predictions)
     print(cm)
@@ -564,6 +567,9 @@ if args.testfile:
     plt.ylabel('Actual')
     plt.xlabel('Predicted')
     fig.tight_layout()
+    png_filename = model_str+".e"+str(ix_epoch)+".cm.png"
+    print( "Saving", png_filename )
+    fig.savefig(png_filename, dpi=144)
     plt.pause(2.0)
 
 if args.unlabelled:
@@ -588,6 +594,9 @@ if args.unlabelled:
     axs.set_title( "Unlabelled data" )
     fig.suptitle( model_str )
     fig.tight_layout()
+    png_filename = model_str+".e"+str(ix_epoch)+".unlabelled.png"
+    print( "Saving", png_filename )
+    fig.savefig(png_filename, dpi=144)
     #
     # Sequences?
     #predictions = [0,0,1,1,1,0,1,1,2,2,2,0,0]
