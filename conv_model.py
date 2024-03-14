@@ -350,6 +350,9 @@ model = ConvTabularModelP(channels, height, width, training_data.get_num_classes
 print(model)
 log(model)
 
+# Device configuration - use GPU if available
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
 # Assuming random_batch is the batch of random values generated as shown previously
 # Pass the batch through the model
 #output = model(random_batch)
@@ -372,11 +375,11 @@ test_loader  = DataLoader(testing_data, batch_size=args.batchsize, shuffle=False
 
 if args.info:
     hor=4
-    ver=3
-    f, axs = plt.subplots(ver, hor)
+    ver=4
+    f, axs = plt.subplots(ver, hor, figsize=(12,10))
     for h in range(ver):
         for v in range(hor): #, v in zip(range(ver), range(hor)): #  [(0, 0), (0, 1), (1, 0), (1, 1)]:
-            X, y = next(iter(train_loader)) # We need to reset it...
+            X, y = next(iter(train_loader)) # We need to reset it later.
             xx = axs[h, v].imshow(np.abs(X[0][0]), cmap = 'gray', aspect='auto') # Used for colourbar.
             res_lbl = oh_enc.inverse_transform(y[0].reshape(1, -1))
             axs[h, v].set_title(res_lbl)
@@ -417,9 +420,6 @@ test_losses  = []
 lowest_test_loss = 1e9
 
 torch.autograd.set_detect_anomaly(True)
-
-# Device configuration - use GPU if available
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model.to(device)
 
 def train_model(data_loader, model, loss_function, optimizer, epoch):
