@@ -63,6 +63,22 @@ def ms_to_time(ms):
     secs = secs - (mins*60)
     return f"{mins:02}:{secs:02}.{millis:03}"
 
+def visualise_conv1(model):
+    kernels = model.conv1.weight.detach().clone()
+    print("kernels shape:", kernels.numpy().shape)
+    kernels = kernels - kernels.min()
+    kernels = kernels / kernels.max()
+    filter_img = utils.make_grid(kernels, nrow = 8) #, normalize=True, value_range=(0,255))
+    print("filter_img shape:", filter_img.shape)
+    # change ordering since matplotlib requires images to 
+    # be (H, W, C)
+    fig, ax = plt.subplots()
+    im = ax.imshow(filter_img.permute(1, 2, 0))
+    ax.set_title("Filters in conv1.")
+    return fig, im
+    #img = save_image(kernels, 'encoder_conv1_filters.png', nrow = 12)
+    #sys.exit(0)
+
 # ============================================================================
 # Data loaders.
 # ============================================================================
@@ -235,10 +251,10 @@ class ConvTabularModelP(nn.Module):
             print("Wrong pooling")
             sys.exit(0)
         #
-        filters1 = 32
-        filters2 = 64
-        self.conv1 = nn.Conv2d(channels, filters1, kernel_size=(20, 10), padding=(20,10))  # 32 x height x width
-        #self.conv1 = nn.Conv2d(channels, filters1, kernel_size=3, padding=1)  # Output: 32 x height x width
+        filters1 = 16
+        filters2 = 32
+        #self.conv1 = nn.Conv2d(channels, filters1, kernel_size=(20, 10), padding=(20,10))  # 32 x height x width
+        self.conv1 = nn.Conv2d(channels, filters1, kernel_size=3, padding=1)  # Output: 32 x height x width
         out_size = tensorshape(self.conv1, image_size)
         print("out_size conv1", out_size)
         log("out_size conv1", out_size)
@@ -466,19 +482,6 @@ elif os.path.exists( model_str ):
     lowest_test_loss = checkpoint['lowest_test_loss']
     train_losses = train_losses[0] # these are tuples
     test_losses  = test_losses[0]  
-    #
-    kernels = model.conv1.weight.detach().clone()
-    print(kernels)
-    kernels = kernels - kernels.min()
-    kernels = kernels / kernels.max()
-    filter_img = utils.make_grid(kernels, nrow = 12)
-    # change ordering since matplotlib requires images to 
-    # be (H, W, C)
-    plt.imshow(filter_img.permute(1, 2, 0))
-    plt.pause(1)
-    # You can directly save the image as well using
-    #img = save_image(kernels, 'encoder_conv1_filters.png', nrow = 12)
-    #sys.exit(0)
     
 if args.epochs > 0:
     for ix_epoch in range(epoch_start+1, epoch_start+args.epochs+1):
@@ -528,6 +531,12 @@ if args.epochs > 0:
     print( "Saving", png_filename )
     fig.savefig(png_filename, dpi=144)
     plt.pause(1.0)
+
+fig, im = visualise_conv1(model)
+plt.pause(1.0)
+png_filename = model_str+".e"+str(ix_epoch)+"_conv1.pdf"
+print( "Saving", png_filename )
+fig.savefig(png_filename, dpi=144)
 
 # ============================================================================
 # Separate test file.
