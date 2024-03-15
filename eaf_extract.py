@@ -69,7 +69,8 @@ parser.add_argument( "-o", "--output", default="eaf_targets.tsv",
                      help="Output filename." )
 parser.add_argument( "-F", "--filter", action="append",
                      help="Regexp to filter output sensor names.", default=[] )
-parser.add_argument( "-S", "--standardised",  help="Output _S values", action="store_true" ) # standardised
+parser.add_argument( "-c", "--classnames", help="Use class names", action="store_true" ) # names instead of ints
+parser.add_argument( "-S", "--standardised", help="Output _S values", action="store_true" ) # standardised
 parser.add_argument( "-N", "--normalised", help="Output _N values", action="store_true" ) # normalised
 parser.add_argument( "-D", "--distances", help="Output distance values", action="store_true" )
 parser.add_argument( "-V", "--velocities", help="Output velocity values", action="store_true" )
@@ -201,7 +202,10 @@ if not args.tiernames:
 for tier in args.tiernames:
     print( tier )
     ####classes = ["NONE"] # Initialising classes here repeats class indices for each tier.
-    df_data.insert( len(df_data.columns), tier, 0 ) # tier as "EAF"
+    if args.classnames:
+        df_data.insert( len(df_data.columns), tier, "NONE" ) # tier as "EAF"
+    else:
+        df_data.insert( len(df_data.columns), tier, 0 ) # tier as "EAF"
     ##df_targets.insert( len(df_targets.columns), tier, 0 ) # tier as "EAF"
     annotation_data = []
     if eaf:
@@ -230,7 +234,10 @@ for tier in args.tiernames:
         '''
         # Instead of EAF, use tier name?
         #df_data.loc[ (df_data['Timestamp']>=t0m) & (df_data['Timestamp']<t1m), 'EAF' ] = cli
-        df_data.loc[ (df_data['Timestamp']>=t0m) & (df_data['Timestamp']<t1m), tier ] = cli
+        if args.classnames:
+            df_data.loc[ (df_data['Timestamp']>=t0m) & (df_data['Timestamp']<t1m), tier ] = cl_name
+        else:
+            df_data.loc[ (df_data['Timestamp']>=t0m) & (df_data['Timestamp']<t1m), tier ] = cli
         ##df_targets.loc[ (df_data['Timestamp']>=t0m) & (df_data['Timestamp']<t1m), tier ] = cli
 
 print( classes )
