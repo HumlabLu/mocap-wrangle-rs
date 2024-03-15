@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder
-from sklearn.metrics import confusion_matrix, classification_report #, ConfusionMatrixDisplay
+from sklearn.metrics import confusion_matrix, classification_report
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 import pandas as pd
@@ -588,8 +588,6 @@ if args.testfile:
     print(cm)
     log(cm)
     cm = confusion_matrix(golds, predictions, normalize='true')
-    #cmd = ConfusionMatrixDisplay(cm, display_labels=target_names)
-    #cmd.plot()
     with np.printoptions(precision=2, suppress=True):
         print(cm)
         log(cm)
