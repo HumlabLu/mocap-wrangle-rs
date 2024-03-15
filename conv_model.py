@@ -175,10 +175,6 @@ class TabSeparatedDataset(Dataset):
         #if torch.is_tensor(idx):
         #    idx = idx.tolist()
 
-        #print(idx, self.features.shape, self.labels.shape)
-        #print(self.features[idx])
-        #print(self.labels.values[idx])
-
         features = torch.tensor(self.features[idx], device=device, dtype=torch.float)
         label = torch.tensor(self.labels.values[idx], device=device, dtype=torch.float)
         #print("getitem", features.shape, label.shape)
@@ -207,13 +203,6 @@ class UnlabelledDataset(Dataset):
         return self.features.shape[0]
 
     def __getitem__(self, idx):
-        #if torch.is_tensor(idx):
-        #    idx = idx.tolist()
-
-        #print(idx, self.features.shape, self.labels.shape)
-        #print(self.features[idx])
-        #print(self.labels.values[idx])
-
         features = torch.tensor(self.features[idx], dtype=torch.float)
         return features
     
@@ -234,6 +223,11 @@ class UnlabelledDataset(Dataset):
 # See https://pytorch.org/docs/stable/generated/torch.nn.Conv2d.html
 # for output size calculations!
 # and https://discuss.pytorch.org/t/utility-function-for-calculating-the-shape-of-a-conv-output/11173/5
+'''
+self.cnn1 = nn.Conv2d(1, inbetween_dim, kernel_size=(3, 3), padding=(1, 1))
+self.cnn2 = nn.Conv2d(1, inbetween_dim, kernel_size=(5, 5), padding=(2, 2))
+self.cnn3 = nn.Conv2d(1, inbetween_dim, kernel_size=(7, 7), padding=(3, 3))
+'''
 class ConvTabularModelP(nn.Module):
     def __init__(self, channels, height, width, features, hidden, pooling):
         # channels could be sensors, height is number of frames, width is sensor values
@@ -251,8 +245,8 @@ class ConvTabularModelP(nn.Module):
             print("Wrong pooling")
             sys.exit(0)
         #
-        filters1 = 16
-        filters2 = 32
+        filters1 = 32
+        filters2 = 64
         #self.conv1 = nn.Conv2d(channels, filters1, kernel_size=(20, 10), padding=(20,10))  # 32 x height x width
         self.conv1 = nn.Conv2d(channels, filters1, kernel_size=3, padding=1)  # Output: 32 x height x width
         out_size = tensorshape(self.conv1, image_size)
@@ -267,6 +261,7 @@ class ConvTabularModelP(nn.Module):
         log("out_size pool1", out_size)
         #
         self.conv2 = nn.Conv2d(filters1, filters2, kernel_size=3, padding=1)  # Output: 64x7x2
+        #                                                      5          2
         out_size = tensorshape(self.conv2, out_size)
         print("out_size conv2", out_size)
         log("out_size conv2", out_size)
@@ -283,6 +278,16 @@ class ConvTabularModelP(nn.Module):
         print("out_size flatten", out_size)
         log("out_size flatten", out_size)
         #
+        # lstm input is [batch_size, seq_len(height), num-features(width)]
+        #self.lstm = nn.LSTM(out_size[-1], hidden, 2, batch_first=True, dropout=0.2)
+        #x = torch.rand(batch_size, hidden, out_size[-1])
+        #output, (hn, cn) = self.lstm(x)
+        #print(output.shape, hn.shape, cn.shape)
+        #out_size = tensorshape(self.lstm, out_size) # not working
+        # out is (generated hidden states, (cell mem, hidden))
+        #out_size = output.shape
+        #print("out_size lstm", out_size)
+        #        
         self.fc1 = nn.Linear(out_size[-1], hidden) 
         out_size = tensorshape(self.fc1, out_size)
         print("out_size fc1", out_size)
@@ -306,6 +311,9 @@ class ConvTabularModelP(nn.Module):
         #
         #x = x.view(-1, 64 * 7 * 2)  # Flatten the output for dense layers
         x = self.flatten(x)
+        #
+        #out, (ht, ct) = self.lstm(x)
+        #x = out[:, -1]
         #
         x = F.relu(self.fc1(x))  # Apply fc1 -> ReLU
         x = self.fc2(x)  # Output layer
@@ -353,19 +361,6 @@ log(model)
 # Device configuration - use GPU if available
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-# Assuming random_batch is the batch of random values generated as shown previously
-# Pass the batch through the model
-#output = model(random_batch)
-#print("Output values for the batch:")
-#print(output)
-
-# To interpret these as probabilities (for classification tasks), you can apply softmax
-#probabilities = torch.softmax(output, dim=1)
-#print("\nProbabilities of the classes for the first item in the batch:")
-#print(probabilities[0])
-
-#print(torch.softmax(probabilities, dim=1))
-
 train_loader = DataLoader(training_data, batch_size=args.batchsize, shuffle=True)
 test_loader  = DataLoader(testing_data, batch_size=args.batchsize, shuffle=False) 
 
@@ -377,11 +372,12 @@ if args.info:
     hor=4
     ver=4
     f, axs = plt.subplots(ver, hor, figsize=(12,10))
+    display_loader = DataLoader(training_data, batch_size=1, shuffle=True)
     for h in range(ver):
         for v in range(hor): #, v in zip(range(ver), range(hor)): #  [(0, 0), (0, 1), (1, 0), (1, 1)]:
-            X, y = next(iter(train_loader)) # We need to reset it later.
-            xx = axs[h, v].imshow(np.abs(X[0][0]), cmap = 'gray', aspect='auto') # Used for colourbar.
-            res_lbl = oh_enc.inverse_transform(y[0].reshape(1, -1))
+            X, y = next(iter(display_loader)) # We need to reset it later.
+            xx = axs[h, v].imshow(np.abs(X[0][0].cpu()), cmap = 'gray', aspect='auto') # Used for colourbar.
+            res_lbl = oh_enc.inverse_transform(y[0].cpu().reshape(1, -1))
             axs[h, v].set_title(res_lbl)
     #bar = plt.colorbar(xx) # Will be for the last image.
     f.subplots_adjust(right=0.8)
