@@ -6,6 +6,8 @@ from torch.utils.data import Dataset, DataLoader
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.metrics import confusion_matrix, classification_report
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
 import pandas as pd
 import numpy as np
 import torch.optim as optim
@@ -76,8 +78,6 @@ def visualise_conv1(model):
     im = ax.imshow(filter_img.permute(1, 2, 0))
     ax.set_title("Filters in conv1.")
     return fig, im
-    #img = save_image(kernels, 'encoder_conv1_filters.png', nrow = 12)
-    #sys.exit(0)
 
 # ============================================================================
 # Data loaders.
@@ -109,15 +109,23 @@ def load_data(filepath, seqlen, getlabels=True, enc=None):
     num_features = num_columns - 2 - args.targets # subtract frame, TS and targets
     print( f"Number of features/data fields: {num_features}" )
 
-    # Cut the feature values, assume last is target.
+    #for cn in df.columns:
+    #    print(df[cn].value_counts().nlargest(5))
+        
+    # Cut the feature values, assume last is target, skip frameno, timestamp.
     features = df.iloc[:, 2:-1]
-    print(features.info())
+    #print(features.value_counts())
     print(features.min(axis=0))
     print(features.max(axis=0))
     
     # The labels are in the last column. What about unlabelled data?
     if getlabels:
-        labels = df.iloc[:, -1].values.reshape(-1, 1) ## This reshape is wrong for 1 dim labels!
+        labels = df.iloc[seqlen-1:, -1] # remove first seqlen because we predict last row of image
+        print("labels value_counts().")
+        log("labels value_counts().")
+        print(labels.value_counts())
+        log(labels.value_counts())
+        labels = labels.values.reshape(-1, 1) ## This reshape is wrong for 1 dim labels!
         
     # One hot encode the values using sklearn. Parameter so we
     # can re-use the encoder for another file.
@@ -125,11 +133,9 @@ def load_data(filepath, seqlen, getlabels=True, enc=None):
         if not enc:
             enc = OneHotEncoder(handle_unknown='ignore')
         #enc.fit(labels)
-        enc_df = pd.DataFrame(enc.fit_transform(labels).toarray())
-        #print(enc_df.head())
-        labels = enc_df.iloc[seqlen-1:] # remove first seqlen because we predict last row of image
+        labels = pd.DataFrame(enc.fit_transform(labels).toarray())
         print("labels shape", labels.shape)
-        #print(labels.head())
+        print(labels.head())
     else:
         print("No labels.")
     
