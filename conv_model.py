@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder
-from sklearn.metrics import confusion_matrix, classification_report
+from sklearn.metrics import confusion_matrix, classification_report #, ConfusionMatrixDisplay
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 import pandas as pd
@@ -129,13 +129,20 @@ def load_data(filepath, seqlen, getlabels=True, enc=None):
         
     # One hot encode the values using sklearn. Parameter so we
     # can re-use the encoder for another file.
+    target_names = []
     if getlabels:
         if not enc:
-            enc = OneHotEncoder(handle_unknown='ignore')
+            enc = OneHotEncoder(handle_unknown='ignore', sparse=False)
         #enc.fit(labels)
-        labels = pd.DataFrame(enc.fit_transform(labels).toarray())
+        labels = pd.DataFrame(enc.fit_transform(labels)) #.toarray())
         print("labels shape", labels.shape)
         print(labels.head())
+        print(enc.categories_)
+        for c in enc.categories_[0]:
+            target_names.append(c)
+            e = enc.transform([[c]])
+            print(c, e[0], enc.inverse_transform(e)[0])
+            log(c, e[0], enc.inverse_transform(e)[0])
     else:
         print("No labels.")
     
@@ -161,7 +168,7 @@ def load_data(filepath, seqlen, getlabels=True, enc=None):
     #print("shapes", train_data.shape, test_data.shape, train_labels.shape, test_labels.shape)
     #return (train_data, test_data, train_labels, test_labels, enc)
     if getlabels:
-        return (features, labels, enc)
+        return (features, labels, target_names, enc)
     return features
 
 class TabSeparatedDataset(Dataset):
@@ -334,7 +341,7 @@ class ConvTabularModelP(nn.Module):
 # Training and test data.
 # ============================================================================
 
-features, labels, oh_enc = load_data(args.trainfile, args.seqlen) # return encoder for later.
+features, labels, target_names, oh_enc = load_data(args.trainfile, args.seqlen) # return encoder for later.
 train_data, test_data, train_labels, test_labels = train_test_split(features,
                                                                     labels,
                                                                     test_size=0.3,
@@ -546,7 +553,7 @@ fig.savefig(png_filename, dpi=144)
 
 if args.testfile:
     log("Test file:", args.testfile)
-    features, labels, oh_enc = load_data(args.testfile, args.seqlen, enc=oh_enc)
+    features, labels, target_names, oh_enc = load_data(args.testfile, args.seqlen, enc=oh_enc)
     print("Data/labels shape", features.shape, labels.shape)
     testing_data = TabSeparatedDataset(features, labels)
     test_loader = DataLoader(testing_data, batch_size=args.batchsize, shuffle=False)
@@ -576,11 +583,13 @@ if args.testfile:
     png_filename = model_str+".e"+str(ix_epoch)+".testfile.png"
     print( "Saving", png_filename )
     fig.savefig(png_filename, dpi=144)
-
+    #
     cm = confusion_matrix(golds, predictions)
     print(cm)
     log(cm)
     cm = confusion_matrix(golds, predictions, normalize='true')
+    #cmd = ConfusionMatrixDisplay(cm, display_labels=target_names)
+    #cmd.plot()
     with np.printoptions(precision=2, suppress=True):
         print(cm)
         log(cm)
@@ -594,8 +603,12 @@ if args.testfile:
     #sn.heatmap( df_cm, annot=True, fmt='d', cmap='Blues', vmax=max_cm//10, ax=axs )
     #sn.heatmap( df_cm, annot=True, fmt='d', cmap='Blues', vmax=512, ax=axs )
     sn.heatmap( df_cm, annot=True, fmt='.2f', cmap='Blues', ax=axs )
-    plt.ylabel('Actual')
+    plt.ylabel('True')
     plt.xlabel('Predicted')
+    #axs.xaxis.set_ticklabels(['business', 'health']);
+    axs.xaxis.set_ticklabels(target_names, rotation=45)
+    axs.yaxis.set_ticklabels(target_names)
+    plt.yticks(rotation=0) 
     fig.tight_layout()
     png_filename = model_str+".e"+str(ix_epoch)+".cm.png"
     print( "Saving", png_filename )
