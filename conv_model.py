@@ -65,10 +65,10 @@ def ms_to_time(ms):
 
 def visualise_conv1(model):
     kernels = model.conv1.weight.detach().clone()
-    print("kernels shape:", kernels.numpy().shape)
+    print("kernels shape:", kernels.cpu().numpy().shape)
     kernels = kernels - kernels.min()
     kernels = kernels / kernels.max()
-    filter_img = utils.make_grid(kernels, nrow = 8) #, normalize=True, value_range=(0,255))
+    filter_img = utils.make_grid(kernels, nrow = 8).cpu() #, normalize=True, value_range=(0,255))
     print("filter_img shape:", filter_img.shape)
     # change ordering since matplotlib requires images to 
     # be (H, W, C)
