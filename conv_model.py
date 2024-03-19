@@ -44,6 +44,7 @@ parser.add_argument("--model",         "-m", help="Model name",         default=
 parser.add_argument("--id",            "-i", help="Extra ID string",    default=None)
 parser.add_argument("--info",          "-I", help="Print info only",    action="store_true")
 parser.add_argument("--longnames",     "-l", help="Long filenames",     action="store_true")
+parser.add_argument("--check",         "-c", help="Check 10% data",     default=None, type=float)
 args = parser.parse_args()
 
 # ============================================================================
@@ -61,8 +62,9 @@ def log(*args, sep=' ', end='\n', file=logfile):
         f.write(message)
         f.flush()
         
-print( "START", time.asctime() )
-print( args )
+print("START", time.asctime())
+print(args)
+
 with open(logfile, "a") as f:
     f.write(datetime.datetime.now().strftime('START %Y%m%dT%H:%M:%S\n'))
     json.dump(args.__dict__, f)
@@ -132,6 +134,11 @@ Frame	Timestamp	LHandIn_az	LHandIn_in	LHandIn_dN	LHandIn_vN	LHandIn_aN	LHandOut_
 
 def load_data(filepath, seqlen, getlabels=True, enc=None):
     df = pd.read_csv(filepath, sep='\t')
+
+    # Takes a stratified subset (based on targets) of the data. Needs enough data
+    # to cover all categories. Destroys order, destroys sequences?
+    if args.check:
+        df = df.groupby(df.iloc[:, -1]).apply(lambda x: x.sample(frac=args.check))
     
     num_columns = df.shape[1]
     # sensors is a misnomer...
@@ -367,7 +374,7 @@ class ConvTabularModelP(nn.Module):
 # ============================================================================
 
 # First, a train and test set.
-features, labels, target_names, oh_enc = load_data(args.trainfile, args.seqlen) # return encoder for later.
+features, labels, target_names, oh_enc = load_data(args.trainfile, args.seqlen) # return encoder for later.        
 train_data, test_data, train_labels, test_labels = train_test_split(features,
                                                                     labels,
                                                                     test_size=0.3,
@@ -844,6 +851,7 @@ if args.unlabelled:
 
 print( "END", time.asctime() )
 print()
+
 with open(logfile, "a") as f:
     f.write(datetime.datetime.now().strftime('END %Y%m%dT%H:%M:%S\n\n'))
 if  args.plots:
