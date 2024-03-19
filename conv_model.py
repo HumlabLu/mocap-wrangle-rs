@@ -25,23 +25,25 @@ from torchvision import utils
 # ============================================================================
 
 parser = argparse.ArgumentParser()
-parser.add_argument( "--epochs",        "-e", help="Num epochs",        default=  1, type=int )
-parser.add_argument( "--batchsize",     "-b", help="Batch size",        default= 10, type=int )
-parser.add_argument( "--seqlen",        "-s", help="Sequence length",   default= 20, type=int )
-parser.add_argument( "--hidden",        "-H", help="Hidden units",      default=108, type=int )
-parser.add_argument( "--pooling",       "-p", help="Pooling tuple",     default=[1,1,1,1], nargs='+', type=int)
-parser.add_argument( "--filter1",             help="Filter (5)",        default=[32,3,3,1,1], nargs='+', type=int)
-parser.add_argument( "--filter2",             help="Filter (5)",        default=[64,5,5,3,3], nargs='+', type=int)
-parser.add_argument( "--targets",       "-T", help="Number of targets", default=  1, type=int )
-parser.add_argument( "--plots",         "-P", help="Show plots",        action="store_true" )
-parser.add_argument( "--trainfile",     "-t", help="Training file",     default="foo.tsv" )
-parser.add_argument( "--device",        "-d", help="Device",            default=None, type=str )
-parser.add_argument( "--testfile",            help="Test file",         default=None )
-parser.add_argument( "--unlabelled",    "-u", help="Unlabelled file",   default=None )
-parser.add_argument( "--restart",       "-r", help="Restart training",  action="store_true" )
-parser.add_argument( "--model",         "-m", help="Model name",        default="ConvTabularModelP" )
-parser.add_argument( "--id",            "-i", help="Extra ID string",   default=None )
-parser.add_argument( "--info",          "-I", help="Print info only",   action="store_true" )
+parser.add_argument("--epochs",        "-e", help="Num epochs",         default=  1, type=int)
+parser.add_argument("--batchsize",     "-b", help="Batch size",         default= 10, type=int)
+parser.add_argument("--seqlen",        "-s", help="Sequence length",    default= 20, type=int)
+parser.add_argument("--hidden",        "-H", help="Hidden units",       default=108, type=int)
+parser.add_argument("--pooling",       "-p", help="Pooling tuple",      default=[1,1,1,1], nargs='+', type=int)
+parser.add_argument("--filter1",             help="Filter (5)",         default=[32,3,3,1,1], nargs='+', type=int)
+parser.add_argument("--filter2",             help="Filter (5)",         default=[64,5,5,3,3], nargs='+', type=int)
+parser.add_argument("--targets",       "-T", help="Number of targets",  default=  1, type=int)
+parser.add_argument("--plots",         "-P", help="Show plots",         action="store_true")
+parser.add_argument("--trainfile",     "-t", help="Training file",      default="foo.tsv")
+parser.add_argument("--device",        "-d", help="Device",             default=None, type=str)
+parser.add_argument("--testfile",            help="Test file",          default=None)
+parser.add_argument("--unlabelled",    "-u", help="Unlabelled file",    default=None)
+parser.add_argument("--restart",       "-r", help="Restart training",   action="store_true")
+parser.add_argument("--model",         "-m", help="Model name",         default="ConvTabularModelP")
+#parser.add_argument("--loadmodel",     "-M", help="Saved model to load",default=None, type=str)
+parser.add_argument("--id",            "-i", help="Extra ID string",    default=None)
+parser.add_argument("--info",          "-I", help="Print info only",    action="store_true")
+parser.add_argument("--longnames",     "-l", help="Long filenames",     action="store_true")
 args = parser.parse_args()
 
 # ============================================================================
@@ -57,6 +59,7 @@ def log(*args, sep=' ', end='\n', file=logfile):
     with open(file, 'a') as f:
         message = sep.join(map(str, args)) + end
         f.write(message)
+        f.flush()
         
 print( "START", time.asctime() )
 print( args )
@@ -133,7 +136,8 @@ def load_data(filepath, seqlen, getlabels=True, enc=None):
     num_columns = df.shape[1]
     # sensors is a misnomer...
     num_features = num_columns - 2 - args.targets # subtract frame, TS and targets
-    print( f"Number of features/data fields: {num_features}" )
+    print(f"Number of features/data fields: {num_features}")
+    log(f"Number of features/data fields: {num_features}")
 
     #for cn in df.columns:
     #    print(df[cn].value_counts().nlargest(5))
@@ -164,6 +168,9 @@ def load_data(filepath, seqlen, getlabels=True, enc=None):
         print("labels shape", labels.shape)
         print(labels.head())
         print(enc.categories_)
+        log("labels shape", labels.shape)
+        log(labels.head())
+        log(enc.categories_)
         for c in enc.categories_[0]:
             target_names.append(c)
             e = enc.transform([[c]])
@@ -171,6 +178,7 @@ def load_data(filepath, seqlen, getlabels=True, enc=None):
             log(c, e[0], enc.inverse_transform(e)[0])
     else:
         print("No labels.")
+        log("No labels.")
     
     # Reshape features to match the input shape (1, 28, 11)
     # We take the target of the last row as target, so we miss the first seqlen data.
@@ -186,10 +194,12 @@ def load_data(filepath, seqlen, getlabels=True, enc=None):
         slices.append(image)
     # Convert the list of 2D arrays into a new DataFrame
     features = np.concatenate(slices, axis=0)
-    print("concatenated features shape", features.shape)
+    print("Concatenated features shape", features.shape)
+    log("Concatenated features shape", features.shape)
     features = features.reshape(-1, 1, seqlen, num_features)
     #features = features[num_samples:-1].reshape(-1, 1, seqlen, num_features)
-    print("features shape", features.shape)
+    print("Features shape after reshape", features.shape)
+    log("Features shape after reshape", features.shape)
 
     #print("shapes", train_data.shape, test_data.shape, train_labels.shape, test_labels.shape)
     #return (train_data, test_data, train_labels, test_labels, enc)
@@ -221,7 +231,6 @@ class TabSeparatedDataset(Dataset):
         return features, label
     
     def get_num_features(self):
-        print("get_num_features", self.features.shape[3])
         return self.features.shape[3]
 
     def get_size(self):
@@ -247,7 +256,6 @@ class UnlabelledDataset(Dataset):
         return features
     
     def get_num_features(self):
-        print("get_num_features", self.features.shape[3])
         return self.features.shape[3]
 
     def get_size(self):
@@ -358,6 +366,7 @@ class ConvTabularModelP(nn.Module):
 # Training and test data.
 # ============================================================================
 
+# First, a train and test set.
 features, labels, target_names, oh_enc = load_data(args.trainfile, args.seqlen) # return encoder for later.
 train_data, test_data, train_labels, test_labels = train_test_split(features,
                                                                     labels,
@@ -366,7 +375,9 @@ train_data, test_data, train_labels, test_labels = train_test_split(features,
                                                                     random_state=42,
                                                                     stratify=labels) # only works for >1 values
 print("Train/test shapes", train_data.shape, test_data.shape, train_labels.shape, test_labels.shape)
-# Split one more into test/validation?
+log("Train/test shapes", train_data.shape, test_data.shape, train_labels.shape, test_labels.shape)
+
+# Split test set once more into test and validation set.
 test_data, val_data, test_labels, val_labels = train_test_split(test_data,
                                                                 test_labels,
                                                                 test_size=0.3,
@@ -374,6 +385,7 @@ test_data, val_data, test_labels, val_labels = train_test_split(test_data,
                                                                 random_state=42,
                                                                 stratify=test_labels)
 print("Test/val shapes", test_data.shape, val_data.shape, test_labels.shape, val_labels.shape)
+log("Test/val shapes", test_data.shape, val_data.shape, test_labels.shape, val_labels.shape)
 
 training_data   = TabSeparatedDataset(train_data, train_labels)
 testing_data    = TabSeparatedDataset(test_data, test_labels)
@@ -389,6 +401,7 @@ channels   = 1     # Number of channels per image (1 for grayscale)
 height     = args.seqlen      # Height of the images (number of "mocap frames")
 width      = training_data.get_num_features()      # Width of the images (sensor values)
 print("batch_size, channels, height, width", batch_size, channels, height, width)
+log("batch_size, channels, height, width", batch_size, channels, height, width)
 
 # Pooling/stride?
 
@@ -428,32 +441,45 @@ f.colorbar(xx, cax=cbar_ax)
 f.subplots_adjust(hspace=0.5)
 png_filename = os.path.basename(args.trainfile)+"_s"+str(args.seqlen)+".imgdata.png"
 print("Saving", png_filename)
+log("Saving", png_filename)
 f.savefig(png_filename, dpi=288)
 plt.pause(1)
 if args.info:
     sys.exit(0)
 
 # ============================================================================
-# Training.
+# Training and testing.
 # ============================================================================
 
-try:
-    pooling_str = "_p."+".".join([str(y) for y in args.pooling])
-except:
-    pooling_str = ""
-try:
-    filter_str =  "_f1."+".".join([str(y) for y in args.filter1])
-    filter_str += "_f2."+".".join([str(y) for y in args.filter2])
-except:
-    filter_str = ""
+pooling_str = ""
+filter_str = ""
+if args.longnames:
+    try:
+        pooling_str = "_p."+".".join([str(y) for y in args.pooling])
+    except:
+        pooling_str = ""
+    try:
+        filter_str =  "_f1."+".".join([str(y) for y in args.filter1])
+        filter_str += "_f2."+".".join([str(y) for y in args.filter2])
+    except:
+        filter_str = ""
+
+# Should prolly check if the long name exists, if using the short one...
 if args.id:
     model_str = f"{args.model}_{args.id}_H{args.hidden}_h{args.seqlen}_w{width}{pooling_str}{filter_str}.pht"
 else:
     model_str = f"{args.model}_H{args.hidden}_h{args.seqlen}_w{width}{pooling_str}{filter_str}.pht"
+
+# Probably not worth it, very dependent on data/filters, etc etc.
+# Or load just the named model later, leave everything else as it was?
+#if args.loadmodel: # Have an associated settings file? Save all/some args in the model?
+#    model_str = args.loadmodel
+
 print("model_str", model_str)
 log("model_str", model_str)
 
-print("len data loader/total batches", len(train_loader))
+print("Data loader/total batches", len(train_loader))
+log("Data loader/total batches", len(train_loader))
 
 criterion = torch.nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=0.0001)
@@ -499,6 +525,10 @@ def test_model(data_loader, model, loss_function):
     avg_loss = total_loss / num_batches
     return avg_loss
 
+# ============================================================================
+# Code.
+# ============================================================================
+
 epoch_start = 0
 ix_epoch = 0
 lowest_test_loss = 1e9
@@ -509,11 +539,12 @@ if args.restart or not os.path.exists( model_str ):
         log("Starting from zero.")
         # Bootstrap values with an untrained network at "epoch 0".
         # Disadvantage is that this is usually large, not good for the plot.
-        train_loss = test_model(train_loader, model, criterion)
+        train_loss = test_model(train_loader, model, criterion) # One batch would be enough really!
         test_loss  = test_model(test_loader, model, criterion)
         train_losses.append( train_loss )
         test_losses.append( test_loss )
         print(f"Train loss: {train_loss:.4f}, Test loss: {test_loss:.4f}")
+        log(f"Train loss: {train_loss:.4f}, Test loss: {test_loss:.4f}")
 elif os.path.exists( model_str ):
     print(f"Loading existing model {model_str}")
     log(f"Loading existing model {model_str}")
@@ -527,7 +558,7 @@ elif os.path.exists( model_str ):
     lowest_test_loss = checkpoint['lowest_test_loss']
     train_losses = train_losses[0] # these are tuples
     test_losses  = test_losses[0]  
-    
+
 if args.epochs > 0:
     for ix_epoch in range(epoch_start+1, epoch_start+args.epochs+1):
         print( f"Epoch {ix_epoch}/{args.epochs+epoch_start}" )
@@ -537,10 +568,10 @@ if args.epochs > 0:
         test_losses.append( test_loss )
         print(f"Train loss: {train_loss:.4f}, Test loss: {test_loss:.4f}")
         log(f"Epoch {ix_epoch}/{args.epochs+epoch_start}: Train loss: {train_loss:.4f}, Test loss: {test_loss:.4f}")
-        print()
         #
         if test_loss < lowest_test_loss:
-            print( "LOWEST" )
+            print("Lowest, saving model.")
+            log("Lowest test loss, saving model.")
             lowest_test_loss = test_loss
             torch.save({
                 'epoch': ix_epoch,
@@ -568,12 +599,14 @@ if args.epochs > 0:
     fig.tight_layout()
     png_filename = model_str+".e"+str(ix_epoch)+".lc.png" # Learning Curve
     print("Saving", png_filename)
+    log("Saving", png_filename)
     fig.savefig(png_filename, dpi=144)
     plt.pause(1.0)
 
 fig, im = visualise_conv1(model)
 png_filename = model_str+".e"+str(ix_epoch)+"_conv1.pdf" # Filters conv1
 print("Saving", png_filename)
+log("Saving", png_filename)
 fig.savefig(png_filename, dpi=144)
 plt.pause(1.0)
 
@@ -612,6 +645,7 @@ if args.epochs > 0:
     fig.tight_layout()
     png_filename = model_str+".e"+str(ix_epoch)+".val.png"
     print("Saving", png_filename)
+    log("Saving", png_filename)
     fig.savefig(png_filename, dpi=144)
     cm = confusion_matrix(golds, predictions)
     print(cm)
@@ -641,7 +675,8 @@ if args.epochs > 0:
     axs.yaxis.set_ticklabels(target_names, rotation=0)
     fig.tight_layout()
     png_filename = model_str+".e"+str(ix_epoch)+".val.cm.png"
-    print( "Saving", png_filename )
+    print("Saving", png_filename)
+    log("Saving", png_filename)
     fig.savefig(png_filename, dpi=144)
     plt.pause(2.0)
 
@@ -653,6 +688,7 @@ if args.testfile:
     log("Test file:", args.testfile)
     features, labels, target_names, oh_enc = load_data(args.testfile, args.seqlen, enc=oh_enc)
     print("Data/labels shape", features.shape, labels.shape)
+    log("Data/labels shape", features.shape, labels.shape)
     testing_data = TabSeparatedDataset(features, labels)
     test_loader = DataLoader(testing_data, batch_size=args.batchsize, shuffle=False)
     model.eval()
@@ -680,6 +716,7 @@ if args.testfile:
     fig.tight_layout()
     png_filename = model_str+".e"+str(ix_epoch)+".test.png" # Predictions
     print("Saving", png_filename)
+    log("Saving", png_filename)
     fig.savefig(png_filename, dpi=144)
     #
     cm = confusion_matrix(golds, predictions)
@@ -716,6 +753,7 @@ if args.testfile:
     fig.tight_layout()
     png_filename = model_str+".e"+str(ix_epoch)+".test.cm.png"
     print("Saving", png_filename)
+    log("Saving", png_filename)
     fig.savefig(png_filename, dpi=144)
     plt.pause(2.0)
 
@@ -725,9 +763,10 @@ if args.testfile:
 # ============================================================================
 
 if args.unlabelled:
-    log("Unlabelled file:", args.unlabelled)
+    log("Unlabelled data:", args.unlabelled)
     features = load_data(args.unlabelled, args.seqlen, getlabels=False)
     print("Data shape", features.shape)
+    log("Data shape", features.shape)
     unlabelled_data = UnlabelledDataset(features)
     unlabelled_loader = DataLoader(unlabelled_data, batch_size=args.batchsize, shuffle=False) 
     model.eval()
@@ -743,11 +782,12 @@ if args.unlabelled:
     # from torch_mocap_14.py
     fig, axs = plt.subplots(nrows=1, ncols=1, figsize=(12,6))
     axs.vlines(range(len(predictions)), 0, predictions)
-    axs.set_title( "Unlabelled data" )
-    fig.suptitle( model_str )
+    axs.set_title(args.unlabelled)
+    fig.suptitle(model_str)
     fig.tight_layout()
     png_filename = model_str+".e"+str(ix_epoch)+".unlabelled.png"
-    print( "Saving", png_filename )
+    print("Saving", png_filename)
+    log("Saving", png_filename)
     fig.savefig(png_filename, dpi=144)
     #
     # Sequences?
