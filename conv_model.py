@@ -44,7 +44,6 @@ parser.add_argument("--model",         "-m", help="Model name",         default=
 parser.add_argument("--id",            "-i", help="Extra ID string",    default=None)
 parser.add_argument("--info",          "-I", help="Print info only",    action="store_true")
 parser.add_argument("--longnames",     "-l", help="Long filenames",     action="store_true")
-parser.add_argument("--check",         "-c", help="Check 10% data",     default=None, type=float)
 args = parser.parse_args()
 
 # ============================================================================
@@ -134,11 +133,6 @@ Frame	Timestamp	LHandIn_az	LHandIn_in	LHandIn_dN	LHandIn_vN	LHandIn_aN	LHandOut_
 
 def load_data(filepath, seqlen, getlabels=True, enc=None):
     df = pd.read_csv(filepath, sep='\t')
-
-    # Takes a stratified subset (based on targets) of the data. Needs enough data
-    # to cover all categories. Destroys order, destroys sequences?
-    if args.check:
-        df = df.groupby(df.iloc[:, -1]).apply(lambda x: x.sample(frac=args.check))
     
     num_columns = df.shape[1]
     # sensors is a misnomer...
