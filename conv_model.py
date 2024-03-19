@@ -25,35 +25,42 @@ from torchvision import utils
 # ============================================================================
 
 parser = argparse.ArgumentParser()
-parser.add_argument( "--epochs",        "-e", help="Num epochs",          default=  1, type=int )
-parser.add_argument( "--batchsize",     "-b", help="Batch size",          default= 10, type=int )
-parser.add_argument( "--seqlen",        "-s", help="Sequence length",     default= 20, type=int )
-parser.add_argument( "--hidden",        "-H", help="Hidden units",        default=108, type=int )
-parser.add_argument( "--pooling",       "-p", help="Pooling tuple",       default=[1,1,1,1], nargs='+', type=int)
-#parser.add_argument( "--layers",        "-l", help="Number of layers",    default=  1, type=int )
-parser.add_argument( "--targets",       "-T", help="Number of targets",   default=  1, type=int )
-#parser.add_argument( "--noplots",       "-p", help="Show no plots",       action="store_true" )
-parser.add_argument( "--trainfile",     "-t", help="Training file",       default="foo.tsv" )
-parser.add_argument( "--testfile",            help="Test file",           default=None )
-parser.add_argument( "--unlabelled",    "-u", help="Unlabelled file",     default=None )
-parser.add_argument( "--restart",       "-r", help="Restart training",    action="store_true" )
-parser.add_argument( "--model",         "-m", help="Model name",          default="ConvTabularModelP" )
-parser.add_argument( "--id",            "-i", help="Extra ID string",     default=None )
-parser.add_argument( "--info",          "-I", help="Print info only",     action="store_true" )
+parser.add_argument( "--epochs",        "-e", help="Num epochs",        default=  1, type=int )
+parser.add_argument( "--batchsize",     "-b", help="Batch size",        default= 10, type=int )
+parser.add_argument( "--seqlen",        "-s", help="Sequence length",   default= 20, type=int )
+parser.add_argument( "--hidden",        "-H", help="Hidden units",      default=108, type=int )
+parser.add_argument( "--pooling",       "-p", help="Pooling tuple",     default=[1,1,1,1], nargs='+', type=int)
+parser.add_argument( "--filter1",             help="Filter (5)",        default=[32,3,3,1,1], nargs='+', type=int)
+parser.add_argument( "--filter2",             help="Filter (5)",        default=[64,5,5,3,3], nargs='+', type=int)
+parser.add_argument( "--targets",       "-T", help="Number of targets", default=  1, type=int )
+parser.add_argument( "--plots",         "-P", help="Show plots",        action="store_true" )
+parser.add_argument( "--trainfile",     "-t", help="Training file",     default="foo.tsv" )
+parser.add_argument( "--device",        "-d", help="Device",            default=None, type=str )
+parser.add_argument( "--testfile",            help="Test file",         default=None )
+parser.add_argument( "--unlabelled",    "-u", help="Unlabelled file",   default=None )
+parser.add_argument( "--restart",       "-r", help="Restart training",  action="store_true" )
+parser.add_argument( "--model",         "-m", help="Model name",        default="ConvTabularModelP" )
+parser.add_argument( "--id",            "-i", help="Extra ID string",   default=None )
+parser.add_argument( "--info",          "-I", help="Print info only",   action="store_true" )
 args = parser.parse_args()
 
 # ============================================================================
 # Logger and logging
 # ============================================================================
 
-def log(*args, sep=' ', end='\n', file='conv_04.log'):
+if args.id:
+    logfile = f"conv_05_{args.id}.log"
+else:
+    logfile = "conv_05.log"
+
+def log(*args, sep=' ', end='\n', file=logfile):
     with open(file, 'a') as f:
         message = sep.join(map(str, args)) + end
         f.write(message)
         
 print( "START", time.asctime() )
 print( args )
-with open("./conv_04.log", "a") as f:
+with open(logfile, "a") as f:
     f.write(datetime.datetime.now().strftime('START %Y%m%dT%H:%M:%S\n'))
     json.dump(args.__dict__, f)
     f.write("\n")
@@ -78,6 +85,25 @@ def visualise_conv1(model):
     im = ax.imshow(filter_img.permute(1, 2, 0))
     ax.set_title("Filters in conv1.")
     return fig, im
+
+def encode_targets(targets, enc=None):
+    target_names = []
+    if not enc:
+        enc = OneHotEncoder(handle_unknown='ignore', sparse=False)
+    targets = [[name] for name in targets]
+    #print(targets)
+    #enc.fit(targets)
+    #print(enc)
+    labels = pd.DataFrame(enc.fit_transform(targets))
+    #print("labels shape", labels.shape)
+    #print(labels.head())
+    #print(enc.categories_)
+    for c in enc.categories_[0]:
+        target_names.append(c)
+        e = enc.transform([[c]])
+        #print(c, e[0], enc.inverse_transform(e)[0])
+        log(c, e[0], enc.inverse_transform(e)[0])
+    return (labels, enc)
 
 # ============================================================================
 # Data loaders.
@@ -125,16 +151,16 @@ def load_data(filepath, seqlen, getlabels=True, enc=None):
         log("labels value_counts().")
         print(labels.value_counts())
         log(labels.value_counts())
-        labels = labels.values.reshape(-1, 1) ## This reshape is wrong for 1 dim labels!
+        labels = labels.values #.reshape(-1, 1) ## This reshape is wrong for 1 dim labels!
         
     # One hot encode the values using sklearn. Parameter so we
     # can re-use the encoder for another file.
     target_names = []
     if getlabels:
-        if not enc:
-            enc = OneHotEncoder(handle_unknown='ignore', sparse=False)
-        #enc.fit(labels)
-        labels = pd.DataFrame(enc.fit_transform(labels)) #.toarray())
+        if enc:
+            labels, enc = encode_targets(labels, enc)
+        else:
+            labels, enc = encode_targets(labels)
         print("labels shape", labels.shape)
         print(labels.head())
         print(enc.categories_)
@@ -190,6 +216,7 @@ class TabSeparatedDataset(Dataset):
 
         features = torch.tensor(self.features[idx], device=device, dtype=torch.float)
         label = torch.tensor(self.labels.values[idx], device=device, dtype=torch.float)
+        #label = torch.tensor(self.labels.values[idx].astype(float), device=device, dtype=torch.float)
         #print("getitem", features.shape, label.shape)
         return features, label
     
@@ -216,7 +243,7 @@ class UnlabelledDataset(Dataset):
         return self.features.shape[0]
 
     def __getitem__(self, idx):
-        features = torch.tensor(self.features[idx], dtype=torch.float)
+        features = torch.tensor(self.features[idx], dtype=torch.float32)
         return features
     
     def get_num_features(self):
@@ -242,7 +269,7 @@ self.cnn2 = nn.Conv2d(1, inbetween_dim, kernel_size=(5, 5), padding=(2, 2))
 self.cnn3 = nn.Conv2d(1, inbetween_dim, kernel_size=(7, 7), padding=(3, 3))
 '''
 class ConvTabularModelP(nn.Module):
-    def __init__(self, channels, height, width, features, hidden, pooling):
+    def __init__(self, channels, height, width, features, hidden, pooling, filters1, filters2):
         # channels could be sensors, height is number of frames, width is sensor values
         super(ConvTabularModelP, self).__init__()
         image_size = (args.batchsize, channels, height, width) # Channels is one  ("greyscale").
@@ -258,22 +285,25 @@ class ConvTabularModelP(nn.Module):
             print("Wrong pooling")
             sys.exit(0)
         #
-        filters1 = 32
-        filters2 = 64
-        #self.conv1 = nn.Conv2d(channels, filters1, kernel_size=(20, 10), padding=(20,10))  # 32 x height x width
-        self.conv1 = nn.Conv2d(channels, filters1, kernel_size=3, padding=1)  # Output: 32 x height x width
+        num_filter1 = filters1[0]
+        filter1 = (filters1[1], filters1[2])
+        padding1 = (filters1[3], filters1[4])
+        num_filter2 = filters2[0]
+        filter2 = (filters2[1], filters2[2])
+        padding2 = (filters2[3], filters2[4])
+        #
+        self.conv1 = nn.Conv2d(channels, num_filter1, kernel_size=filter1, padding=padding1)
         out_size = tensorshape(self.conv1, image_size)
         print("out_size conv1", out_size)
         log("out_size conv1", out_size)
         #
         self.pool1_size = pool1_size
-        ##self.pool1 = nn.MaxPool2d(self.pool1_size, self.pool1_size)
         self.pool1 = nn.MaxPool2d(pool1_size, pool1_stride)
         out_size = tensorshape(self.pool1, out_size)
         print("out_size pool1", out_size)
         log("out_size pool1", out_size)
         #
-        self.conv2 = nn.Conv2d(filters1, filters2, kernel_size=3, padding=1)  # Output: 64x7x2
+        self.conv2 = nn.Conv2d(num_filter1, num_filter2, kernel_size=filter2, padding=padding2)
         #                                                      5          2
         out_size = tensorshape(self.conv2, out_size)
         print("out_size conv2", out_size)
@@ -291,16 +321,6 @@ class ConvTabularModelP(nn.Module):
         print("out_size flatten", out_size)
         log("out_size flatten", out_size)
         #
-        # lstm input is [batch_size, seq_len(height), num-features(width)]
-        #self.lstm = nn.LSTM(out_size[-1], hidden, 2, batch_first=True, dropout=0.2)
-        #x = torch.rand(batch_size, hidden, out_size[-1])
-        #output, (hn, cn) = self.lstm(x)
-        #print(output.shape, hn.shape, cn.shape)
-        #out_size = tensorshape(self.lstm, out_size) # not working
-        # out is (generated hidden states, (cell mem, hidden))
-        #out_size = output.shape
-        #print("out_size lstm", out_size)
-        #        
         self.fc1 = nn.Linear(out_size[-1], hidden) 
         out_size = tensorshape(self.fc1, out_size)
         print("out_size fc1", out_size)
@@ -325,9 +345,6 @@ class ConvTabularModelP(nn.Module):
         #x = x.view(-1, 64 * 7 * 2)  # Flatten the output for dense layers
         x = self.flatten(x)
         #
-        #out, (ht, ct) = self.lstm(x)
-        #x = out[:, -1]
-        #
         x = F.relu(self.fc1(x))  # Apply fc1 -> ReLU
         x = self.fc2(x)  # Output layer
         return x
@@ -346,13 +363,21 @@ train_data, test_data, train_labels, test_labels = train_test_split(features,
                                                                     labels,
                                                                     test_size=0.3,
                                                                     shuffle=True,
-                                                                    random_state=42)
+                                                                    random_state=42,
+                                                                    stratify=labels) # only works for >1 values
 print("Train/test shapes", train_data.shape, test_data.shape, train_labels.shape, test_labels.shape)
-#print(oh_enc)
-#print(oh_enc.inverse_transform([[0, 0, 0, 1, 1, 0, 0], [1, 1, 0, 0, 0, 1, 0]]))
+# Split one more into test/validation?
+test_data, val_data, test_labels, val_labels = train_test_split(test_data,
+                                                                test_labels,
+                                                                test_size=0.3,
+                                                                shuffle=True,
+                                                                random_state=42,
+                                                                stratify=test_labels)
+print("Test/val shapes", test_data.shape, val_data.shape, test_labels.shape, val_labels.shape)
 
-training_data = TabSeparatedDataset(train_data, train_labels)
-testing_data  = TabSeparatedDataset(test_data, test_labels)
+training_data   = TabSeparatedDataset(train_data, train_labels)
+testing_data    = TabSeparatedDataset(test_data, test_labels)
+validation_data = TabSeparatedDataset(val_data, val_labels)
 
 # ============================================================================
 # Model.
@@ -367,12 +392,16 @@ print("batch_size, channels, height, width", batch_size, channels, height, width
 
 # Pooling/stride?
 
-model = ConvTabularModelP(channels, height, width, training_data.get_num_classes(), args.hidden, args.pooling)
+model = ConvTabularModelP(channels, height, width, training_data.get_num_classes(), args.hidden, args.pooling,
+                          args.filter1, args.filter2)
 print(model)
 log(model)
 
 # Device configuration - use GPU if available
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+if args.device:
+    device = args.device
+else:
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 train_loader = DataLoader(training_data, batch_size=args.batchsize, shuffle=True)
 test_loader  = DataLoader(testing_data, batch_size=args.batchsize, shuffle=False) 
@@ -381,27 +410,27 @@ test_loader  = DataLoader(testing_data, batch_size=args.batchsize, shuffle=False
 # Visualise.
 # ============================================================================
 
+hor=4
+ver=4
+f, axs = plt.subplots(ver, hor, figsize=(12,10))
+display_loader = DataLoader(training_data, batch_size=1, shuffle=True)
+for h in range(ver):
+    for v in range(hor): #, v in zip(range(ver), range(hor)): #  [(0, 0), (0, 1), (1, 0), (1, 1)]:
+        X, y = next(iter(display_loader)) # We need to reset it later.
+        xx = axs[h, v].imshow(np.abs(X[0][0].cpu()), cmap = 'gray', aspect='auto') # Used for colourbar.
+        res_lbl = oh_enc.inverse_transform(y[0].cpu().reshape(1, -1))
+        axs[h, v].set_title(res_lbl)
+#bar = plt.colorbar(xx) # Will be for the last image.
+f.subplots_adjust(right=0.8)
+cbar_ax = f.add_axes([0.85, 0.15, 0.05, 0.7])
+f.colorbar(xx, cax=cbar_ax)
+#bar.set_label('ColorBar 1')
+f.subplots_adjust(hspace=0.5)
+png_filename = os.path.basename(args.trainfile)+"_s"+str(args.seqlen)+".imgdata.png"
+print("Saving", png_filename)
+f.savefig(png_filename, dpi=288)
+plt.pause(1)
 if args.info:
-    hor=4
-    ver=4
-    f, axs = plt.subplots(ver, hor, figsize=(12,10))
-    display_loader = DataLoader(training_data, batch_size=1, shuffle=True)
-    for h in range(ver):
-        for v in range(hor): #, v in zip(range(ver), range(hor)): #  [(0, 0), (0, 1), (1, 0), (1, 1)]:
-            X, y = next(iter(display_loader)) # We need to reset it later.
-            xx = axs[h, v].imshow(np.abs(X[0][0].cpu()), cmap = 'gray', aspect='auto') # Used for colourbar.
-            res_lbl = oh_enc.inverse_transform(y[0].cpu().reshape(1, -1))
-            axs[h, v].set_title(res_lbl)
-    #bar = plt.colorbar(xx) # Will be for the last image.
-    f.subplots_adjust(right=0.8)
-    cbar_ax = f.add_axes([0.85, 0.15, 0.05, 0.7])
-    f.colorbar(xx, cax=cbar_ax)
-    #bar.set_label('ColorBar 1')
-    f.subplots_adjust(hspace=0.5)
-    plt.show()
-    png_filename = os.path.basename(args.trainfile)+"_s"+str(args.seqlen)+".imgdata.png"
-    print( "Saving", png_filename )
-    f.savefig(png_filename, dpi=288)
     sys.exit(0)
 
 # ============================================================================
@@ -409,13 +438,18 @@ if args.info:
 # ============================================================================
 
 try:
-    pooling_str = "_p"+str(args.pooling[0])+str(args.pooling[1])+str(args.pooling[2])+str(args.pooling[3])
+    pooling_str = "_p."+".".join([str(y) for y in args.pooling])
 except:
     pooling_str = ""
+try:
+    filter_str =  "_f1."+".".join([str(y) for y in args.filter1])
+    filter_str += "_f2."+".".join([str(y) for y in args.filter2])
+except:
+    filter_str = ""
 if args.id:
-    model_str = f"{args.model}_{args.id}_H{args.hidden}_h{args.seqlen}xw{width}{pooling_str}.pht"
+    model_str = f"{args.model}_{args.id}_H{args.hidden}_h{args.seqlen}_w{width}{pooling_str}{filter_str}.pht"
 else:
-    model_str = f"{args.model}_H{args.hidden}_h{args.seqlen}xw{width}{pooling_str}.pht"
+    model_str = f"{args.model}_H{args.hidden}_h{args.seqlen}_w{width}{pooling_str}{filter_str}.pht"
 print("model_str", model_str)
 log("model_str", model_str)
 
@@ -467,20 +501,22 @@ def test_model(data_loader, model, loss_function):
 
 epoch_start = 0
 ix_epoch = 0
+lowest_test_loss = 1e9
 
 if args.restart or not os.path.exists( model_str ):
-    print("Starting from zero.")
-    log("Starting from zero.")
-    # Bootstrap values with an untrained network at "epoch 0".
-    # Disadvantage is that this is usually large, not good for the plot.
-    train_loss = test_model(train_loader, model, criterion)
-    test_loss  = test_model(test_loader, model, criterion)
-    train_losses.append( train_loss )
-    test_losses.append( test_loss )
-    print(f"Train loss: {train_loss:.4f}, Test loss: {test_loss:.4f}")
+    if args.epochs > 0: # Otherwise we just evaluate on an untrained network.
+        print("Starting from zero.")
+        log("Starting from zero.")
+        # Bootstrap values with an untrained network at "epoch 0".
+        # Disadvantage is that this is usually large, not good for the plot.
+        train_loss = test_model(train_loader, model, criterion)
+        test_loss  = test_model(test_loader, model, criterion)
+        train_losses.append( train_loss )
+        test_losses.append( test_loss )
+        print(f"Train loss: {train_loss:.4f}, Test loss: {test_loss:.4f}")
 elif os.path.exists( model_str ):
-    print(f"Continuing existing model {model_str}")
-    log(f"Continuing existing model {model_str}")
+    print(f"Loading existing model {model_str}")
+    log(f"Loading existing model {model_str}")
     checkpoint = torch.load( model_str )
     model.load_state_dict(checkpoint['model_state_dict'])
     optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
@@ -502,7 +538,19 @@ if args.epochs > 0:
         print(f"Train loss: {train_loss:.4f}, Test loss: {test_loss:.4f}")
         log(f"Epoch {ix_epoch}/{args.epochs+epoch_start}: Train loss: {train_loss:.4f}, Test loss: {test_loss:.4f}")
         print()
-
+        #
+        if test_loss < lowest_test_loss:
+            print( "LOWEST" )
+            lowest_test_loss = test_loss
+            torch.save({
+                'epoch': ix_epoch,
+                'model_state_dict': model.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+                'lowest_test_loss':lowest_test_loss,
+                'train_losses':train_losses,
+                'test_losses':test_losses
+            }, "best_"+model_str)
+    #
     torch.save({
             'epoch': ix_epoch,
             'model_state_dict': model.state_dict(),
@@ -512,40 +560,90 @@ if args.epochs > 0:
             'test_losses':test_losses
         }, model_str)
 
-'''
-fv, lbl = next(iter(train_loader))
-print("fv.shape", fv.shape)
-print("lbl.shape", lbl.shape)
-print(fv, fv.shape)
-foo = model.predict(fv)
-print(foo)
-res_foo = oh_enc.inverse_transform(foo.detach().numpy())
-res_lbl = oh_enc.inverse_transform(lbl.numpy())
-for i, xy in enumerate(zip(res_foo, res_lbl)):
-    x = xy[0]
-    y = xy[1]
-    a = ""
-    if x != y:
-        a = "ERR"
-    print(i, x, y, a)
-'''
-
 if args.epochs > 0:
     fig, axs = plt.subplots(nrows=1, ncols=1, figsize=(12,6), sharex=True, sharey=True)
     axs.plot( train_losses )
     axs.plot( test_losses )
     axs.set_ylim([0.0, None])
     fig.tight_layout()
-    png_filename = model_str+".e"+str(ix_epoch)+".png"
-    print( "Saving", png_filename )
+    png_filename = model_str+".e"+str(ix_epoch)+".lc.png" # Learning Curve
+    print("Saving", png_filename)
     fig.savefig(png_filename, dpi=144)
     plt.pause(1.0)
 
 fig, im = visualise_conv1(model)
-plt.pause(1.0)
-png_filename = model_str+".e"+str(ix_epoch)+"_conv1.pdf"
-print( "Saving", png_filename )
+png_filename = model_str+".e"+str(ix_epoch)+"_conv1.pdf" # Filters conv1
+print("Saving", png_filename)
 fig.savefig(png_filename, dpi=144)
+plt.pause(1.0)
+
+# ============================================================================
+# Test the validation set.
+# Probably different eveytime we run this, so it end up
+# being a part of the training set.
+# ============================================================================
+
+if args.epochs > 0:
+    print("Validation set")
+    log("Validation set")
+    val_loader = DataLoader(validation_data, batch_size=args.batchsize, shuffle=False)
+    model.eval()
+    predictions = []
+    golds = []
+    with torch.no_grad():
+        for X, y in tqdm(val_loader):
+            lbl = model.predict(X)
+            # We get 2D Tensors, convert to numpy and loop over values.
+            #for i, (pred, gold) in enumerate(zip(lbl.detach().numpy(), y.detach().numpy())):
+            for i, (pred, gold) in enumerate(zip(lbl.cpu().numpy(), y.cpu().numpy())):
+                res_lbl = oh_enc.inverse_transform(pred.reshape(1, -1))[0][0] # From [[0]] to 0.
+                gold_lbl = oh_enc.inverse_transform(gold.reshape(1, -1))[0][0] 
+                #if gold_lbl != 0:
+                #    print(res_lbl, gold_lbl)
+                predictions.append(res_lbl)
+                golds.append(gold_lbl)
+    #
+    fig, axs = plt.subplots(nrows=2, ncols=1, figsize=(12,6), sharex=True, sharey=True)
+    axs[0].vlines(range(len(predictions)), 0, predictions, colors=['green'])
+    axs[1].vlines(range(len(golds)), 0, predictions, colors=['green'])
+    axs[0].set_title( "Predictions" )
+    axs[1].set_title( "Gold" )
+    fig.suptitle( model_str )
+    fig.tight_layout()
+    png_filename = model_str+".e"+str(ix_epoch)+".val.png"
+    print("Saving", png_filename)
+    fig.savefig(png_filename, dpi=144)
+    cm = confusion_matrix(golds, predictions)
+    print(cm)
+    log(cm)
+    target_names = [str(x) for x in target_names] # because if integers, problems?!
+    tns = target_names
+    cr = classification_report(golds,
+                               predictions,
+                               target_names=tns,
+                               zero_division=0.0)
+    print(cr)
+    log(cr)
+    cm = confusion_matrix(golds, predictions, normalize='true')
+    with np.printoptions(precision=2, suppress=True):
+        print(cm)
+        log(cm)
+    max_cm = cm.max()
+    df_cm = pd.DataFrame(cm)
+    scale = 1.0
+    sn.set(font_scale=scale)
+    fig, axs = plt.subplots(nrows=1, ncols=1, figsize=(8,6))
+    fig.suptitle( model_str )
+    sn.heatmap( df_cm, annot=True, fmt='.2f', cmap='Greens', ax=axs )
+    plt.ylabel('True')
+    plt.xlabel('Predicted')
+    axs.xaxis.set_ticklabels(target_names, rotation=45)
+    axs.yaxis.set_ticklabels(target_names, rotation=0)
+    fig.tight_layout()
+    png_filename = model_str+".e"+str(ix_epoch)+".val.cm.png"
+    print( "Saving", png_filename )
+    fig.savefig(png_filename, dpi=144)
+    plt.pause(2.0)
 
 # ============================================================================
 # Separate test file.
@@ -574,19 +672,29 @@ if args.testfile:
                 golds.append(gold_lbl)
     #
     fig, axs = plt.subplots(nrows=2, ncols=1, figsize=(12,6), sharex=True, sharey=True)
-    axs[0].vlines(range(len(predictions)), 0, predictions)
-    axs[1].vlines(range(len(golds)), 0, predictions)
+    axs[0].vlines(range(len(predictions)), 0, predictions, colors=['blue'])
+    axs[1].vlines(range(len(golds)), 0, predictions, colors=['blue'])
     axs[0].set_title( "Predictions" )
     axs[1].set_title( "Gold" )
     fig.suptitle( model_str )
     fig.tight_layout()
-    png_filename = model_str+".e"+str(ix_epoch)+".testfile.png"
-    print( "Saving", png_filename )
+    png_filename = model_str+".e"+str(ix_epoch)+".test.png" # Predictions
+    print("Saving", png_filename)
     fig.savefig(png_filename, dpi=144)
     #
     cm = confusion_matrix(golds, predictions)
     print(cm)
     log(cm)
+    #
+    target_names = [str(x) for x in target_names] # because if integers, problems?!
+    tns = target_names
+    cr = classification_report(golds,
+                               predictions,
+                               target_names=tns,
+                               zero_division=0.0)
+    print(cr)
+    log(cr)
+    #
     cm = confusion_matrix(golds, predictions, normalize='true')
     with np.printoptions(precision=2, suppress=True):
         print(cm)
@@ -603,13 +711,11 @@ if args.testfile:
     sn.heatmap( df_cm, annot=True, fmt='.2f', cmap='Blues', ax=axs )
     plt.ylabel('True')
     plt.xlabel('Predicted')
-    #axs.xaxis.set_ticklabels(['business', 'health']);
     axs.xaxis.set_ticklabels(target_names, rotation=45)
-    axs.yaxis.set_ticklabels(target_names)
-    plt.yticks(rotation=0) 
+    axs.yaxis.set_ticklabels(target_names, rotation=0)
     fig.tight_layout()
-    png_filename = model_str+".e"+str(ix_epoch)+".cm.png"
-    print( "Saving", png_filename )
+    png_filename = model_str+".e"+str(ix_epoch)+".test.cm.png"
+    print("Saving", png_filename)
     fig.savefig(png_filename, dpi=144)
     plt.pause(2.0)
 
@@ -698,6 +804,7 @@ if args.unlabelled:
 
 print( "END", time.asctime() )
 print()
-with open("./conv_04.log", "a") as f:
+with open(logfile, "a") as f:
     f.write(datetime.datetime.now().strftime('END %Y%m%dT%H:%M:%S\n\n'))
-plt.show()
+if  args.plots:
+    plt.show()
