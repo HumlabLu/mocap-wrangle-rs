@@ -642,7 +642,7 @@ if args.epochs > 0:
     axs[1].vlines(range(len(golds)), 0, predictions, colors=['green'])
     axs[0].set_title( "Predictions" )
     axs[1].set_title( "Gold" )
-    fig.suptitle( model_str )
+    fig.suptitle(args.trainfile)
     fig.tight_layout()
     png_filename = model_str+".e"+str(ix_epoch)+".val.png"
     print("Saving", png_filename)
@@ -668,7 +668,7 @@ if args.epochs > 0:
     scale = 1.0
     sn.set(font_scale=scale)
     fig, axs = plt.subplots(nrows=1, ncols=1, figsize=(8,6))
-    fig.suptitle( model_str )
+    fig.suptitle(args.trainfile)
     sn.heatmap( df_cm, annot=True, fmt='.2f', cmap='Greens', ax=axs )
     plt.ylabel('True')
     plt.xlabel('Predicted')
@@ -713,7 +713,7 @@ if args.testfile:
     axs[1].vlines(range(len(golds)), 0, predictions, colors=['blue'])
     axs[0].set_title( "Predictions" )
     axs[1].set_title( "Gold" )
-    fig.suptitle( model_str )
+    fig.suptitle(args.testfile)
     fig.tight_layout()
     png_filename = model_str+".e"+str(ix_epoch)+".test.png" # Predictions
     print("Saving", png_filename)
@@ -743,7 +743,7 @@ if args.testfile:
     scale = 1.0
     sn.set(font_scale=scale)
     fig, axs = plt.subplots(nrows=1, ncols=1, figsize=(8,6))
-    fig.suptitle( model_str )
+    fig.suptitle(args.testfile)
     #sn.heatmap( df_cm, annot=True, fmt='d', cmap='Blues', vmax=max_cm//10, ax=axs )
     #sn.heatmap( df_cm, annot=True, fmt='d', cmap='Blues', vmax=512, ax=axs )
     sn.heatmap( df_cm, annot=True, fmt='.2f', cmap='Blues', ax=axs )
