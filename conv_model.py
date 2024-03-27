@@ -33,6 +33,8 @@ parser.add_argument("--pooling",       "-p", help="Pooling tuple",      default=
 parser.add_argument("--filter1",             help="Filter (5)",         default=[32,3,3,1,1], nargs='+', type=int)
 parser.add_argument("--filter2",             help="Filter (5)",         default=[64,5,5,3,3], nargs='+', type=int)
 parser.add_argument("--targets",       "-T", help="Number of targets",  default=  1, type=int)
+# next should be called target labels...
+parser.add_argument("--filltargets",   "-F", help="Fill labels",        default=[], nargs='+', type=str)
 parser.add_argument("--plots",         "-P", help="Show plots",         action="store_true")
 parser.add_argument("--trainfile",     "-t", help="Training file",      default="foo.tsv")
 parser.add_argument("--device",        "-d", help="Device",             default=None, type=str)
@@ -51,9 +53,9 @@ args = parser.parse_args()
 # ============================================================================
 
 if args.id:
-    logfile = f"conv_05_{args.id}.log"
+    logfile = f"conv_06_{args.id}.log"
 else:
-    logfile = "conv_05.log"
+    logfile = "conv_06.log"
 
 def log(*args, sep=' ', end='\n', file=logfile):
     with open(file, 'a') as f:
@@ -87,10 +89,11 @@ def visualise_conv1(model):
     # be (H, W, C)
     fig, ax = plt.subplots()
     im = ax.imshow(filter_img.permute(1, 2, 0))
+    fig.suptitle(model_str)
     ax.set_title("Filters in conv1.")
     return fig, im
 
-def encode_targets(targets, enc=None):
+def encode_targets_old(targets, enc=None):
     target_names = []
     if not enc:
         enc = OneHotEncoder(handle_unknown='ignore', sparse=False)
@@ -99,15 +102,103 @@ def encode_targets(targets, enc=None):
     #enc.fit(targets)
     #print(enc)
     labels = pd.DataFrame(enc.fit_transform(targets))
-    #print("labels shape", labels.shape)
+    print("labels shape", labels.shape)
     #print(labels.head())
     #print(enc.categories_)
     for c in enc.categories_[0]:
         target_names.append(c)
         e = enc.transform([[c]])
-        #print(c, e[0], enc.inverse_transform(e)[0])
-        log(c, e[0], enc.inverse_transform(e)[0])
+        print(c, e[0], enc.inverse_transform(e)[0])
+        #log(c, e[0], enc.inverse_transform(e)[0])
     return (labels, enc)
+
+def encode_targets(targets, enc=None):
+    target_names = list(np.unique(targets))
+    print(target_names)
+    print(targets)
+    if not enc:
+        enc = OHE(target_names)
+    labels = pd.DataFrame(np.array(enc.fit_transform(targets)))
+    #labels = enc.fit_transform(targets)
+    return (labels, enc)
+
+def create_encoder(targets):
+    '''
+    enc = OneHotEncoder(handle_unknown='ignore', sparse=False)
+    targets = [[name] for name in targets]
+    enc.fit(targets)
+    print(enc)
+    for c in enc.categories_[0]:
+        e = enc.transform([[c]])
+        print(c, e[0], enc.inverse_transform(e)[0])
+    return (targets, enc)
+    '''
+    enc = OHE(targets)
+    return (targets, enc)
+
+def one_hot(y, num_classes):
+    oh = [0] * num_classes
+    if y < 0 or y >= num_classes:
+        return oh
+    oh[int(y)] = 1
+    return oh
+
+class OHE:
+    def __init__(self, classes):
+        self.classes = classes
+        self.num_classes = len(classes)
+        self.categories_ = [classes]
+    def one_hot_c(self, y):
+        oh = [0.0] * self.num_classes
+        try:
+            y = self.classes.index(y)
+            oh[int(y)] = 1.0
+            return oh
+        except ValueError:
+            return oh # All zeroes...
+    def fit_transform(self, y): # y = []
+        res = []
+        for y1 in y:
+            oh = [0.0] * self.num_classes
+            try:
+                pos = self.classes.index(y1)
+                oh[int(pos)] = 1.0
+                res.append(oh)
+            except ValueError:
+                res.append(oh) # All zeroes...
+        return res
+    def transform(self, y): # y = []
+        return self.fit_transform(y)
+    def inverse_transform(self, y):
+        res = []
+        y_am = np.argmax(y, axis=1)
+        #print(y_am)
+        for y1 in y_am:
+            res.append(self.classes[y1])
+        return [res]
+'''
+enc = OHE(["a", "b", "c"])
+foo = np.array(["a", "b", "c", "b", "a", "c"])
+#print(enc.fit_transform(foo))
+bar, _ = encode_targets(foo)
+print(bar)
+print(enc.inverse_transform(bar))
+#print(encode_targets_old(foo))
+print("-")
+enc = OHE([1, 2, 3])
+foo = np.array([1, 2, 3, 2, 1])
+bar, _ = encode_targets(foo)
+print(bar)
+print(enc.inverse_transform(bar))
+#print(encode_targets_old(foo))
+print("-")
+_, enc = create_encoder(["foo", "bar", "baz"])
+foo = np.array(["foo", "bar", "baz"])
+bar = enc.fit_transform(foo)
+print(bar)
+print(enc.inverse_transform(bar))
+sys.exit(0)
+'''
 
 # ============================================================================
 # Data loaders.
@@ -157,13 +248,15 @@ def load_data(filepath, seqlen, getlabels=True, enc=None):
         print(labels.value_counts())
         log(labels.value_counts())
         labels = labels.values #.reshape(-1, 1) ## This reshape is wrong for 1 dim labels!
-        
+
     # One hot encode the values using sklearn. Parameter so we
     # can re-use the encoder for another file.
+    # Add the filltargets if available.
     target_names = []
     if getlabels:
         if enc:
             labels, enc = encode_targets(labels, enc)
+            print("USING INCLUDED ENCODER")
         else:
             labels, enc = encode_targets(labels)
         print("labels shape", labels.shape)
@@ -367,8 +460,16 @@ class ConvTabularModelP(nn.Module):
 # Training and test data.
 # ============================================================================
 
-# First, a train and test set.
-features, labels, target_names, oh_enc = load_data(args.trainfile, args.seqlen) # return encoder for later.        
+if args.filltargets:
+    print(args.filltargets)
+    # but we want integers, maybe use range over the length, and the filltargets as labels...
+    # We stil have the 0 problem?
+    _, oh_enc = create_encoder(range(0, len(args.filltargets)))
+    features, labels, target_names, oh_enc = load_data(args.trainfile, args.seqlen, enc=oh_enc)
+    target_names = args.filltargets
+else:
+    features, labels, target_names, oh_enc = load_data(args.trainfile, args.seqlen) # return encoder for later.
+    
 train_data, test_data, train_labels, test_labels = train_test_split(features,
                                                                     labels,
                                                                     test_size=0.3,
@@ -438,6 +539,7 @@ for h in range(ver):
 f.subplots_adjust(right=0.8)
 cbar_ax = f.add_axes([0.85, 0.15, 0.05, 0.7])
 f.colorbar(xx, cax=cbar_ax)
+f.suptitle(args.trainfile)
 #bar.set_label('ColorBar 1')
 f.subplots_adjust(hspace=0.5)
 png_filename = os.path.basename(args.trainfile)+"_s"+str(args.seqlen)+".imgdata.png"
@@ -597,6 +699,7 @@ if args.epochs > 0:
     axs.plot( train_losses )
     axs.plot( test_losses )
     axs.set_ylim([0.0, None])
+    fig.suptitle(args.trainfile)
     fig.tight_layout()
     png_filename = model_str+".e"+str(ix_epoch)+".lc.png" # Learning Curve
     print("Saving", png_filename)
@@ -626,7 +729,7 @@ if args.epochs > 0:
     golds = []
     with torch.no_grad():
         for X, y in tqdm(val_loader):
-            lbl = model.predict(X)
+            lbl = model.predict(X) # predict() returns probabilities.
             # We get 2D Tensors, convert to numpy and loop over values.
             #for i, (pred, gold) in enumerate(zip(lbl.detach().numpy(), y.detach().numpy())):
             for i, (pred, gold) in enumerate(zip(lbl.cpu().numpy(), y.cpu().numpy())):
@@ -648,7 +751,7 @@ if args.epochs > 0:
     print("Saving", png_filename)
     log("Saving", png_filename)
     fig.savefig(png_filename, dpi=144)
-    cm = confusion_matrix(golds, predictions)
+    cm = confusion_matrix(golds, predictions, labels=target_names)
     print(cm)
     log(cm)
     target_names = [str(x) for x in target_names] # because if integers, problems?!
@@ -713,7 +816,7 @@ if args.testfile:
     axs[1].vlines(range(len(golds)), 0, predictions, colors=['blue'])
     axs[0].set_title( "Predictions" )
     axs[1].set_title( "Gold" )
-    fig.suptitle(args.testfile)
+    fig.suptitle(model_str+"\n"+args.testfile)
     fig.tight_layout()
     png_filename = model_str+".e"+str(ix_epoch)+".test.png" # Predictions
     print("Saving", png_filename)
