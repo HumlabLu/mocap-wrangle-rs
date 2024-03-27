@@ -187,7 +187,7 @@ print( time_delta, 1.0/time_delta )
 tier_names = []
 if eaf:
     tier_names = eaf.get_tier_names()
-    print( tier_names )
+    print( "EAF Tiers", tier_names )
 
 # Initialising classes here gives a unique class index to
 # every annotation across all tiers.
@@ -200,7 +200,7 @@ if not args.tiernames:
 #df_targets = df_data.iloc[:, [0, 1]].copy()
 
 for tier in args.tiernames:
-    print( tier )
+    print( "TIER", tier )
     ####classes = ["NONE"] # Initialising classes here repeats class indices for each tier.
     if args.classnames:
         df_data.insert( len(df_data.columns), tier, "NONE" ) # tier as "EAF"
@@ -224,7 +224,6 @@ for tier in args.tiernames:
         cli = classes.index( cl_name )
         t_delta = t1 - t0
         t_annotations += t_delta
-
         #                                      percentage of data with annotations 
         print( t0, t0m, t1, t1m, cl_name, cli, "{:.1f}".format(t_annotations*100.0 / t1) )
         '''
